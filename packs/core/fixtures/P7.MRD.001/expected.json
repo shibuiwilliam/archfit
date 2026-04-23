@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P7.MRD.001",
+      "severity": "warn",
+      "path": "docs/",
+      "message_contains": "exit codes are not documented"
+    }
+  ]
+}

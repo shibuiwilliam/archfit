@@ -1,0 +1,22 @@
+id: P1.LOC.002
+principle: P1
+dimension: LOC
+title: Declared vertical-slice directories carry their own AGENTS.md
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  When a repository organizes code into vertical slices (e.g. packs/,
+  services/, modules/), each slice should carry an AGENTS.md — otherwise
+  changes inside a slice require loading the whole repo's conventions
+  into context. This rule fires only when one of those well-known
+  container directories exists; it does not impose a structure on repos
+  that chose a different layout.
+remediation:
+  summary: >-
+    Add AGENTS.md at the root of every subdirectory under a well-known
+    slice container (packs/, services/, modules/) describing what that
+    slice is, what it owns, and the minimum context needed to change it.
+  guide_ref: docs/rules/P1.LOC.002.md
+  auto_fixable: false

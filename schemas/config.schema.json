@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://archfit.dev/schemas/config.schema.json",
+  "title": "archfit configuration (.archfit.yaml)",
+  "type": "object",
+  "required": ["version"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {"const": 1},
+    "project_type": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "e.g. ['web-saas'], ['iac'], ['agent-tool']."
+    },
+    "profile": {
+      "type": "string",
+      "enum": ["strict", "standard", "permissive"],
+      "default": "standard"
+    },
+    "risk_tiers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {"type": "string"}
+      }
+    },
+    "packs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {"type": "array", "items": {"type": "string"}},
+        "disabled": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "overrides": {
+      "type": "object",
+      "additionalProperties": {"type": "object"}
+    },
+    "ignore": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule", "reason", "expires"],
+        "additionalProperties": false,
+        "properties": {
+          "rule": {"type": "string", "pattern": "^P[1-7]\\.[A-Z]{3}\\.[0-9]{3}$"},
+          "paths": {"type": "array", "items": {"type": "string"}},
+          "reason": {"type": "string", "minLength": 1},
+          "expires": {"type": "string", "format": "date"}
+        }
+      }
+    }
+  }
+}

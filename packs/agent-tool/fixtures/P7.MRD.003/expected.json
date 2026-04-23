@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P7.MRD.003",
+      "severity": "warn",
+      "path": "docs/adr/",
+      "message_contains": "no docs/adr/ directory"
+    }
+  ]
+}

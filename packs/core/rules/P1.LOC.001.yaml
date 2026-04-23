@@ -1,0 +1,19 @@
+id: P1.LOC.001
+principle: P1
+dimension: LOC
+title: Root of the repository has agent-facing documentation
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Coding agents need a consistent entry point to orient themselves before
+  touching the repository. A top-level AGENTS.md or CLAUDE.md is the
+  cheapest, most widely adopted signal. Its absence is one of the strongest
+  predictors of agents making locally-plausible but repo-incoherent changes.
+remediation:
+  summary: >-
+    Add CLAUDE.md (or AGENTS.md) at the repository root describing the
+    project, its layout, and the rules Claude Code should follow.
+  guide_ref: docs/rules/P1.LOC.001.md
+  auto_fixable: false

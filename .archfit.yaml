@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "project_type": ["agent-tool"],
+  "profile": "standard",
+  "packs": {
+    "enabled": ["core", "agent-tool"]
+  },
+  "ignore": []
+}

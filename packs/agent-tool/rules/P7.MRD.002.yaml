@@ -1,0 +1,21 @@
+id: P7.MRD.002
+principle: P7
+dimension: MRD
+title: Agent-tool repository has a CHANGELOG.md at the root
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Agents driving a tool need a machine-readable record of what changed
+  between versions. CHANGELOG.md is the lightest, most widely recognized
+  signal. Keep-a-changelog.com and SemVer co-evolve; a tool that ships
+  without one forces agents to diff the repository or infer changes from
+  commit titles.
+remediation:
+  summary: >-
+    Add CHANGELOG.md at the repository root following the Keep a Changelog
+    format. Minimum sections: Unreleased, then versioned releases with
+    Added / Changed / Removed subsections.
+  guide_ref: docs/rules/P7.MRD.002.md
+  auto_fixable: false

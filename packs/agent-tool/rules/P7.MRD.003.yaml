@@ -1,0 +1,20 @@
+id: P7.MRD.003
+principle: P7
+dimension: MRD
+title: Agent-tool repository records ADRs under docs/adr/
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Architecture Decision Records are the canonical way to surface irreversible
+  design choices to agents. When an agent is asked to refactor an agent-tool,
+  the ADR log tells it which decisions are load-bearing (and why) versus
+  which are accidents of history. This rule fires when the repo ships a CLI
+  (has cmd/) but no docs/adr/ directory exists.
+remediation:
+  summary: >-
+    Create docs/adr/ and seed it with an initial ADR documenting the
+    architecture overview. Use YAML frontmatter (id, title, status, date).
+  guide_ref: docs/rules/P7.MRD.003.md
+  auto_fixable: false

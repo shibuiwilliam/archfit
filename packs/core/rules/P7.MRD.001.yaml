@@ -1,0 +1,20 @@
+id: P7.MRD.001
+principle: P7
+dimension: MRD
+title: Exit codes are documented when the repository ships a CLI
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  For a CLI to be machine-usable, its exit codes must be an explicit
+  contract, not emergent. This rule fires when the repo has a cmd/ or
+  bin/ directory (strong signal of a binary entrypoint) but no
+  docs/exit-codes.md or equivalent document.
+remediation:
+  summary: >-
+    Add docs/exit-codes.md listing every exit code the CLI can emit, the
+    condition that causes it, and whether it is part of the stability
+    contract.
+  guide_ref: docs/rules/P7.MRD.001.md
+  auto_fixable: false

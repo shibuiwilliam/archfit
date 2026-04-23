@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P4.VER.001",
+      "severity": "warn",
+      "path": "",
+      "message_contains": "no verification entrypoint"
+    }
+  ]
+}

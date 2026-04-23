@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P1.LOC.002",
+      "severity": "warn",
+      "path": "packs/alpha",
+      "message_contains": "missing an AGENTS.md"
+    }
+  ]
+}

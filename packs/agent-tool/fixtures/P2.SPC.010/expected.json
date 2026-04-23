@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P2.SPC.010",
+      "severity": "warn",
+      "path": "schemas/",
+      "message_contains": "no JSON Schema files found"
+    }
+  ]
+}

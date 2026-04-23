@@ -1,0 +1,109 @@
+# go-arch-lint — encodes the boundary rule from CLAUDE.md §4.
+#
+# The pack layer must not import from the I/O layer (adapter, collector,
+# core, report, config). Those belong in main.go wiring and tests only.
+#
+# https://github.com/fe3dback/go-arch-lint
+
+version: 3
+workdir: .
+
+components:
+  model:
+    in: internal/model
+  rule:
+    in: internal/rule
+  adapter:
+    in: internal/adapter/**
+  collector:
+    in: internal/collector/**
+  core:
+    in: internal/core
+  config:
+    in: internal/config
+  score:
+    in: internal/score
+  report:
+    in: internal/report
+  version:
+    in: internal/version
+  packs:
+    in: packs/**
+  main:
+    in: cmd/**
+
+# Packs may only depend on model and rule. Anything else is a boundary violation.
+deps:
+  packs:
+    mayDependOn:
+      - model
+      - rule
+    cannotDependOn:
+      - adapter
+      - collector
+      - core
+      - config
+      - report
+      - score
+
+  # Model has no internal dependencies — it is the shared vocabulary.
+  model:
+    mayDependOn: []
+
+  # Rule engine depends only on model. No collectors, no adapters.
+  rule:
+    mayDependOn:
+      - model
+
+  # Scheduler is the one place that wires collectors + rules together.
+  core:
+    mayDependOn:
+      - model
+      - rule
+      - adapter
+      - collector
+      - score
+
+  # Collectors may go through adapters to reach the outside world.
+  collector:
+    mayDependOn:
+      - model
+      - adapter
+
+  # Adapters depend only on the standard library (expressed as "no internal deps").
+  adapter:
+    mayDependOn: []
+
+  # Report depends on model + core (for ScanResult).
+  report:
+    mayDependOn:
+      - model
+      - core
+
+  # Config is self-contained aside from model (for validation types).
+  config:
+    mayDependOn:
+      - model
+
+  # Score depends only on model.
+  score:
+    mayDependOn:
+      - model
+
+  # Main wires everything. This is the one place this breadth is allowed.
+  main:
+    mayDependOn:
+      - model
+      - rule
+      - adapter
+      - collector
+      - core
+      - config
+      - report
+      - score
+      - version
+      - packs
+
+commonComponents: []
+excludeFiles:
+  - "^.*_test\\.go$"

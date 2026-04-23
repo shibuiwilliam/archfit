@@ -1,0 +1,20 @@
+id: P4.VER.001
+principle: P4
+dimension: VER
+title: Repository declares a fast verification entrypoint
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Agents need a single, declared way to verify a change: "did this break
+  anything?". A Makefile, justfile, Taskfile.yml, package.json,
+  pyproject.toml, or Cargo.toml at the root is the canonical pointer.
+  Without one, agents resort to guessing or running partial checks.
+remediation:
+  summary: >-
+    Add a Makefile (or justfile / Taskfile.yml / package.json with an npm
+    test script) at the repo root that exposes a single command to run
+    the fast verification suite.
+  guide_ref: docs/rules/P4.VER.001.md
+  auto_fixable: false

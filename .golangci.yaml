@@ -1,0 +1,62 @@
+# golangci-lint configuration.
+# Keep this tight. Adding a linter is a design decision; surface it in the PR.
+# Each disabled linter needs a reason comment.
+
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: none
+  enable:
+    # Correctness
+    - govet         # core vet checks; catches printf/copylocks/etc.
+    - staticcheck   # SA* / S* / ST* checks
+    - ineffassign   # unused assignments
+    - errcheck      # unchecked errors
+    # Style / clarity
+    - unconvert
+    - misspell
+    - revive        # replaces golint; configured below for archfit
+    - gocritic
+    # Import hygiene
+    - goimports
+  settings:
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+          arguments:
+            - checkPrivateReceivers
+            - sayRepetitiveInsteadOfStutters
+        - name: unexported-return
+        - name: var-declaration
+    gocritic:
+      enabled-tags: [diagnostic, style, performance]
+      disabled-checks:
+        # commentFormatting fires on godoc links; not worth the noise.
+        - commentFormatting
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+
+issues:
+  # Maximum issues per linter; 0 = unlimited. Keep honest.
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-rules:
+    # Test files may leave receivers unused.
+    - path: _test\.go
+      linters: [revive]
+      text: "unused-parameter"

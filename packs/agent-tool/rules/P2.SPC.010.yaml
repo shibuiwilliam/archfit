@@ -1,0 +1,21 @@
+id: P2.SPC.010
+principle: P2
+dimension: SPC
+title: Tool ships a versioned JSON output schema
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  An agent-driven tool's machine-readable output is a contract. Without a
+  versioned, discoverable schema, downstream agents cannot tell additive
+  changes from breaking ones. This rule looks for a JSON Schema file under
+  schemas/ whose content declares a top-level $id and is referenced from a
+  schema_version field in documentation or in the schema itself.
+remediation:
+  summary: >-
+    Place a JSON Schema at schemas/output.schema.json (or similar) with a
+    top-level $id identifying it unambiguously, and emit a schema_version
+    field in your tool's JSON output that matches.
+  guide_ref: docs/rules/P2.SPC.010.md
+  auto_fixable: false

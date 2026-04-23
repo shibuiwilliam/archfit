@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P1.LOC.001",
+      "severity": "warn",
+      "path": "",
+      "message_contains": "no CLAUDE.md or AGENTS.md"
+    }
+  ]
+}

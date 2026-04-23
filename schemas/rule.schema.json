@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://archfit.dev/schemas/rule.schema.json",
+  "title": "archfit rule",
+  "type": "object",
+  "required": ["id", "principle", "dimension", "title", "severity", "evidence_strength", "stability", "rationale", "remediation"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^P[1-7]\\.[A-Z]{3}\\.[0-9]{3}$",
+      "description": "Rule ID in the form P<n>.<DIM>.<nnn>, e.g. P5.RSK.002."
+    },
+    "principle": {
+      "type": "string",
+      "enum": ["P1", "P2", "P3", "P4", "P5", "P6", "P7"]
+    },
+    "dimension": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$"
+    },
+    "title": {"type": "string", "minLength": 1, "maxLength": 120},
+    "severity": {
+      "type": "string",
+      "enum": ["info", "warn", "error", "critical"]
+    },
+    "evidence_strength": {
+      "type": "string",
+      "enum": ["strong", "medium", "weak", "sampled"]
+    },
+    "stability": {
+      "type": "string",
+      "enum": ["experimental", "stable", "deprecated"]
+    },
+    "applies_to": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "project_types": {"type": "array", "items": {"type": "string"}},
+        "languages": {"type": "array", "items": {"type": "string"}},
+        "path_globs": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "rationale": {"type": "string", "minLength": 20},
+    "weight": {"type": "number", "minimum": 0, "maximum": 10, "default": 1},
+    "remediation": {
+      "type": "object",
+      "required": ["summary"],
+      "additionalProperties": false,
+      "properties": {
+        "summary": {"type": "string", "minLength": 1},
+        "guide_ref": {"type": "string"},
+        "auto_fixable": {"type": "boolean", "default": false}
+      }
+    }
+  }
+}
