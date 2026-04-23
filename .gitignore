@@ -26,7 +26,14 @@ go.work.sum
 
 # env file
 .env
+.envrc
+
+# Build artifacts
+/bin/
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+
+.claude/settings.local.json
+.claude/settings.json
