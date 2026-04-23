@@ -1,3 +1,5 @@
+![img](./archfit_logo.png)
+
 # archfit
 
 > **Architecture fitness evaluator for the coding-agent era.**
