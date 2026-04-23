@@ -1,39 +1,67 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+# Go binaries and compiled shared libraries
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 
-# Test binary, built with `go test -c`
+# Test binary built with `go test -c`
 *.test
 
-# Code coverage profiles and other test artifacts
+# Coverage / profiling artifacts
 *.out
-coverage.*
+*.cover
 *.coverprofile
+coverage.*
 profile.cov
+cpu.pprof
+mem.pprof
+*.prof
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
+# Go workspace (committed only when a workspace is actually in use)
 go.work
 go.work.sum
 
-# env file
+# Vendor directory (Phase 1 has no external deps, so this is not needed yet)
+# vendor/
+
+# Local environment files. Checked-in ".example" variants are intentional.
 .env
 .envrc
+.env.local
+.env.*.local
 
-# Build artifacts
+# Local build output
 /bin/
+/dist/
 
-# Editor/IDE
+# archfit's own local outputs when users redirect scan output to disk per the
+# quick-start examples. Golden fixtures under testdata/e2e are NOT ignored.
+/archfit.json
+/archfit.sarif
+/archfit.md
+/main.json
+/pr.json
+
+# Editor / IDE state — directories only. `.idea/`-style files inside tracked
+# docs (e.g. blog posts mentioning them) are unaffected.
 .idea/
 .vscode/
+*.iml
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
 
+# Claude Code per-user, per-machine state. The project-scope skill at
+# .claude/skills/ is INTENTIONALLY tracked — it ships as part of archfit.
 .claude/settings.local.json
 .claude/settings.json
+
+# Log files
+*.log
+
+# Temp directories
+/tmp/
+/temp/
