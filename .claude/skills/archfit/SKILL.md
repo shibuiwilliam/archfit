@@ -49,7 +49,11 @@ contract.
 archfit scan [path]                # full scan
 archfit scan --json [path]         # JSON to stdout (the contract)
 archfit score [path]               # numbers only, no finding list
+archfit check <rule-id> [path]     # run a single rule
+archfit report [path]              # Markdown report
+archfit diff <baseline.json>       # PR gate on new findings only
 archfit explain <rule-id>          # rule rationale + remediation
+archfit init [path]                # scaffold .archfit.yaml
 archfit list-rules                 # all registered rules
 archfit list-packs                 # packs and their rule IDs
 archfit validate-config [path]     # check .archfit.yaml
@@ -59,9 +63,14 @@ Global flags:
 
 - `--fail-on {info|warn|error|critical}` — exit code 1 when any finding
   meets this severity. Default: `error`.
-- `--format {terminal|json|md}` — output format. `--json` is shorthand
+- `--format {terminal|json|md|sarif}` — output format. `--json` is shorthand
   for `--format=json`.
 - `-C <dir>` — change to directory before running.
+- `--with-llm` — enrich findings with LLM-authored explanations. Opt-in,
+  requires `GOOGLE_API_KEY` (or `GEMINI_API_KEY`). Adds an `llm_suggestion`
+  object to each enriched finding. **Never use this on the base scan path;**
+  use it after the default scan has produced findings. See `docs/llm.md`.
+- `--llm-budget N` — cap LLM calls per run (default 5; only with `--with-llm`).
 
 ## Output schema
 

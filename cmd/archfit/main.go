@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	"github.com/shibuiwilliam/archfit/internal/adapter/exec"
+	"github.com/shibuiwilliam/archfit/internal/adapter/llm"
 	"github.com/shibuiwilliam/archfit/internal/config"
 	"github.com/shibuiwilliam/archfit/internal/core"
 	"github.com/shibuiwilliam/archfit/internal/model"
@@ -103,6 +104,9 @@ global flags (where applicable):
   --json                               shorthand for --format=json
   --fail-on {info|warn|error|critical} exit 1 when any finding meets this level (default: error)
   -C <dir>                             change to dir before running (like git -C)
+  --with-llm                           enrich findings with LLM-authored explanations
+                                       (opt-in; requires GOOGLE_API_KEY)
+  --llm-budget N                       cap the number of LLM calls per run (default: 5)
 
 Exit codes:
   0   success (or: findings below --fail-on threshold)
@@ -116,11 +120,13 @@ See docs/exit-codes.md and PROJECT.md for the full contract.
 }
 
 type scanFlags struct {
-	format  string
-	json    bool
-	failOn  string
-	workDir string
-	path    string
+	format    string
+	json      bool
+	failOn    string
+	workDir   string
+	path      string
+	withLLM   bool
+	llmBudget int
 }
 
 func parseScanFlags(args []string, cmd string) (scanFlags, error) {
@@ -131,6 +137,8 @@ func parseScanFlags(args []string, cmd string) (scanFlags, error) {
 	fs.BoolVar(&f.json, "json", false, "shorthand for --format=json")
 	fs.StringVar(&f.failOn, "fail-on", "error", "severity threshold that causes a non-zero exit")
 	fs.StringVar(&f.workDir, "C", "", "change to directory before running")
+	fs.BoolVar(&f.withLLM, "with-llm", false, "enrich findings with LLM-authored explanations (opt-in; requires GOOGLE_API_KEY)")
+	fs.IntVar(&f.llmBudget, "llm-budget", 5, "maximum LLM calls per run (only when --with-llm)")
 	if err := fs.Parse(args); err != nil {
 		return f, err
 	}
@@ -218,6 +226,18 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 		return exitRuntimeError
 	}
 
+	// LLM enrichment runs only when --with-llm is set. Never on the hot path
+	// (CLAUDE.md §13). Failures degrade; they never fail the scan.
+	llmClient, err := buildLLMClient(ctx, flags.withLLM, flags.llmBudget)
+	if err != nil {
+		fmt.Fprintf(stderr, "scan: --with-llm: %v\n", err)
+		return exitConfigError
+	}
+	if llmClient != nil {
+		defer llmClient.Close()
+		enrichFindings(ctx, llmClient, rules, res.Findings, cfg.ProjectType, stderr)
+	}
+
 	if format == report.FormatSARIF {
 		if err := report.RenderSARIF(stdout, res, rules, version.Version); err != nil {
 			fmt.Fprintf(stderr, "scan: %v\n", err)
@@ -283,8 +303,16 @@ func cmdScore(args []string, stdout, stderr io.Writer) int {
 }
 
 func cmdExplain(args []string, stdout, stderr io.Writer) int {
-	if len(args) != 1 {
-		fmt.Fprintln(stderr, "usage: archfit explain <rule-id>")
+	fs := flag.NewFlagSet("explain", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	withLLM := fs.Bool("with-llm", false, "append an LLM-authored explanation (requires GOOGLE_API_KEY)")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprintf(stderr, "explain: %v\n", err)
+		return exitUsage
+	}
+	rest := fs.Args()
+	if len(rest) != 1 {
+		fmt.Fprintln(stderr, "usage: archfit explain [--with-llm] <rule-id>")
 		return exitUsage
 	}
 	reg, err := buildRegistry()
@@ -292,9 +320,9 @@ func cmdExplain(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "explain: %v\n", err)
 		return exitRuntimeError
 	}
-	r, ok := reg.Rule(args[0])
+	r, ok := reg.Rule(rest[0])
 	if !ok {
-		fmt.Fprintf(stderr, "explain: unknown rule %q\n", args[0])
+		fmt.Fprintf(stderr, "explain: unknown rule %q\n", rest[0])
 		return exitUsage
 	}
 	fmt.Fprintf(stdout, "%s — %s\n", r.ID, r.Title)
@@ -305,7 +333,43 @@ func cmdExplain(args []string, stdout, stderr io.Writer) int {
 	if r.Remediation.GuideRef != "" {
 		fmt.Fprintf(stdout, "  guide: %s\n", r.Remediation.GuideRef)
 	}
+	if *withLLM {
+		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+		defer cancel()
+		client, err := buildLLMClient(ctx, true, 1)
+		if err != nil {
+			fmt.Fprintf(stderr, "explain: --with-llm: %v\n", err)
+			return exitConfigError
+		}
+		defer client.Close()
+
+		cfg, _, _, _ := config.Load(".")
+		prompt := llm.BuildRulePrompt(r, cfg.ProjectType)
+		// Synthetic empty finding — explain is rule-level, not finding-level.
+		sug, err := client.Explain(ctx, r, model.Finding{RuleID: r.ID}, prompt)
+		if err != nil {
+			fmt.Fprintf(stderr, "explain: llm: %v (static explanation above still applies)\n", err)
+			return exitOK
+		}
+		fmt.Fprintf(stdout, "\nLLM explanation (%s):\n", sug.Model)
+		writeIndentedStdout(stdout, sug.Text, "  ")
+	}
 	return exitOK
+}
+
+// writeIndentedStdout mirrors the one in report/report.go but is local here
+// to keep main.go's dependencies tight.
+func writeIndentedStdout(w io.Writer, s, prefix string) {
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			fmt.Fprintf(w, "%s%s\n", prefix, s[start:i])
+			start = i + 1
+		}
+	}
+	if start < len(s) {
+		fmt.Fprintf(w, "%s%s\n", prefix, s[start:])
+	}
 }
 
 func cmdListRules(_ []string, stdout, stderr io.Writer) int {
@@ -411,6 +475,66 @@ func parseSeverity(s string) (model.Severity, error) {
 	return sev, nil
 }
 
+// ----- LLM enrichment (Phase 3a) -----
+//
+// buildLLMClient returns a ready-to-use llm.Client (Real wrapped in Budget
+// and Cached) when --with-llm is set and an API key is configured.
+// It returns (nil, nil) when --with-llm is not set — the caller treats that
+// as "do nothing LLM-related". It returns (nil, error) when --with-llm is set
+// but the API key is missing; the caller maps that to exit code 4.
+func buildLLMClient(ctx context.Context, withLLM bool, budget int) (llm.Client, error) {
+	if !withLLM {
+		return nil, nil
+	}
+	cfg, ok := llm.FromEnv(os.Getenv)
+	if !ok {
+		return nil, llm.ErrNotConfigured
+	}
+	real, err := llm.NewReal(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	// Canonical composition: Real → Budget → Cached (outermost).
+	// See internal/adapter/llm/budget.go for the rationale.
+	return llm.NewCached(llm.NewBudget(real, budget)), nil
+}
+
+// enrichFindings calls the LLM for each finding up to the client's budget.
+// Errors are logged to stderr and never fail the scan — base exit code is
+// unchanged. Mutates findings in place.
+func enrichFindings(ctx context.Context, client llm.Client, rules []model.Rule, findings []model.Finding, projectType []string, stderr io.Writer) {
+	if client == nil {
+		return
+	}
+	byID := map[string]model.Rule{}
+	for _, r := range rules {
+		byID[r.ID] = r
+	}
+	for i := range findings {
+		rule, ok := byID[findings[i].RuleID]
+		if !ok {
+			continue
+		}
+		prompt := llm.BuildFindingPrompt(rule, findings[i], projectType)
+		sug, err := client.Explain(ctx, rule, findings[i], prompt)
+		if err != nil {
+			if errors.Is(err, llm.ErrBudgetExhausted) {
+				// Quiet exit — user explicitly set the budget.
+				return
+			}
+			fmt.Fprintf(stderr, "llm: finding %s skipped (%v)\n", findings[i].RuleID, err)
+			continue
+		}
+		findings[i].LLMSuggestion = &model.LLMSuggestion{
+			Text:      sug.Text,
+			Model:     sug.Model,
+			CacheHit:  sug.CacheHit,
+			Truncated: sug.Truncated,
+			LatencyMS: sug.LatencyMS,
+		}
+	}
+}
+
 // ----- Phase 2 subcommands -----
 
 func cmdInit(args []string, stdout, stderr io.Writer) int {
@@ -494,6 +618,15 @@ func cmdCheck(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		fmt.Fprintf(stderr, "check: %v\n", err)
 		return exitRuntimeError
+	}
+	llmClient, err := buildLLMClient(ctx, flags.withLLM, flags.llmBudget)
+	if err != nil {
+		fmt.Fprintf(stderr, "check: --with-llm: %v\n", err)
+		return exitConfigError
+	}
+	if llmClient != nil {
+		defer llmClient.Close()
+		enrichFindings(ctx, llmClient, []model.Rule{r}, res.Findings, nil, stderr)
 	}
 	if format == report.FormatSARIF {
 		if err := report.RenderSARIF(stdout, res, []model.Rule{r}, version.Version); err != nil {

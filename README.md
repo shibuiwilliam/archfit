@@ -33,28 +33,31 @@ thesis.
 
 ---
 
-## Status — Phase 2 (0.2.0)
+## Status — Phase 3a (0.3.0)
 
 archfit scans a repo, runs the `core` and `agent-tool` packs, emits
 terminal / JSON / Markdown / **SARIF** output, and passes its own self-scan
-with 7 `strong`-evidence rules at score **100.0**.
+with 7 `strong`-evidence rules at score **100.0**. Phase 3a adds an opt-in
+LLM path (Google Gemini) for finding-specific explanations.
 
-| Layer | 0.1.0 | 0.2.0 | Later |
-|---|---|---|---|
-| CLI: `scan`, `score`, `explain`, `list-rules`, `list-packs`, `validate-config`, `version` | ready | ready | |
-| CLI: `init`, `check`, `report`, `diff` | | ready | |
-| Rule engine with explicit (no-`init`) registration | ready | ready | |
-| Collectors: filesystem, git, **schema** | fs + git | + schema | ast, depgraph, command |
-| Schemas: `rule`, `config`, `output` (versioned JSON Schema) | ready | ready | |
-| Renderers: terminal, JSON, Markdown, **SARIF 2.1.0** | term + json + md | + SARIF | HTML |
-| `core` pack — 4 rules | ready | ready | |
-| `agent-tool` pack — 3 rules (opt-in) | | ready | |
-| Packs: `web-saas`, `iac`, `mobile`, `data-event` | | | Phase 3+ |
-| `archfit fix` (auto-remediation) | | | Phase 3 |
-| Metrics pipeline (`context_span_p50`, `blast_radius_score`, …) | | | Phase 3 |
-| `go-arch-lint` + `golangci-lint` configs (contracts) | | ready | |
-| End-to-end golden tests (`testdata/e2e/`) | | ready | |
-| GitHub Actions CI: lint + test + self-scan + cross-build matrix | | ready | |
+| Layer | 0.1.0 | 0.2.0 | 0.3.0 | Later |
+|---|---|---|---|---|
+| CLI: `scan`, `score`, `explain`, `list-rules`, `list-packs`, `validate-config`, `version` | ready | ready | ready | |
+| CLI: `init`, `check`, `report`, `diff` | | ready | ready | |
+| CLI: `--with-llm`, `--llm-budget` (opt-in Gemini) | | | ready | |
+| Rule engine with explicit (no-`init`) registration | ready | ready | ready | |
+| Collectors: filesystem, git, schema | fs + git | + schema | + schema | ast, depgraph, command |
+| Schemas: `rule`, `config`, `output` (versioned JSON Schema) | ready | ready | ready | |
+| Renderers: terminal, JSON, Markdown, SARIF 2.1.0 | term + json + md | + SARIF | + SARIF | HTML |
+| `core` pack — 4 rules | ready | ready | ready | |
+| `agent-tool` pack — 3 rules (opt-in) | | ready | ready | |
+| **LLM adapter** (`internal/adapter/llm/`, Google Gemini) | | | ready | OpenAI / Anthropic / Ollama |
+| Packs: `web-saas`, `iac`, `mobile`, `data-event` | | | | Phase 3b |
+| Metrics pipeline (`context_span_p50`, `blast_radius_score`, …) | | | | Phase 3b |
+| `archfit fix` (auto-remediation) | | | | Phase 3c |
+| `go-arch-lint` + `golangci-lint` configs (contracts) | | ready | ready | |
+| End-to-end golden tests (`testdata/e2e/`) | | ready | ready | |
+| GitHub Actions CI: lint + test + self-scan + cross-build matrix | | ready | ready | |
 
 The full plan is in [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md). The release
 log is in [`CHANGELOG.md`](./CHANGELOG.md).
@@ -72,10 +75,12 @@ make build
 ./bin/archfit version
 ```
 
-Requires Go 1.23 or newer. No CGO, no external dependencies — the 0.2.0
-binary is still pure standard library.
+Requires **Go 1.24** or newer (bumped from 1.23 in 0.3.0 because
+`google.golang.org/genai` requires it — the only non-stdlib runtime dep, used
+solely for opt-in `--with-llm`; see [ADR 0003](./docs/adr/0003-llm-explanation.md)
+and [`docs/dependencies.md`](./docs/dependencies.md)). No CGO.
 
-Pre-built binaries, Homebrew tap, and Docker image are Phase 3.
+Pre-built binaries, Homebrew tap, and Docker image are Phase 3b.
 
 ---
 
@@ -121,7 +126,7 @@ Pre-built binaries, Homebrew tap, and Docker image are Phase 3.
 ### Example output
 
 ```
-archfit 0.2.0 — target . (profile=standard)
+archfit 0.3.0 — target . (profile=standard)
 rules evaluated: 7, findings: 0
 overall score: 100.0
   P1: 100.0
@@ -142,7 +147,7 @@ see [`docs/exit-codes.md`](./docs/exit-codes.md):
 | `1` | Findings at or above `--fail-on` (default: `error`) |
 | `2` | Usage error |
 | `3` | Runtime error |
-| `4` | Configuration error |
+| `4` | Configuration error (e.g. `--with-llm` without an API key) |
 
 Treat `1` as a signal to re-read the JSON, not as a crash. `archfit diff`
 uses the same convention — exit `1` when new findings appear vs. the
@@ -164,13 +169,17 @@ baseline, which is the intended PR-gate behavior.
 │ fs, git, │   │  core, agent-    │   │ terminal, json,   │
 │  schema  │   │  tool (YAML + Go │   │ md, SARIF 2.1.0   │
 │(via exec │   │  resolvers)      │   │   (HTML later)    │
-│ adapter) │   └──────────────────┘   └───────────────────┘
-└──────────┘
+│ adapter) │   └──────────┬───────┘   └─────────┬─────────┘
+└──────────┘              │                     │
+                          │   ┌─────────────────┴─┐  (opt-in,
+                          └──▶│ LLM adapter       │   off hot
+                              │ Gemini (Phase 3a) │   path)
+                              └───────────────────┘
 ```
 
 - **Collectors** gather facts from the filesystem, git history, and JSON
   Schema files. They *observe*; they do not judge. AST, dependency-graph,
-  and command-execution collectors arrive in Phase 3.
+  and command-execution collectors arrive in Phase 3b.
 - **Rule packs** declare rules in YAML and implement resolvers in Go.
   Resolvers are pure functions of a read-only `FactStore` — they never perform
   I/O. This is archfit's own aggregation principle (P5), enforced on itself
@@ -178,15 +187,61 @@ baseline, which is the intended PR-gate behavior.
 - **Renderers** produce human- and machine-readable output. JSON is the
   primary machine contract and conforms to [`schemas/output.schema.json`](./schemas/output.schema.json);
   SARIF 2.1.0 is the CI/code-scanning contract.
+- **LLM adapter** (`internal/adapter/llm/`) is the single network boundary
+  for Gemini. It is only engaged when the user passes `--with-llm`; the base
+  scan path is byte-identical whether or not an API key is set.
 
 Rule registration is explicit — `cmd/archfit/main.go` calls each pack's
 `Register` function. There is no reflection, no `init()`-based auto-discovery,
 no plugin magic. Adding a pack is a two-line diff.
 
-The design rationale is in
-[`docs/adr/0001-architecture-overview.md`](./docs/adr/0001-architecture-overview.md)
-and
-[`docs/adr/0002-phase2-dogfood-and-sarif.md`](./docs/adr/0002-phase2-dogfood-and-sarif.md).
+Design rationale:
+[ADR 0001 — architecture overview](./docs/adr/0001-architecture-overview.md),
+[ADR 0002 — Phase 2 dogfood & SARIF](./docs/adr/0002-phase2-dogfood-and-sarif.md),
+[ADR 0003 — LLM explanation](./docs/adr/0003-llm-explanation.md).
+
+---
+
+## LLM-assisted explanation (opt-in)
+
+Static remediation docs answer *"what do I do when this rule fires, in
+general"*. They can't answer *"why did my repo trigger this, given the
+specific evidence"* or *"what exact change would fix it here"*. `--with-llm`
+closes that gap — without ever touching the default scan path.
+
+```bash
+export GOOGLE_API_KEY=...          # or GEMINI_API_KEY
+./bin/archfit scan --with-llm .
+./bin/archfit explain --with-llm P1.LOC.001
+./bin/archfit scan --with-llm --llm-budget=20 --json . \
+  | jq '.findings[].llm_suggestion'
+```
+
+Guarantees (enforced by tests under `testdata/e2e/`):
+
+- **Opt-in only.** The base `archfit scan .` makes zero LLM calls — same
+  bytes, same exit code, whether or not a key is set.
+- **Bounded cost.** `--llm-budget N` caps calls per run (default **5**).
+  Identical prompts within a run are served from an in-memory cache.
+- **Never fails the scan.** If the API is down or slow, archfit logs a
+  single stderr line per skipped finding and keeps the static remediation.
+- **Minimal data.** Only the rule ID/title/rationale, the finding's
+  evidence map, and your declared `project_type` are sent. **Source code,
+  file contents, git history, and environment variables are not.**
+- **Never auto-fixes.** Suggestions are advisory; `archfit fix` is Phase 3c.
+
+Configuration summary (full contract: [`docs/llm.md`](./docs/llm.md)):
+
+| Setting | Where | Default |
+|---|---|---|
+| API key | `GOOGLE_API_KEY` / `GEMINI_API_KEY` env | **required** — exit `4` if missing |
+| Model | `LLM_MODEL` env | `gemini-2.5-flash` |
+| Per-run budget | `--llm-budget N` | `5` |
+| Per-call timeout | (not configurable) | `30s` |
+
+The provider is pluggable — the `llm.Client` interface in
+`internal/adapter/llm/` is provider-agnostic. OpenAI, Anthropic, and Ollama
+backends are Phase 3b.
 
 ---
 
@@ -232,7 +287,7 @@ All 7 rules ship at `strong` evidence and `experimental` stability.
 | [`P7.MRD.002`](./docs/rules/P7.MRD.002.md) | Machine-readability | A `CHANGELOG.md` exists at the repo root |
 | [`P7.MRD.003`](./docs/rules/P7.MRD.003.md) | Machine-readability | A repo with a `cmd/` binary records ADRs under `docs/adr/` |
 
-More packs (`web-saas`, `iac`, `mobile`, `data-event`) arrive in Phase 3.
+More packs (`web-saas`, `iac`, `mobile`, `data-event`) arrive in Phase 3b.
 Breadth is deliberately paced: seven solid `strong`-evidence rules beat a
 hundred weak ones.
 
@@ -241,10 +296,10 @@ hundred weak ones.
 ## Configuration
 
 archfit reads `.archfit.yaml` (or `.archfit.yml` / `.archfit.json`) from the
-repository root. In Phase 1 and 2 the file is parsed as JSON — YAML 1.2 is a
+repository root. Through Phase 3a, the file is parsed as JSON — YAML 1.2 is a
 strict superset, so the JSON document round-trips through any YAML tool. Full
-YAML syntax (anchors, block scalars, unquoted strings) lands in Phase 3 when
-`yaml.v3` is introduced.
+YAML syntax (anchors, block scalars, unquoted strings) lands in Phase 3b
+when `yaml.v3` is introduced.
 
 The easy way to get started:
 
@@ -324,6 +379,18 @@ To gate pull requests on *new* findings only (not the existing backlog), use
   run: archfit diff baseline.json   # exits 1 when new findings appear
 ```
 
+If you'd like PR comments with LLM-authored explanations for new findings,
+add a second step with `--with-llm` — keep the gate step above without the
+flag so CI stays deterministic:
+
+```yaml
+- name: LLM-annotated diff (PR comment)
+  if: github.event_name == 'pull_request'
+  env:
+    GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  run: archfit scan --with-llm --llm-budget=10 --json . > archfit-annotated.json
+```
+
 The repo's own CI is in
 [`.github/workflows/ci.yml`](./.github/workflows/ci.yml): it runs
 `make lint`, `make test`, `make self-scan`, and a cross-build matrix over the
@@ -368,7 +435,10 @@ archfit/
 │   ├── model/                # Rule, Finding, Evidence, Metric, FactStore, ParseFailure
 │   ├── config/               # .archfit.yaml loading + schema validation
 │   ├── collector/            # Fact gatherers (fs, git, schema). Pure data, no judgement.
-│   ├── adapter/              # Side-effect boundary: exec, fs-write, net
+│   ├── adapter/
+│   │   ├── exec/             # Fake-able subprocess runner (git log, etc.)
+│   │   └── llm/              # Gemini client behind a Client interface (Phase 3a,
+│   │                         #   engaged only via --with-llm)
 │   ├── rule/                 # Rule engine core (not the rules themselves)
 │   ├── report/               # Renderers: terminal, json, markdown, sarif
 │   ├── score/                # Weight-based, normalized scoring
@@ -379,14 +449,15 @@ archfit/
 ├── schemas/                  # Versioned JSON Schema: rule / config / output
 ├── testdata/e2e/             # End-to-end golden tests (`make e2e`)
 ├── .claude/skills/archfit/   # Claude Code agent skill (canonical location,
-│                             # auto-discovered by Claude Code)
+│                             #   auto-discovered by Claude Code)
 ├── .github/workflows/ci.yml  # Lint + test + self-scan + cross-build matrix
 ├── docs/
-│   ├── adr/                  # Architecture Decision Records (0001, 0002)
+│   ├── adr/                  # ADRs: 0001 (overview), 0002 (Phase 2), 0003 (LLM)
 │   ├── rules/                # Human docs per rule
 │   ├── configuration.md
+│   ├── dependencies.md       # Runtime deps + justification (currently: genai)
 │   ├── exit-codes.md
-│   └── dependencies.md
+│   └── llm.md                # --with-llm user guide and contract
 ├── .archfit.yaml             # archfit's own config — used by `make self-scan`
 ├── .golangci.yaml            # Lint config (contract even when not executed)
 ├── .go-arch-lint.yaml        # Boundary rule (`packs/*` cannot import I/O)
@@ -402,6 +473,8 @@ archfit/
 The boundary is load-bearing: `packs/*` may import `internal/model` and the
 public interfaces in `internal/rule`, but **not** anything that performs I/O.
 A rule that needs a new fact grows a Collector, not a new filesystem call.
+LLM access is similarly firewalled — only `cmd/archfit/main.go` instantiates
+the real `llm.Client`; everything else sees the interface.
 
 ---
 
@@ -422,6 +495,11 @@ Every push and pull request runs the same targets in GitHub Actions, plus a
 cross-build matrix for `linux/amd64`, `linux/arm64`, `darwin/amd64`,
 `darwin/arm64`, and `windows/amd64`. The self-scan artifact is uploaded for
 debugging.
+
+No test performs network I/O. The LLM adapter's `Fake` client is used
+throughout the test suite; the `Real` client is instantiated only in
+`cmd/archfit/main.go`. This means `make test` and `make e2e` do not need —
+and do not use — `GOOGLE_API_KEY`.
 
 The **self-scan** is the forcing function. If `archfit scan ./` flags
 archfit's own code, the change is wrong: either the code needs to be fixed or
@@ -448,18 +526,27 @@ Highlights:
   `expected.json` · table test · remediation guide · `docs/rules/<id>.md`
 - **Every new Collector** ships with: tests against representative fixtures
   and a fake implementation for downstream tests
+- **Every new dependency** carries a justification comment at the import
+  site plus an entry in [`docs/dependencies.md`](./docs/dependencies.md)
 - **No** `init()` cross-package registration, reflection-based discovery, or
   global mutable state
 - **No** rules that bypass the collector boundary — if a pack needs I/O, add
   a Collector
+- **No** LLM calls on the default scan path — they live behind `--with-llm`
+  and the `internal/adapter/llm/` boundary
 
 ---
 
 ## Security
 
-See [`SECURITY.md`](./SECURITY.md) for the disclosure policy. archfit executes
-subprocesses like `git log` against the repository being scanned, so run it
-only on repositories you trust or inside a sandbox.
+See [`SECURITY.md`](./SECURITY.md) for the disclosure policy. Two
+things to keep in mind when running archfit:
+
+- archfit executes subprocesses like `git log` against the repository being
+  scanned. Run it only on repositories you trust, or inside a sandbox.
+- `--with-llm` sends rule metadata and a finding's evidence map to Google
+  Gemini. **Source code, file contents, and git history are never sent.**
+  The full data-handling contract is in [`docs/llm.md`](./docs/llm.md).
 
 ---
 
@@ -473,6 +560,8 @@ only on repositories you trust or inside a sandbox.
   over time, not a number to compete on.
 - Not a cage. Rules are advice backed by evidence. Suppression exists — with
   a reason and an expiry date — on purpose.
+- Not dependent on an LLM. The base scan is deterministic and offline; the
+  LLM path is strictly additive.
 
 ---
 
@@ -485,11 +574,18 @@ Full plan in [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md):
 - **Phase 2 — 0.2.0** ✅ `init` / `check` / `report` / `diff`, SARIF 2.1.0,
   `agent-tool` pack, end-to-end golden tests, CI, `.golangci.yaml` +
   `.go-arch-lint.yaml` contracts.
-- **Phase 3 — next** `iac` / `mobile` / `data-event` / `web-saas` packs,
-  metrics pipeline (`context_span_p50`, `blast_radius_score`, …), `archfit
-  fix`, release binaries, Docker image, Homebrew tap, YAML config (`yaml.v3`).
-- **Phase 4 — 1.0** rule IDs frozen in `core` and `web-saas`, JSON schema v1
-  certified, SARIF certified against GitHub Code Scanning, public API
+- **Phase 3a — 0.3.0** ✅ opt-in `--with-llm` via Google Gemini, isolated
+  adapter, in-memory cache + per-run budget, ADR 0003, `docs/llm.md`,
+  Go 1.24.
+- **Phase 3b — next** `web-saas` / `iac` / `mobile` / `data-event` packs,
+  metrics pipeline (`context_span_p50`, `blast_radius_score`, …), additional
+  LLM providers (OpenAI, Anthropic, Ollama) behind the same adapter, disk
+  cache + daily spend cap, release binaries, Docker image, Homebrew tap,
+  YAML config (`yaml.v3`).
+- **Phase 3c** `archfit fix` for rules with `strong` evidence and safe
+  auto-remediations.
+- **Phase 4 — 1.0** rule IDs frozen in `core` and `web-saas`, JSON schema
+  v1 certified, SARIF certified against GitHub Code Scanning, public API
   stability statement.
 
 ---

@@ -66,11 +66,40 @@ Deliberately deferred to later phases (each a design decision, not an oversight)
 - HTML renderer: deferred until SARIF is certified end-to-end.
 - `ast`, `depgraph`, `command`, `schema` collectors: added when the first rule requires each.
 
-### Phase 3 — Remaining packs and operationalization
+### Phase 3a — LLM-assisted analysis via Google Gemini (this iteration)
+
+Goal: add an **opt-in** LLM extension that produces tailored finding explanations and remediation suggestions without changing the default behavior of `archfit scan`. CLAUDE.md §13 is the governing rule: "Do not introduce LLM calls on the hot path. Any LLM-assisted explanation is opt-in via `--with-llm` and lives behind a clearly isolated adapter."
+
+Committed scope:
+
+1. **LLM adapter** (`internal/adapter/llm/`) — the single boundary for Gemini I/O. Exposes a `Client` interface; real implementation uses `google.golang.org/genai`, the fake returns canned responses for tests. No other package imports the SDK.
+2. **Dependency**: `google.golang.org/genai` added with justification comment at the import site and an entry in `docs/dependencies.md`. Go toolchain bumps to 1.24 (the minimum the SDK requires); documented in ADR 0003.
+3. **Configuration by environment**: API key read from `GOOGLE_API_KEY` or `GEMINI_API_KEY`. Missing key → the command exits `4` (config error) with a clear message. Never embeds keys in code or config.
+4. **`--with-llm` global flag** applies only to `scan`, `check`, and `explain`:
+   - `explain --with-llm <rule-id>` appends an LLM-authored, repo-contextual explanation to the static rule doc.
+   - `scan --with-llm` calls the LLM for up to `--llm-budget` (default 5) findings and attaches `llm_suggestion` to each. Non-LLM output is unchanged.
+   - `check --with-llm <rule-id>` is the single-rule variant of the above.
+5. **Determinism contract**: LLM output is excluded from golden tests and the determinism check. Base `archfit scan .` is byte-identical across runs as before. The `llm_suggestion` field only appears when `--with-llm` is set.
+6. **Safety rails**: in-run LLM budget (default 5 calls), per-call timeout (30s), and a clear "LLM unavailable — static remediation only" fallback when the network call fails. LLM errors never fail the scan.
+7. **In-memory response cache**: keyed by SHA-256 of `(model, prompt)` so repeated calls within a run are free. Disk cache is Phase 3b.
+8. **Output schema extension**: `llm_suggestion` is an optional field on each `findings[]` element. Purely additive; `schema_version` stays `0.1.0`.
+9. **Tests**: all LLM paths tested with the `Fake` client. The `Real` client is only instantiated in `cmd/archfit/main.go`. No test performs network I/O.
+10. **Documentation**: ADR 0003, `docs/llm.md` (user guide), updated `.env.example`, `docs/dependencies.md`, `CHANGELOG.md`, `README.md` quick-start.
+
+Explicit non-goals for Phase 3a (deferred with rationale):
+
+- **LLM on the main scan path**: CLAUDE.md §13 forbids it. The flag is always opt-in.
+- **Multiple providers**: the adapter interface could take OpenAI/Anthropic behind the same `Client`, but Phase 3a ships with Gemini only. Adding another provider is a Phase 3b task.
+- **LLM-driven rule authoring / auto-fix**: creating source edits from LLM suggestions is `archfit fix` territory, kept in the Phase 3c bucket until the Gemini explanation loop proves stable.
+- **Disk-backed cache / billing meter**: in-memory only for now; a disk cache + per-day budget land in Phase 3b alongside telemetry.
+
+### Phase 3b+ — Remaining packs and operationalization
 
 - `iac`, `mobile`, `data-event` packs.
 - Metric pipeline: `context_span_p50`, `verification_latency_s`, `invariant_coverage`, `parallel_conflict_rate`, `rollback_signal`, `blast_radius_score`.
 - `archfit fix` for rules with `strong` evidence and safe auto-fixes.
+- Additional LLM providers behind the same adapter interface.
+- Disk-backed response cache, daily spend cap, and usage telemetry for `--with-llm`.
 - CI workflow, cross-platform release binaries, Docker image, Homebrew tap.
 
 ### Phase 4 — 1.0

@@ -176,6 +176,21 @@ type Finding struct {
 	Message          string           `json:"message"`
 	Evidence         map[string]any   `json:"evidence"`
 	Remediation      Remediation      `json:"remediation"`
+	// LLMSuggestion is populated only when `--with-llm` is used. It carries
+	// the LLM-authored explanation/remediation text. Omitted from JSON output
+	// when empty, so the default scan path remains byte-identical (schema
+	// version 0.1.0 stays additive per CLAUDE.md §9). See ADR 0003.
+	LLMSuggestion *LLMSuggestion `json:"llm_suggestion,omitempty"`
+}
+
+// LLMSuggestion is the structured form of an LLM-authored explanation.
+// The text is always present; other fields record provenance for auditability.
+type LLMSuggestion struct {
+	Text      string `json:"text"`
+	Model     string `json:"model,omitempty"`
+	CacheHit  bool   `json:"cache_hit,omitempty"`
+	Truncated bool   `json:"truncated,omitempty"`
+	LatencyMS int64  `json:"latency_ms,omitempty"`
 }
 
 type Metric struct {

@@ -187,6 +187,14 @@ func renderTerminal(w io.Writer, res core.ScanResult, toolVersion, profile strin
 			path = "(repo)"
 		}
 		fmt.Fprintf(w, "  [%s] %s %s — %s\n", f.Severity, f.RuleID, path, f.Message)
+		if f.LLMSuggestion != nil && f.LLMSuggestion.Text != "" {
+			cacheTag := ""
+			if f.LLMSuggestion.CacheHit {
+				cacheTag = " (cached)"
+			}
+			fmt.Fprintf(w, "    ─ llm%s:\n", cacheTag)
+			writeIndented(w, f.LLMSuggestion.Text, "      ")
+		}
 	}
 	if len(res.Errors) > 0 {
 		fmt.Fprintln(w, "rule errors:")
@@ -195,6 +203,21 @@ func renderTerminal(w io.Writer, res core.ScanResult, toolVersion, profile strin
 		}
 	}
 	return nil
+}
+
+// writeIndented prints s with the given prefix in front of every line,
+// preserving line breaks. Used for multi-line LLM suggestions.
+func writeIndented(w io.Writer, s, prefix string) {
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			fmt.Fprintf(w, "%s%s\n", prefix, s[start:i])
+			start = i + 1
+		}
+	}
+	if start < len(s) {
+		fmt.Fprintf(w, "%s%s\n", prefix, s[start:])
+	}
 }
 
 func renderMarkdown(w io.Writer, res core.ScanResult, toolVersion, profile string) error {

@@ -10,6 +10,44 @@ are called out explicitly below with migration notes.
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-04-24
+
+### Added
+
+- **LLM-assisted explanation (`--with-llm`)**: opt-in enrichment of `scan`,
+  `check`, and `explain` with Google Gemini. Produces a short,
+  evidence-specific follow-up to each finding's static remediation.
+  Requires `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) in the environment.
+  Documented in [`docs/llm.md`](./docs/llm.md) and
+  [ADR 0003](./docs/adr/0003-llm-explanation.md).
+- **`internal/adapter/llm/`**: the single network boundary for LLM calls.
+  Exposes a provider-agnostic `Client` interface with three implementations:
+  `Real` (backed by `google.golang.org/genai`), `Fake` (tests), plus
+  `Cached` and `Budget` decorators for cost control.
+- **`--llm-budget N`** flag (default `5`) caps the number of LLM calls per
+  run. In-memory response cache makes repeated prompts free within a run.
+- **`Finding.LLMSuggestion`** — optional field emitted only when
+  `--with-llm` is used. Purely additive; `schema_version` stays `0.1.0`.
+  SARIF results include it under `properties.llm_suggestion`.
+
+### Changed
+
+- **Go toolchain minimum: `1.24`** (was `1.23`). Required by
+  `google.golang.org/genai v1.54.0`. Noted in `docs/dependencies.md` and
+  ADR 0003. Cross-compile targets unchanged.
+- **First non-stdlib runtime dependency**: `google.golang.org/genai`.
+  Used only inside `internal/adapter/llm/real.go`; every other package
+  depends on the local `llm.Client` interface, never on the SDK.
+
+### Non-breaking
+
+- `archfit scan .` without `--with-llm` is byte-identical to 0.2.0. The
+  end-to-end golden tests under `testdata/e2e/` continue to pin the
+  non-LLM output.
+- LLM failures (missing key with `--with-llm` set, network error, budget
+  exhausted mid-run) never fail the scan — static remediation is the
+  fallback and base exit codes are preserved.
+
 ## [0.2.0] — 2026-04-24
 
 ### Added

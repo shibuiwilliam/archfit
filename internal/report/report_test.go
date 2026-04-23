@@ -74,6 +74,57 @@ func TestRenderTerminal_Readable(t *testing.T) {
 	}
 }
 
+func TestRenderJSON_OmitsLLMSuggestionWhenAbsent(t *testing.T) {
+	// CLAUDE.md §9 + ADR 0003: base JSON must be byte-identical when LLM not used.
+	res := sampleResult() // helper defined below; no LLMSuggestion set.
+	var buf bytes.Buffer
+	if err := report.Render(&buf, res, "0.1.0", "standard", report.FormatJSON); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(buf.String(), "llm_suggestion") {
+		t.Errorf("unused llm_suggestion field leaked into JSON output:\n%s", buf.String())
+	}
+}
+
+func TestRenderJSON_IncludesLLMSuggestionWhenPresent(t *testing.T) {
+	res := sampleResult()
+	res.Findings[0].LLMSuggestion = &model.LLMSuggestion{
+		Text:     "add CLAUDE.md with the four required sections",
+		Model:    "fake",
+		CacheHit: false,
+	}
+	var buf bytes.Buffer
+	if err := report.Render(&buf, res, "0.1.0", "standard", report.FormatJSON); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "llm_suggestion") {
+		t.Errorf("llm_suggestion missing from JSON:\n%s", buf.String())
+	}
+	if !strings.Contains(buf.String(), "four required sections") {
+		t.Errorf("suggestion text not preserved:\n%s", buf.String())
+	}
+}
+
+func TestRenderTerminal_ShowsLLMSuggestion(t *testing.T) {
+	res := sampleResult()
+	res.Findings[0].LLMSuggestion = &model.LLMSuggestion{
+		Text:     "line one\nline two",
+		Model:    "fake",
+		CacheHit: true,
+	}
+	var buf bytes.Buffer
+	if err := report.Render(&buf, res, "0.1.0", "standard", report.FormatTerminal); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "llm") || !strings.Contains(out, "(cached)") {
+		t.Errorf("terminal output missing llm section with cached tag:\n%s", out)
+	}
+	if !strings.Contains(out, "line one") || !strings.Contains(out, "line two") {
+		t.Errorf("multiline LLM text not preserved:\n%s", out)
+	}
+}
+
 func TestParseFormat(t *testing.T) {
 	cases := map[string]report.Format{
 		"":         report.FormatTerminal,

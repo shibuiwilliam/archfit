@@ -140,17 +140,22 @@ func RenderSARIF(w io.Writer, res core.ScanResult, rules []model.Rule, toolVersi
 	}
 
 	for _, f := range res.Findings {
+		props := map[string]interface{}{
+			"principle":         string(f.Principle),
+			"evidence_strength": string(f.EvidenceStrength),
+			"confidence":        f.Confidence,
+			"evidence":          f.Evidence,
+			"remediation":       f.Remediation,
+		}
+		// Additive per ADR 0003: only emit llm_suggestion when present.
+		if f.LLMSuggestion != nil {
+			props["llm_suggestion"] = f.LLMSuggestion
+		}
 		result := sarifResult{
-			RuleID:  f.RuleID,
-			Level:   severityToSARIFLevel(f.Severity),
-			Message: sarifText{Text: f.Message},
-			Properties: map[string]interface{}{
-				"principle":         string(f.Principle),
-				"evidence_strength": string(f.EvidenceStrength),
-				"confidence":        f.Confidence,
-				"evidence":          f.Evidence,
-				"remediation":       f.Remediation,
-			},
+			RuleID:     f.RuleID,
+			Level:      severityToSARIFLevel(f.Severity),
+			Message:    sarifText{Text: f.Message},
+			Properties: props,
 		}
 		// SARIF requires at least one location per result in strict mode; we
 		// emit a synthetic repo-root location when the finding has no path.
