@@ -54,5 +54,21 @@ See [Rules Overview](rules/index.md) for details on each rule.
 - **Deterministic**: base scan makes zero network calls, produces byte-identical output
 - **LLM-enriched** (opt-in): `--with-llm` adds contextual explanations via Claude, OpenAI, or Gemini
 - **Auto-fix**: `archfit fix` closes the scan-fix-verify loop with automatic rollback on failure
+- **Fitness contracts**: declare hard constraints, area budgets, and agent directives in `.archfit-contract.yaml`
 - **CI-ready**: SARIF, JSON, and Markdown output; `archfit diff` for PR gates
 - **Self-consistent**: archfit passes its own scan at score 100.0
+
+## Documentation
+
+| Page | Description |
+|------|-------------|
+| [Getting Started](getting-started.md) | Installation, first scan, common commands |
+| [Configuration](configuration.md) | `.archfit.yaml` reference |
+| [Fitness Contract](contract.md) | `.archfit-contract.yaml` — hard constraints, area budgets, agent directives |
+| [Rules](rules/index.md) | Rule catalog with detection patterns and remediation |
+| [Auto-Fix](fix.md) | `archfit fix` — scan-fix-verify loop |
+| [LLM Integration](llm.md) | `--with-llm` — Claude, OpenAI, Gemini enrichment |
+| [CI/CD Integration](ci-cd.md) | SARIF, PR gates, trend tracking |
+| [Exit Codes](exit-codes.md) | CLI exit code contract |
+| [Dependencies](dependencies.md) | Runtime and build dependencies |
+| [Deployment](deployment.md) | Release process and distribution |

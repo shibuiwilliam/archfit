@@ -313,6 +313,69 @@ make update-golden  # regenerate expected.json files (review carefully)
 
 ---
 
-## 16. When this file and reality disagree
+## 16. Implementation guide for ongoing work
+
+Each numbered step is a self-contained PR-sized unit of work. For detailed technical specs, see `development/`.
+
+### Fix engine (`internal/fix/`)
+
+- **Fixer interface**: `Plan(ctx, finding, facts) → []Change`. Static fixers return deterministic changes; LLM fixers call the adapter. Both registered explicitly in `buildFixEngine()` in `main.go`.
+- **Engine loop**: scan → plan → snapshot originals → apply → re-scan → rollback if regression.
+- **Static fixers** in `internal/fix/static/` use `//go:embed` + `text/template`.
+- **LLM fixers** in `internal/fix/llmfix/` wrap static fixers and enrich via `llm.Client`. Fallback on LLM failure.
+- **Adding a fixer**: implement `fix.Fixer`, add to `buildFixEngine()`, add unit test, update remediation doc.
+
+### Metrics and collectors
+
+- **New collector**: add under `internal/collector/<topic>/` with fake for tests. Wire into `core.Scan()` in `scheduler.go`. Update `FactStore` interface — this requires an ADR.
+- **New metric**: pure function in `internal/score/metrics.go`. Property-based tests preferred.
+
+### Ecosystem and packs
+
+- **External packs** are Go modules compiled into a custom binary. Runtime plugin loading is forbidden.
+- **Organization policies** (`internal/policy/`): post-processing only, does not affect how rules run.
+- **Adding a pack**: use `archfit new-pack <name>`, register in `buildRegistry()` in `main.go`.
+
+### Fitness contract (`internal/contract/`)
+
+- **Contract types**: `Contract`, `Constraint`, `AreaBudget`, `AgentDirective` in `internal/contract/contract.go`.
+- **Check function**: `Check(contract, scores, findings) → CheckResult`. Pure function, no I/O.
+- **Loading**: same JSON-in-YAML pattern as `internal/config/`.
+- **CLI** (next step): `archfit contract check/status/init`. New exit code 5 for soft-target miss (ADR required).
+- **Agent integration** (next step): skill reads contract before starting work, respects area budgets, follows directives.
+- See `development/fitness-contract.md` for full design.
+
+### Agent observatory (`internal/observer/` — not yet started)
+
+- **Trace types**: `Trace`, `Event`, `EventType` in `internal/observer/trace.go`.
+- **Behavioral metrics**: pure functions computing `agent_context_efficiency`, `agent_retry_rate`, etc. from traces.
+- **Hotspot analysis**: cross-reference traces with static findings.
+- **CLI**: `archfit observe --trace-dir .agent-traces/`. Read-only, exit 0 always.
+- **Boundary**: observer reads trace files. It never instruments the agent.
+- See `development/agent-observatory.md` for full design.
+
+### Adaptive engine (`internal/adaptive/` — not yet started)
+
+- **Confidence adjustment**: post-processing layer that adjusts findings AFTER resolvers run.
+- **Opt-in**: `--adaptive` flag or `adaptive: true` in `.archfit.yaml`.
+- **Fix outcome tracking**: extend `internal/fix/log.go` with `RepoSignals`.
+- **Threshold adaptation**: context-aware numeric thresholds. May need optional `FactStore` method (ADR required).
+- Resolvers remain pure. The adaptive layer never modifies resolver functions.
+- See `development/adaptive-engine.md` for full design.
+
+### Quality gates (every step)
+
+- [ ] `make lint` passes (< 5s)
+- [ ] `make test` passes (< 30s)
+- [ ] `make self-scan` exits 0
+- [ ] No new `//nolint` without reason comment
+- [ ] No new dependency without justification + `docs/dependencies.md` entry
+- [ ] No changes to `internal/model/` without ADR
+- [ ] No changes to JSON output schema without `schema_version` consideration
+- [ ] PR ≤ 500 changed lines, ≤ 5 packages touched
+
+---
+
+## 17. When this file and reality disagree
 
 This file is the contract, not the reality. If you find the repository doing something this file forbids, the first move is **not** to update this file to match. Raise the contradiction, decide which side is right, and only then change one of them. Silent drift between `CLAUDE.md` and the code is exactly the kind of thing archfit itself is meant to prevent.

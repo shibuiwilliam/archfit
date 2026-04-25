@@ -3,8 +3,7 @@
 > **Architecture fitness evaluator for the coding-agent era.**
 > Measure how well your repository is shaped for coding agents to work on *safely* and *quickly*.
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/your-org/archfit.svg)](https://pkg.go.dev/github.com/your-org/archfit)
-[![CI](https://github.com/your-org/archfit/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/archfit/actions)
+[![CI](https://github.com/shibuiwilliam/archfit/actions/workflows/ci.yml/badge.svg)](https://github.com/shibuiwilliam/archfit/actions)
 [![Self-scan](https://img.shields.io/badge/self--scan-passing-brightgreen)](./docs/self-scan.md)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](./LICENSE)
 
@@ -44,43 +43,35 @@ Output is available as terminal text, Markdown, JSON, SARIF, and HTML.
 
 ## Status
 
-**Early development.** archfit is pre-1.0. The rule IDs, configuration schema, and JSON output are stabilizing but may still change. See [`CHANGELOG.md`](./CHANGELOG.md) and the "Stability" section below.
+**Active development (v0.3.x).** archfit is pre-1.0 with 10 rules across 2 packs, a working fix engine, multi-provider LLM support, SARIF output, metrics pipeline, and a Claude Code agent skill. Rule IDs, configuration schema, and JSON output are stabilizing but may still change. See [`CHANGELOG.md`](./CHANGELOG.md) and the "Stability" section below.
 
 ---
 
 ## Install
 
-### From release binaries
-
-```bash
-# Linux/macOS
-curl -sSL https://github.com/your-org/archfit/releases/latest/download/archfit_$(uname -s)_$(uname -m).tar.gz \
-  | tar -xz -C /usr/local/bin archfit
-
-# Verify
-archfit --version
-```
-
-Pre-built binaries are provided for `linux/amd64`, `linux/arm64`, `darwin/amd64`, `darwin/arm64`, and `windows/amd64`.
-
 ### From source
 
 ```bash
-go install github.com/your-org/archfit/cmd/archfit@latest
+git clone https://github.com/shibuiwilliam/archfit.git
+cd archfit
+make build
+./bin/archfit version
 ```
 
-Requires Go 1.23 or newer. No CGO.
+Requires **Go 1.24+**. No CGO. Cross-compiles to `linux/{amd64,arm64}`, `darwin/{amd64,arm64}`, and `windows/amd64`.
 
-### Via Homebrew
+### From release binaries
 
 ```bash
-brew install your-org/tap/archfit
+curl -sSL https://github.com/shibuiwilliam/archfit/releases/latest/download/archfit-<version>-linux-amd64.tar.gz \
+  | tar xz
+./archfit version
 ```
 
 ### Via Docker
 
 ```bash
-docker run --rm -v "$PWD:/repo" ghcr.io/your-org/archfit:latest scan /repo
+docker run --rm -v "$PWD:/repo" ghcr.io/shibuiwilliam/archfit:latest scan /repo
 ```
 
 ---
@@ -124,31 +115,40 @@ archfit diff main.json pr.json --format=markdown
 | **P6. Reversibility** | Can every change be rolled back cheaply? Is blast radius bounded? |
 | **P7. Machine-readability** | Are outputs, errors, logs, and ADRs readable by agents, not just humans? |
 
-Each principle expands into dimensions, and dimensions into concrete rules with IDs like `P5.RSK.002`. See [`docs/principles.md`](./docs/principles.md) and [`docs/rules/`](./docs/rules/) for the full catalog.
+Each principle expands into dimensions, and dimensions into concrete rules with IDs like `P1.LOC.001`. See [`docs/rules/`](./docs/rules/) for the full catalog.
 
 ---
 
 ## How archfit works
 
 ```
-          ┌──────────────────────────────┐
-          │          archfit CLI          │
-          └───────────────┬───────────────┘
-                          │
-     ┌────────────────────┼────────────────────┐
-     │                    │                    │
-┌────▼─────┐    ┌─────────▼────────┐    ┌──────▼──────┐
-│ Collectors│    │  Rule Packs      │    │  Renderers  │
-│  fs,git,  │    │  core,web-saas,  │    │ term,json,  │
-│  ast,exec │    │  iac,mobile,…    │    │ md,sarif,html│
-└───────────┘    └──────────────────┘    └─────────────┘
+          +------------------------------+
+          |          archfit CLI          |
+          +--------------+---------------+
+                         |
+     +-------------------+---------------------+
+     |                   |                      |
++----v------+   +--------v---------+   +--------v-------+
+| Collectors|   |    Rule Packs    |   |   Renderers    |
+| fs, git,  |   |  core (7 rules)  |   | terminal, json,|
+|  schema,  |   |  agent-tool (3)  |   | md, SARIF 2.1.0|
+| depgraph, |   +--------+---------+   +--------+-------+
+|  command  |            |                      |
++-----------+   +--------v-------+   +----------v--------+
+                |   Fix Engine   |   |   LLM Adapter     |
+                | 7 static fixers|   | Claude | OpenAI   |
+                | + LLM fixers   |   | Gemini            |
+                +----------------+   +-------------------+
+                                       (opt-in only)
 ```
 
-- **Collectors** gather facts from the filesystem, git history, ASTs, command execution, and schema files. They do not judge — they only observe.
-- **Rule packs** contain rules declared as YAML plus Go resolvers. Resolvers receive a read-only `FactStore` and emit findings.
-- **Renderers** produce human- and machine-readable output.
+- **Collectors** gather facts from the filesystem, git history, schemas, dependency graphs, and command execution. They observe; they do not judge.
+- **Rule packs** contain rules and resolver functions. Resolvers are pure functions of a read-only `FactStore` — no I/O.
+- **Fix engine** produces deterministic file changes for each finding, then re-scans to verify. Static fixers handle templates; LLM fixers generate contextual content when `--with-llm` is set.
+- **Renderers** produce output in multiple formats. JSON conforms to `schemas/output.schema.json`; SARIF 2.1.0 integrates with GitHub Code Scanning.
+- **LLM adapter** is the single network boundary. Three backends behind one `llm.Client` interface. Only engaged via `--with-llm`.
 
-Collectors and rule packs are separated so resolvers never perform I/O. This enforces archfit's own locality and aggregation principles on itself.
+Rule registration is explicit in `cmd/archfit/main.go`. No reflection, no `init()` auto-discovery.
 
 ---
 
@@ -208,36 +208,60 @@ ignore:
 
 ## CI integration
 
-GitHub Actions:
+### SARIF for GitHub Code Scanning
 
 ```yaml
-- uses: your-org/archfit-action@v1
-  with:
-    fail-on: error
-    depth: standard
-    sarif-output: archfit.sarif
+- name: Build archfit
+  run: go install github.com/shibuiwilliam/archfit/cmd/archfit@latest
+
+- name: Scan
+  run: archfit scan --format=sarif . > archfit.sarif
+
 - uses: github/codeql-action/upload-sarif@v3
   with:
     sarif_file: archfit.sarif
 ```
 
-Examples for GitLab CI, CircleCI, and Buildkite are in [`docs/ci/`](./docs/ci/).
+### PR gate on new findings only
+
+```yaml
+- name: Baseline (main)
+  run: archfit scan --json . > baseline.json
+
+- name: Diff (PR)
+  run: archfit diff baseline.json   # exits 1 when new findings appear
+```
+
+### Auto-fix in CI
+
+```yaml
+- name: Fix and commit
+  run: |
+    archfit fix --all .
+    git diff --quiet || git commit -am "chore: archfit auto-fix"
+```
 
 ---
 
 ## Rule packs
 
+### Implemented
+
+| Pack | Rules | Covers |
+|---|---|---|
+| `core` | 7 (P1, P3, P4, P5, P6, P7) | Principles that apply to every repository |
+| `agent-tool` | 3 (P2, P7) | For tools consumed by agents: versioned schemas, CHANGELOG, ADRs |
+
+### Planned
+
 | Pack | Covers |
 |---|---|
-| `core` | Principles that apply to every repository |
 | `web-saas` | OpenAPI/GraphQL contracts, branded types, tenant isolation, feature flags |
-| `mobile` | View/logic separation, state machines for flows, snapshot tests, OS-capability adapters |
-| `desktop` | IPC surfaces, auto-update safety, credential store handling |
 | `iac` | Terraform/CDK layering, policy-as-code, plan/apply separation, drift detection |
+| `mobile` | View/logic separation, state machines for flows, snapshot tests, OS-capability adapters |
 | `data-event` | Schema registry, idempotency, DLQ, replay harnesses |
-| `agent-tool` | For tools meant to be used by agents: `--json` output, structured errors, versioned schemas |
 
-Packs are opt-in via `.archfit.yaml`. You can write your own — see [`docs/authoring-packs.md`](./docs/authoring-packs.md).
+Packs are opt-in via `.archfit.yaml`. You can write your own with `archfit new-pack <name>`.
 
 ---
 
@@ -252,7 +276,7 @@ archfit emits a set of metrics alongside findings. These are the numbers worth t
 - **`rollback_signal`** — revert-commit frequency and time-to-revert
 - **`blast_radius_score`** — estimated maximum reach of a change in each area
 
-See [`docs/metrics.md`](./docs/metrics.md) for definitions and how they are computed.
+Metrics are computed from collected facts and included in the JSON output. See [`development/metrics-and-scoring.md`](./development/metrics-and-scoring.md) for computation details.
 
 ---
 
@@ -281,7 +305,7 @@ archfit follows semantic versioning from 1.0 onward. Until then, expect:
 - **JSON output schema**: versioned via `schema_version` in output. Additive changes are minor; renames/removals are major.
 - **CLI flags and exit codes**: exit codes are contract and will not change without a major version bump.
 
-See [`docs/stability.md`](./docs/stability.md).
+See [`docs/exit-codes.md`](./docs/exit-codes.md) for exit code contract details.
 
 ---
 
@@ -316,19 +340,71 @@ All contributors are expected to follow the [Code of Conduct](./CODE_OF_CONDUCT.
 
 ## Security
 
-Report security issues privately to `security@your-org.example` or via GitHub's private vulnerability reporting. Do not open public issues for vulnerabilities. See [`SECURITY.md`](./SECURITY.md) for details and our disclosure timeline.
+See [`SECURITY.md`](./SECURITY.md) for reporting instructions.
 
-archfit executes commands like `go build`, `make test`, and `git log` against the repository being scanned. Run it only on repositories you trust, or inside a sandbox. The `--depth=shallow` mode performs no command execution and is safe for untrusted input.
+archfit runs `git log` against the scanned repo. Use a sandbox for untrusted repos. `--with-llm` sends rule metadata and finding evidence to the LLM provider — **source code and file contents are never sent**. Full contract: [`docs/llm.md`](./docs/llm.md).
 
 ---
 
 ## Roadmap
 
-Tracked in the [`Roadmap`](https://github.com/your-org/archfit/projects) project board. Near-term priorities:
+### Completed
 
-- **0.x → 0.y**: Stabilize rule IDs in `core` and `web-saas` packs. Freeze JSON schema at v1.
-- **1.0**: Public API stability. Complete metric definitions. SARIF output certified against GitHub Code Scanning.
-- **Post-1.0**: Remote rule-pack registry, organization policy profiles, `.agent-trace/` ingestion for replay-based findings.
+- **0.1.0**: Foundation, `core` pack (7 rules), JSON/Markdown output, self-scan, schemas.
+- **0.2.0**: `init`/`check`/`report`/`diff`, SARIF 2.1.0, `agent-tool` pack (3 rules), e2e tests, CI.
+- **0.3.x**: Multi-provider LLM (Claude, OpenAI, Gemini). P3/P5/P6 rules. `--config` flag. `archfit fix` with 7 static fixers + LLM-assisted fixers. Dockerfile + release workflow. `archfit trend` and `archfit compare`. Pack SDK (`new-pack`, `validate-pack`, `test-pack`). Organization policy profiles (`--policy`). Metrics pipeline (6 metrics). Dependency graph and command collectors.
+
+### Infrastructure: Remediation, Metrics, and Ecosystem
+
+These capabilities are largely implemented and provide the foundation for the strategic elements.
+
+- **Fix engine** (implemented): `archfit fix` with 7 static fixers + LLM-assisted fixers. Scan → fix → verify loop with automatic rollback. Remaining: fix conflict resolution, richer LLM prompts.
+- **Metrics pipeline** (implemented): 6 metrics (`context_span_p50`, `verification_latency_s`, `invariant_coverage`, `parallel_conflict_rate`, `rollback_signal`, `blast_radius_score`), `archfit trend`, `archfit compare`.
+- **Ecosystem platform** (implemented): Pack SDK, organization policies (`--policy`), cross-repo compare. Remaining: remote pack registry, community publishing.
+
+### Next: Three Strategic Elements
+
+Three capabilities transform archfit from a point-in-time audit tool into continuous architecture infrastructure. See `development/` for detailed implementation guides.
+
+#### Element 1 — Agent Behavior Observatory
+
+Watch real agents work on a repo, measure what actually causes failures, and feed behavioral metrics back into scoring. This is a genuinely new category — no competitor observes the *agent* as it works.
+
+- **Trace collection**: ingest agent session traces (files read/written, commands run, retries)
+- **Behavioral metrics**: `agent_context_efficiency`, `agent_retry_rate`, `agent_time_to_first_verify`, `agent_cross_boundary_reads`, `agent_dangerous_touches`, `agent_rollback_frequency`
+- **Hotspot analysis**: cross-reference behavioral data with static findings to identify areas where agents struggle most
+
+Status: not started. See [`development/agent-observatory.md`](./development/agent-observatory.md).
+
+#### Element 2 — Fitness Contract as Code
+
+Move from "run archfit and read the report" to "declare fitness requirements in a machine-executable contract that agents, CI, and IDEs consume continuously."
+
+- **`.archfit-contract.yaml`**: hard constraints (must satisfy), soft targets (aspirational), area budgets (SRE-style finding budgets per path), agent directives (machine-readable instructions for coding agents)
+- **Contract enforcement**: `archfit contract check` for CI gating
+- **Agent integration**: Claude Code skill reads the contract before starting work, respects area budgets, follows directives
+
+Status: contract types and checking logic implemented (`internal/contract/`). CLI wiring next. See [`development/fitness-contract.md`](./development/fitness-contract.md).
+
+#### Element 3 — Adaptive Rule Engine
+
+Let archfit learn from fix outcomes, suppress history, and repo characteristics to tune confidence and thresholds automatically.
+
+- **Fix outcome tracking**: extend audit log with repo signals
+- **Adaptive confidence**: adjust finding confidence based on fix success rates and suppress rates
+- **Threshold adaptation**: scale numeric thresholds (e.g., P5.AGG.001's `maxTopLevelDirs`) based on repo size
+- **Community telemetry** (future): anonymized, opt-in data sharing for cross-project calibration
+
+Status: not started. See [`development/adaptive-engine.md`](./development/adaptive-engine.md).
+
+### Toward 1.0
+
+- Stabilize rule IDs in `core` and `agent-tool` packs.
+- Freeze JSON output schema at v1.
+- SARIF output certified against GitHub Code Scanning.
+- Public API stability statement.
+- Additional packs: `web-saas`, `iac`, `mobile`, `data-event`.
+- Cross-stack detection improvements (Java, Ruby, PHP, Terraform — see [`development/cross-stack-improvements.md`](./development/cross-stack-improvements.md)).
 
 ---
 
