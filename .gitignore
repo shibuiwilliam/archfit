@@ -58,6 +58,7 @@ Thumbs.db
 # .claude/skills/ is INTENTIONALLY tracked — it ships as part of archfit.
 .claude/settings.local.json
 .claude/settings.json
+.claude/worktrees/
 
 # Log files
 *.log
