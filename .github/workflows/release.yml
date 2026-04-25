@@ -1,5 +1,8 @@
 name: release
 
+# Manual release: push a v* tag for minor/major version bumps.
+# For automatic patch releases on main, see auto-release.yml.
+
 on:
   push:
     tags:

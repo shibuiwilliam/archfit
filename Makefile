@@ -5,7 +5,10 @@ GO          ?= go
 PKG          := ./...
 BIN_DIR     := bin
 BIN         := $(BIN_DIR)/archfit
-LDFLAGS     := -s -w -X github.com/shibuiwilliam/archfit/internal/version.Version=$(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+VERSION     := $(shell cat VERSION 2>/dev/null || echo dev)
+GIT_DIRTY   := $(shell git diff --quiet 2>/dev/null || echo "-dirty")
+BUILD_VER   := $(VERSION)$(GIT_DIRTY)
+LDFLAGS     := -s -w -X github.com/shibuiwilliam/archfit/internal/version.Version=$(BUILD_VER)
 
 .PHONY: all
 all: lint test build
