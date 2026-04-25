@@ -87,6 +87,9 @@ func checkEnvFiles(repo model.RepoFacts) *model.Finding {
 	}
 	var envFiles []string
 	for _, f := range repo.Files {
+		if isFixtureOrTestdata(f.Path) {
+			continue
+		}
 		base := fileBase(f.Path)
 		if !strings.HasPrefix(base, ".env") {
 			continue
@@ -119,6 +122,9 @@ func checkSpringProfiles(repo model.RepoFacts) *model.Finding {
 	}
 	var profiles []string
 	for _, f := range repo.Files {
+		if isFixtureOrTestdata(f.Path) {
+			continue
+		}
 		base := fileBase(f.Path)
 		if !strings.HasPrefix(base, "application-") {
 			continue
@@ -151,6 +157,9 @@ func checkTerraformVars(repo model.RepoFacts) *model.Finding {
 	}
 	var tfvarsFiles []string
 	for _, f := range repo.Files {
+		if isFixtureOrTestdata(f.Path) {
+			continue
+		}
 		base := fileBase(f.Path)
 		if strings.HasSuffix(base, ".tfvars") {
 			tfvarsFiles = append(tfvarsFiles, f.Path)
@@ -178,6 +187,9 @@ func checkRailsEnvironments(repo model.RepoFacts) *model.Finding {
 	}
 	var envFiles []string
 	for _, f := range repo.Files {
+		if isFixtureOrTestdata(f.Path) {
+			continue
+		}
 		if strings.HasPrefix(f.Path, "config/environments/") && strings.HasSuffix(f.Path, ".rb") {
 			envFiles = append(envFiles, f.Path)
 		}
@@ -204,6 +216,27 @@ func hasConfigDoc(repo model.RepoFacts) bool {
 		}
 	}
 	return false
+}
+
+// isFixtureOrTestdata returns true if the path lives under a directory
+// conventionally used for test fixtures. Config files inside fixtures are
+// not real project configuration and must not trigger findings.
+func isFixtureOrTestdata(path string) bool {
+	for _, prefix := range fixturePathPrefixes {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+var fixturePathPrefixes = []string{
+	"testdata/",
+	"fixtures/",
+	"test/fixtures/",
+	"tests/fixtures/",
+	"packs/core/fixtures/",
+	"packs/agent-tool/fixtures/",
 }
 
 // fileBase returns the basename of a path (last segment after /).

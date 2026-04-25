@@ -43,6 +43,9 @@ go.work.sum
 /main.json
 /pr.json
 
+# Scan records created by --record (timestamped subdirectories)
+.archfit-records/
+
 # Editor / IDE state — directories only. `.idea/`-style files inside tracked
 # docs (e.g. blog posts mentioning them) are unaffected.
 .idea/

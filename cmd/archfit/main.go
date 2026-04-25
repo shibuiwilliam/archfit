@@ -18,6 +18,7 @@ import (
 	"sort"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/shibuiwilliam/archfit/internal/adapter/exec"
 	"github.com/shibuiwilliam/archfit/internal/adapter/llm"
@@ -140,6 +141,8 @@ global flags (where applicable):
                                        (opt-in; requires ANTHROPIC_API_KEY, OPENAI_API_KEY, or GOOGLE_API_KEY)
   --llm-backend {gemini|openai|claude} LLM provider (auto-detected from env if omitted)
   --llm-budget N                       cap the number of LLM calls per run (default: 5)
+  --record <dir>                       save scan results (JSON + Markdown) to a timestamped
+                                       subdirectory under <dir> (e.g., --record .archfit-records)
 
 Exit codes:
   0   success (or: findings below --fail-on threshold)
@@ -164,6 +167,7 @@ type scanFlags struct {
 	withLLM    bool
 	llmBackend string
 	llmBudget  int
+	recordDir  string
 }
 
 func parseScanFlags(args []string, cmd string) (scanFlags, error) {
@@ -180,6 +184,7 @@ func parseScanFlags(args []string, cmd string) (scanFlags, error) {
 	fs.BoolVar(&f.withLLM, "with-llm", false, "enrich findings with LLM-authored explanations (opt-in; requires ANTHROPIC_API_KEY, OPENAI_API_KEY, or GOOGLE_API_KEY)")
 	fs.StringVar(&f.llmBackend, "llm-backend", "", "LLM provider: gemini, openai, or claude (auto-detected from env if omitted)")
 	fs.IntVar(&f.llmBudget, "llm-budget", 5, "maximum LLM calls per run (only when --with-llm)")
+	fs.StringVar(&f.recordDir, "record", "", "save scan results (JSON + Markdown) to a timestamped subdirectory under this path")
 	if err := fs.Parse(args); err != nil {
 		return f, err
 	}
@@ -314,6 +319,14 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 		}
 	}
 
+	// Record results to a timestamped subdirectory when --record is set.
+	if flags.recordDir != "" {
+		if err := recordScanResults(flags.recordDir, res, rules, version.Version, cfg.Profile, stderr); err != nil {
+			fmt.Fprintf(stderr, "scan: --record: %v\n", err)
+			return exitRuntimeError
+		}
+	}
+
 	for _, f := range res.Findings {
 		if f.Severity.Rank() >= threshold.Rank() {
 			return exitFindingsAtLevel
@@ -321,6 +334,45 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 	}
 	return exitOK
 }
+
+// recordScanResults writes JSON and Markdown files to a timestamped subdirectory
+// under baseDir. The directory name is the current UTC timestamp in
+// YYYYMMDD-HHMMSS format so results sort chronologically.
+func recordScanResults(baseDir string, res core.ScanResult, rules []model.Rule, toolVersion, profile string, stderr io.Writer) error {
+	now := timeNow().UTC()
+	subDir := filepath.Join(baseDir, now.Format("20060102-150405"))
+	if err := os.MkdirAll(subDir, 0o755); err != nil {
+		return fmt.Errorf("create record directory: %w", err)
+	}
+
+	// Write JSON record.
+	jsonPath := filepath.Join(subDir, "scan.json")
+	jsonFile, err := os.Create(jsonPath)
+	if err != nil {
+		return fmt.Errorf("create %s: %w", jsonPath, err)
+	}
+	defer func() { _ = jsonFile.Close() }()
+	if err := report.Render(jsonFile, res, toolVersion, profile, report.FormatJSON); err != nil {
+		return fmt.Errorf("write JSON record: %w", err)
+	}
+
+	// Write Markdown report.
+	mdPath := filepath.Join(subDir, "report.md")
+	mdFile, err := os.Create(mdPath)
+	if err != nil {
+		return fmt.Errorf("create %s: %w", mdPath, err)
+	}
+	defer func() { _ = mdFile.Close() }()
+	if err := report.Render(mdFile, res, toolVersion, profile, report.FormatMarkdown); err != nil {
+		return fmt.Errorf("write Markdown report: %w", err)
+	}
+
+	fmt.Fprintf(stderr, "recorded: %s\n", subDir)
+	return nil
+}
+
+// timeNow is a package-level variable so tests can override it.
+var timeNow = time.Now
 
 func cmdScore(args []string, stdout, stderr io.Writer) int {
 	// Score is a thin wrapper: run a scan, emit only the score summary.
