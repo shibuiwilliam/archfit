@@ -15,7 +15,15 @@ import (
 // sliceContainers are well-known directory names that, if present at the repo
 // root, strongly imply a vertical-slice layout. A repo that doesn't use any of
 // these is not penalized by P1.LOC.002.
-var sliceContainers = []string{"packs", "services", "modules"}
+var sliceContainers = []string{
+	"packs", "services", "modules",
+	// Monorepo conventions (Lerna, Turborepo, NX, Yarn workspaces)
+	"packages", "apps", "libs",
+	// Plugin / extension architectures (Rails engines, WordPress, etc.)
+	"plugins", "engines", "components",
+	// Domain-driven design
+	"domains", "features",
+}
 
 // LocP1LOC001 fires when neither CLAUDE.md nor AGENTS.md exists at the repo root.
 func LocP1LOC001(_ context.Context, facts model.FactStore) ([]model.Finding, []model.Metric, error) {

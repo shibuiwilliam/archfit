@@ -8,8 +8,10 @@ import (
 	"github.com/shibuiwilliam/archfit/packs/agent-tool/resolvers"
 )
 
+// PackName is the identifier for the agent-tool rule pack.
 const PackName = "agent-tool"
 
+// Rules returns all rules defined in the agent-tool pack.
 func Rules() []model.Rule {
 	return []model.Rule{
 		{
@@ -63,6 +65,17 @@ func Rules() []model.Rule {
 	}
 }
 
+// Register adds the agent-tool rules to reg.
 func Register(reg *rule.Registry) error {
-	return reg.Register(PackName, Rules()...)
+	if err := reg.Register(PackName, Rules()...); err != nil {
+		return err
+	}
+	reg.RegisterPack(rule.Pack{
+		Name:        PackName,
+		Version:     "0.3.0",
+		Description: "Rules for repositories whose consumers are coding agents",
+		Principles:  []model.Principle{model.P2SpecFirst, model.P7MachineReadability},
+		RuleCount:   len(Rules()),
+	})
+	return nil
 }

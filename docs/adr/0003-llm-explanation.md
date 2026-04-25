@@ -158,7 +158,35 @@ archfit's own code.
   output is deterministic, `--with-llm` output is not, and the two paths
   are tested separately.
 
+### 10. Additional backends: OpenAI and Claude (Phase 3b)
+
+OpenAI support was added using `github.com/openai/openai-go/v3`, the
+official OpenAI Go SDK. Claude support was added using
+`github.com/anthropics/anthropic-sdk-go`, the official Anthropic Go SDK.
+Both follow the same pattern as the Gemini backend:
+
+- `adapter/llm/openai.go` implements `Client` using the Chat Completions
+  API. It is the only file that imports the OpenAI SDK.
+- `adapter/llm/anthropic.go` implements `Client` using the Messages API.
+  It is the only file that imports the Anthropic SDK.
+- Configuration via `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` environment
+  variables respectively.
+- Default models: `gpt-5.4-mini` (OpenAI), `claude-sonnet-4-6-20250627`
+  (Claude).
+- Auto-detection: `FromEnv()` detects the backend from whichever API key
+  is present. Priority: `ANTHROPIC_API_KEY` > `OPENAI_API_KEY` >
+  `GOOGLE_API_KEY` > `GEMINI_API_KEY`.
+- Explicit override: `--llm-backend={gemini|openai|claude}` forces a
+  specific backend regardless of which keys are present.
+- The same Budget and Cached wrappers apply — no provider-specific
+  special-casing outside of the concrete client.
+
+The `llm.Client` interface proved sufficient without modification for
+all three providers, validating the original design decision to use a
+local interface rather than a vendor-neutral SDK.
+
 ## Status
 
-Accepted. Phase 3b revisits the provider abstraction once a second
-backend (OpenAI, Anthropic, or local Ollama) is requested.
+Accepted. Gemini, OpenAI, and Claude backends are available. Additional
+backends (local Ollama, etc.) can be added by implementing `llm.Client`
+without modifying existing code.

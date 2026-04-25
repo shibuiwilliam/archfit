@@ -1,0 +1,27 @@
+name: 'archfit scan'
+description: 'Run archfit architecture fitness scan and report results'
+inputs:
+  fail-on:
+    description: 'Severity threshold (info|warn|error|critical)'
+    default: 'error'
+  baseline-branch:
+    description: 'Branch to compare against'
+    default: 'main'
+  comment:
+    description: 'Post PR comment with fitness diff'
+    default: 'true'
+  sarif:
+    description: 'Generate SARIF output for Code Scanning'
+    default: 'false'
+  version:
+    description: 'archfit version to install'
+    default: 'latest'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install archfit
+      shell: bash
+      run: ${{ github.action_path }}/entrypoint.sh install "${{ inputs.version }}"
+    - name: Scan
+      shell: bash
+      run: ${{ github.action_path }}/entrypoint.sh scan "${{ inputs.fail-on }}" "${{ inputs.baseline-branch }}" "${{ inputs.comment }}" "${{ inputs.sarif }}"

@@ -5,19 +5,30 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"math"
 	"os"
+	osexec "os/exec"
 	"os/signal"
+	"path/filepath"
+	"sort"
+	"strings"
 	"syscall"
 
 	"github.com/shibuiwilliam/archfit/internal/adapter/exec"
 	"github.com/shibuiwilliam/archfit/internal/adapter/llm"
+	collectfs "github.com/shibuiwilliam/archfit/internal/collector/fs"
 	"github.com/shibuiwilliam/archfit/internal/config"
 	"github.com/shibuiwilliam/archfit/internal/core"
+	"github.com/shibuiwilliam/archfit/internal/fix"
+	"github.com/shibuiwilliam/archfit/internal/fix/static"
 	"github.com/shibuiwilliam/archfit/internal/model"
+	"github.com/shibuiwilliam/archfit/internal/packman"
+	"github.com/shibuiwilliam/archfit/internal/policy"
 	"github.com/shibuiwilliam/archfit/internal/report"
 	"github.com/shibuiwilliam/archfit/internal/rule"
 	"github.com/shibuiwilliam/archfit/internal/version"
@@ -69,6 +80,18 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdReport(rest, stdout, stderr)
 	case "diff":
 		return cmdDiff(rest, stdout, stderr)
+	case "fix":
+		return cmdFix(rest, stdout, stderr)
+	case "trend":
+		return cmdTrend(rest, stdout, stderr)
+	case "compare":
+		return cmdCompare(rest, stdout, stderr)
+	case "validate-pack":
+		return cmdValidatePack(rest, stdout, stderr)
+	case "new-pack":
+		return cmdNewPack(rest, stdout, stderr)
+	case "test-pack":
+		return cmdTestPack(rest, stdout, stderr)
 	case "version", "--version", "-v":
 		fmt.Fprintf(stdout, "archfit %s\n", version.Version)
 		return exitOK
@@ -92,11 +115,18 @@ usage:
   archfit report [path]                Markdown report (shorthand for scan --format=md)
   archfit diff <baseline.json> [current.json]
                                        compare findings between two scans
+  archfit fix [rule-id] [path]         auto-fix findings (strong-evidence rules)
+  archfit trend                        show score trends from archived scans
+  archfit compare <f1.json> <f2.json> [...]
+                                       compare scans across repos
   archfit explain <rule-id>            show a rule's rationale and remediation
   archfit init [path]                  scaffold .archfit.yaml with defaults
   archfit list-rules                   list all registered rules
   archfit list-packs                   list all registered rule packs
   archfit validate-config [path]       check .archfit.yaml without scanning
+  archfit validate-pack <path>         check pack structure
+  archfit new-pack <name> [path]       scaffold a new rule pack
+  archfit test-pack <path>             run pack tests
   archfit version                      print the version
 
 global flags (where applicable):
@@ -104,8 +134,11 @@ global flags (where applicable):
   --json                               shorthand for --format=json
   --fail-on {info|warn|error|critical} exit 1 when any finding meets this level (default: error)
   -C <dir>                             change to dir before running (like git -C)
+  --config <file>                      path to config file (default: .archfit.yaml in target dir)
+  --depth {shallow|standard|deep}      scan depth (default: standard; deep runs verification commands)
   --with-llm                           enrich findings with LLM-authored explanations
-                                       (opt-in; requires GOOGLE_API_KEY)
+                                       (opt-in; requires ANTHROPIC_API_KEY, OPENAI_API_KEY, or GOOGLE_API_KEY)
+  --llm-backend {gemini|openai|claude} LLM provider (auto-detected from env if omitted)
   --llm-budget N                       cap the number of LLM calls per run (default: 5)
 
 Exit codes:
@@ -120,13 +153,17 @@ See docs/exit-codes.md and PROJECT.md for the full contract.
 }
 
 type scanFlags struct {
-	format    string
-	json      bool
-	failOn    string
-	workDir   string
-	path      string
-	withLLM   bool
-	llmBudget int
+	format     string
+	json       bool
+	failOn     string
+	workDir    string
+	configPath string
+	path       string
+	depth      string
+	policy     string
+	withLLM    bool
+	llmBackend string
+	llmBudget  int
 }
 
 func parseScanFlags(args []string, cmd string) (scanFlags, error) {
@@ -137,7 +174,11 @@ func parseScanFlags(args []string, cmd string) (scanFlags, error) {
 	fs.BoolVar(&f.json, "json", false, "shorthand for --format=json")
 	fs.StringVar(&f.failOn, "fail-on", "error", "severity threshold that causes a non-zero exit")
 	fs.StringVar(&f.workDir, "C", "", "change to directory before running")
-	fs.BoolVar(&f.withLLM, "with-llm", false, "enrich findings with LLM-authored explanations (opt-in; requires GOOGLE_API_KEY)")
+	fs.StringVar(&f.configPath, "config", "", "path to config file (default: .archfit.yaml in target dir)")
+	fs.StringVar(&f.depth, "depth", "standard", "scan depth: shallow, standard, or deep")
+	fs.StringVar(&f.policy, "policy", "", "path to organization policy file (JSON)")
+	fs.BoolVar(&f.withLLM, "with-llm", false, "enrich findings with LLM-authored explanations (opt-in; requires ANTHROPIC_API_KEY, OPENAI_API_KEY, or GOOGLE_API_KEY)")
+	fs.StringVar(&f.llmBackend, "llm-backend", "", "LLM provider: gemini, openai, or claude (auto-detected from env if omitted)")
 	fs.IntVar(&f.llmBudget, "llm-budget", 5, "maximum LLM calls per run (only when --with-llm)")
 	if err := fs.Parse(args); err != nil {
 		return f, err
@@ -164,10 +205,10 @@ func joinIfRelative(dir, p string) string {
 	if p == "" || p == "." {
 		return dir
 	}
-	if len(p) > 0 && (p[0] == '/' || (len(p) >= 2 && p[1] == ':')) {
+	if p != "" && (p[0] == '/' || (len(p) >= 2 && p[1] == ':')) {
 		return p // absolute
 	}
-	return dir + string(os.PathSeparator) + p
+	return filepath.Join(dir, p)
 }
 
 // buildRegistry is the ONE place where packs are wired in. Add new packs here.
@@ -205,7 +246,7 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 		return exitRuntimeError
 	}
 
-	cfg, cfgPath, present, err := config.Load(flags.path)
+	cfg, err := loadConfig(flags.configPath, flags.path)
 	if err != nil {
 		fmt.Fprintf(stderr, "scan: %v\n", err)
 		return exitConfigError
@@ -220,6 +261,7 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 		Root:   flags.path,
 		Rules:  rules,
 		Runner: exec.NewReal(),
+		Depth:  flags.depth,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "scan: %v\n", err)
@@ -228,14 +270,36 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 
 	// LLM enrichment runs only when --with-llm is set. Never on the hot path
 	// (CLAUDE.md §13). Failures degrade; they never fail the scan.
-	llmClient, err := buildLLMClient(ctx, flags.withLLM, flags.llmBudget)
+	llmClient, err := buildLLMClient(ctx, flags.withLLM, flags.llmBudget, flags.llmBackend)
 	if err != nil {
 		fmt.Fprintf(stderr, "scan: --with-llm: %v\n", err)
 		return exitConfigError
 	}
 	if llmClient != nil {
-		defer llmClient.Close()
+		defer func() { _ = llmClient.Close() }()
 		enrichFindings(ctx, llmClient, rules, res.Findings, cfg.ProjectType, stderr)
+	}
+
+	// Policy enforcement (advisory — does not change exit code).
+	if flags.policy != "" {
+		pol, perr := policy.Load(flags.policy)
+		if perr != nil {
+			fmt.Fprintf(stderr, "scan: --policy: %v\n", perr)
+			return exitConfigError
+		}
+		principleScores := make(map[string]float64, len(res.Scores.ByPrinciple))
+		for p, v := range res.Scores.ByPrinciple {
+			principleScores[string(p)] = v
+		}
+		var ruleIDs []string
+		for _, r := range rules {
+			ruleIDs = append(ruleIDs, r.ID)
+		}
+		violations := policy.Enforce(pol, principleScores, res.Scores.Overall,
+			cfg.Packs.Enabled, ruleIDs, "")
+		for _, v := range violations {
+			fmt.Fprintf(stderr, "policy violation [%s]: %s\n", v.Type, v.Detail)
+		}
 	}
 
 	if format == report.FormatSARIF {
@@ -248,10 +312,6 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "scan: %v\n", err)
 			return exitRuntimeError
 		}
-	}
-
-	if present {
-		_ = cfgPath // surfaced via the renderer's target.profile field; path reserved for future verbose mode
 	}
 
 	for _, f := range res.Findings {
@@ -274,7 +334,7 @@ func cmdScore(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "score: %v\n", err)
 		return exitRuntimeError
 	}
-	cfg, _, _, err := config.Load(flags.path)
+	cfg, err := loadConfig(flags.configPath, flags.path)
 	if err != nil {
 		fmt.Fprintf(stderr, "score: %v\n", err)
 		return exitConfigError
@@ -287,6 +347,7 @@ func cmdScore(args []string, stdout, stderr io.Writer) int {
 		Root:   flags.path,
 		Rules:  rules,
 		Runner: exec.NewReal(),
+		Depth:  flags.depth,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "score: %v\n", err)
@@ -305,7 +366,8 @@ func cmdScore(args []string, stdout, stderr io.Writer) int {
 func cmdExplain(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("explain", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	withLLM := fs.Bool("with-llm", false, "append an LLM-authored explanation (requires GOOGLE_API_KEY)")
+	withLLM := fs.Bool("with-llm", false, "append an LLM-authored explanation (requires ANTHROPIC_API_KEY, OPENAI_API_KEY, or GOOGLE_API_KEY)")
+	llmBackendStr := fs.String("llm-backend", "", "LLM provider: gemini or openai (auto-detected from env if omitted)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(stderr, "explain: %v\n", err)
 		return exitUsage
@@ -336,12 +398,12 @@ func cmdExplain(args []string, stdout, stderr io.Writer) int {
 	if *withLLM {
 		ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer cancel()
-		client, err := buildLLMClient(ctx, true, 1)
+		client, err := buildLLMClient(ctx, true, 1, *llmBackendStr)
 		if err != nil {
 			fmt.Fprintf(stderr, "explain: --with-llm: %v\n", err)
 			return exitConfigError
 		}
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		cfg, _, _, _ := config.Load(".")
 		prompt := llm.BuildRulePrompt(r, cfg.ProjectType)
@@ -390,10 +452,13 @@ func cmdListPacks(_ []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "list-packs: %v\n", err)
 		return exitRuntimeError
 	}
-	for name, ids := range reg.Packs() {
-		fmt.Fprintf(stdout, "%s (%d rules)\n", name, len(ids))
-		for _, id := range ids {
-			fmt.Fprintf(stdout, "  %s\n", id)
+	packRules := reg.Packs()
+	for _, p := range reg.AllPacks() {
+		fmt.Fprintf(stdout, "%s (v%s) — %s — %d rules\n", p.Name, p.Version, p.Description, p.RuleCount)
+		if ids, ok := packRules[p.Name]; ok {
+			for _, id := range ids {
+				fmt.Fprintf(stdout, "  %s\n", id)
+			}
 		}
 	}
 	return exitOK
@@ -467,6 +532,15 @@ func filterRules(reg *rule.Registry, cfg config.Config) []model.Rule {
 	return out
 }
 
+// loadConfig loads configuration from --config if set, otherwise discovers from path.
+func loadConfig(configPath, path string) (config.Config, error) {
+	if configPath != "" {
+		return config.LoadFile(configPath)
+	}
+	cfg, _, _, err := config.Load(path)
+	return cfg, err
+}
+
 func parseSeverity(s string) (model.Severity, error) {
 	sev := model.Severity(s)
 	if !sev.Valid() {
@@ -477,26 +551,41 @@ func parseSeverity(s string) (model.Severity, error) {
 
 // ----- LLM enrichment (Phase 3a) -----
 //
-// buildLLMClient returns a ready-to-use llm.Client (Real wrapped in Budget
-// and Cached) when --with-llm is set and an API key is configured.
+// buildLLMClient returns a ready-to-use llm.Client (Real or OpenAI, wrapped
+// in Budget and Cached) when --with-llm is set and an API key is configured.
 // It returns (nil, nil) when --with-llm is not set — the caller treats that
 // as "do nothing LLM-related". It returns (nil, error) when --with-llm is set
 // but the API key is missing; the caller maps that to exit code 4.
-func buildLLMClient(ctx context.Context, withLLM bool, budget int) (llm.Client, error) {
+func buildLLMClient(ctx context.Context, withLLM bool, budget int, backend string) (llm.Client, error) {
 	if !withLLM {
 		return nil, nil
 	}
-	cfg, ok := llm.FromEnv(os.Getenv)
+	var cfg llm.Config
+	var ok bool
+	if backend != "" {
+		cfg, ok = llm.FromEnvWithBackend(os.Getenv, llm.Backend(backend))
+	} else {
+		cfg, ok = llm.FromEnv(os.Getenv)
+	}
 	if !ok {
 		return nil, llm.ErrNotConfigured
 	}
-	real, err := llm.NewReal(ctx, cfg)
+	var inner llm.Client
+	var err error
+	switch cfg.Backend {
+	case llm.BackendClaude:
+		inner, err = llm.NewAnthropic(ctx, cfg)
+	case llm.BackendOpenAI:
+		inner, err = llm.NewOpenAI(ctx, cfg)
+	default:
+		inner, err = llm.NewReal(ctx, cfg)
+	}
 	if err != nil {
 		return nil, err
 	}
-	// Canonical composition: Real → Budget → Cached (outermost).
+	// Canonical composition: inner → Budget → Cached (outermost).
 	// See internal/adapter/llm/budget.go for the rationale.
-	return llm.NewCached(llm.NewBudget(real, budget)), nil
+	return llm.NewCached(llm.NewBudget(inner, budget)), nil
 }
 
 // enrichFindings calls the LLM for each finding up to the client's budget.
@@ -511,12 +600,12 @@ func enrichFindings(ctx context.Context, client llm.Client, rules []model.Rule, 
 		byID[r.ID] = r
 	}
 	for i := range findings {
-		rule, ok := byID[findings[i].RuleID]
+		rl, ok := byID[findings[i].RuleID]
 		if !ok {
 			continue
 		}
-		prompt := llm.BuildFindingPrompt(rule, findings[i], projectType)
-		sug, err := client.Explain(ctx, rule, findings[i], prompt)
+		prompt := llm.BuildFindingPrompt(rl, findings[i], projectType)
+		sug, err := client.Explain(ctx, rl, findings[i], prompt)
 		if err != nil {
 			if errors.Is(err, llm.ErrBudgetExhausted) {
 				// Quiet exit — user explicitly set the budget.
@@ -573,10 +662,7 @@ func filepathJoin(a, b string) string {
 	if a == "" || a == "." {
 		return b
 	}
-	if a[len(a)-1] == os.PathSeparator {
-		return a + b
-	}
-	return a + string(os.PathSeparator) + b
+	return filepath.Join(a, b)
 }
 
 func cmdCheck(args []string, stdout, stderr io.Writer) int {
@@ -614,18 +700,19 @@ func cmdCheck(args []string, stdout, stderr io.Writer) int {
 		Root:   flags.path,
 		Rules:  []model.Rule{r},
 		Runner: exec.NewReal(),
+		Depth:  flags.depth,
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "check: %v\n", err)
 		return exitRuntimeError
 	}
-	llmClient, err := buildLLMClient(ctx, flags.withLLM, flags.llmBudget)
+	llmClient, err := buildLLMClient(ctx, flags.withLLM, flags.llmBudget, flags.llmBackend)
 	if err != nil {
 		fmt.Fprintf(stderr, "check: --with-llm: %v\n", err)
 		return exitConfigError
 	}
 	if llmClient != nil {
-		defer llmClient.Close()
+		defer func() { _ = llmClient.Close() }()
 		enrichFindings(ctx, llmClient, []model.Rule{r}, res.Findings, nil, stderr)
 	}
 	if format == report.FormatSARIF {
@@ -711,6 +798,524 @@ func cmdDiff(args []string, stdout, stderr io.Writer) int {
 	// Regressions (new findings) → exit 1 so CI can gate on them.
 	if len(d.New) > 0 {
 		return exitFindingsAtLevel
+	}
+	return exitOK
+}
+
+// ----- Fix engine (Pillar 1) -----
+
+// buildFixEngine registers all static fixers explicitly. Same pattern as
+// buildRegistry(). See ADR 0004.
+func buildFixEngine() *fix.Engine {
+	e := fix.NewEngine()
+	e.Register(static.NewLocP1LOC001())
+	e.Register(static.NewLocP1LOC002())
+	e.Register(static.NewVerP4VER001())
+	e.Register(static.NewMrdP7MRD001())
+	e.Register(static.NewMrdP7MRD002())
+	e.Register(static.NewMrdP7MRD003())
+	e.Register(static.NewSpcP2SPC010())
+	return e
+}
+
+func cmdFix(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("fix", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	var (
+		fixAll     = fs.Bool("all", false, "fix all fixable findings")
+		dryRun     = fs.Bool("dry-run", false, "show what would change without applying")
+		planOnly   = fs.Bool("plan", false, "show fix plan and exit")
+		jsonOut    = fs.Bool("json", false, "emit fix result as JSON")
+		workDir    = fs.String("C", "", "change to directory before running")
+		withLLM    = fs.Bool("with-llm", false, "enrich fix content with LLM (opt-in)")
+		llmBackend = fs.String("llm-backend", "", "LLM provider: gemini, openai, or claude")
+		llmBudget  = fs.Int("llm-budget", 5, "max LLM calls per run")
+	)
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprintf(stderr, "fix: %v\n", err)
+		return exitUsage
+	}
+	rest := fs.Args()
+
+	// Determine rule ID and path from positional args.
+	var ruleID, path string
+	switch {
+	case *fixAll && len(rest) > 1:
+		fmt.Fprintln(stderr, "usage: archfit fix --all [path]")
+		return exitUsage
+	case *fixAll && len(rest) == 1:
+		path = rest[0]
+	case *fixAll:
+		path = "."
+	case len(rest) == 0:
+		fmt.Fprintln(stderr, "usage: archfit fix [--all] [rule-id] [path]")
+		return exitUsage
+	case len(rest) == 1:
+		ruleID = rest[0]
+		path = "."
+	case len(rest) == 2:
+		ruleID = rest[0]
+		path = rest[1]
+	default:
+		fmt.Fprintln(stderr, "usage: archfit fix [--all] [rule-id] [path]")
+		return exitUsage
+	}
+
+	if *workDir != "" {
+		path = joinIfRelative(*workDir, path)
+	}
+
+	// Suppress unused variable warnings for LLM flags (used in Step 6).
+	_, _, _ = *withLLM, *llmBackend, *llmBudget
+
+	reg, err := buildRegistry()
+	if err != nil {
+		fmt.Fprintf(stderr, "fix: %v\n", err)
+		return exitRuntimeError
+	}
+
+	cfg, _, _, err := config.Load(path)
+	if err != nil {
+		fmt.Fprintf(stderr, "fix: %v\n", err)
+		return exitConfigError
+	}
+
+	rules := filterRules(reg, cfg)
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	// Initial scan to get current findings and facts.
+	scanRes, err := core.Scan(ctx, core.ScanInput{
+		Root:   path,
+		Rules:  rules,
+		Runner: exec.NewReal(),
+	})
+	if err != nil {
+		fmt.Fprintf(stderr, "fix: initial scan: %v\n", err)
+		return exitRuntimeError
+	}
+
+	engine := buildFixEngine()
+
+	var ruleIDs []string
+	if ruleID != "" {
+		ruleIDs = []string{ruleID}
+	}
+
+	// Build a scanner function for verification.
+	scanner := func(ctx context.Context) (core.ScanResult, error) {
+		return core.Scan(ctx, core.ScanInput{
+			Root:   path,
+			Rules:  rules,
+			Runner: exec.NewReal(),
+		})
+	}
+
+	// We need a FactStore for the fixers. Re-collect facts.
+	facts := &cliFactStore{scanRes: scanRes, path: path}
+
+	fixResult, err := engine.Fix(ctx, fix.Input{
+		Root:     path,
+		RuleIDs:  ruleIDs,
+		DryRun:   *dryRun || *planOnly,
+		Facts:    facts,
+		Findings: scanRes.Findings,
+		Scanner:  scanner,
+	})
+	if err != nil {
+		fmt.Fprintf(stderr, "fix: %v\n", err)
+		return exitRuntimeError
+	}
+
+	// Render output.
+	if *jsonOut {
+		enc := json.NewEncoder(stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(fixResult); err != nil {
+			fmt.Fprintf(stderr, "fix: %v\n", err)
+			return exitRuntimeError
+		}
+	} else {
+		fmt.Fprint(stdout, fixResult.Plan.Summary())
+		if !*dryRun && !*planOnly {
+			if fixResult.Verified {
+				fmt.Fprintf(stdout, "\nall fixes verified by re-scan\n")
+			} else if len(fixResult.Applied) > 0 {
+				fmt.Fprintf(stdout, "\nfixes rolled back — verification failed\n")
+				if len(fixResult.NewIssues) > 0 {
+					fmt.Fprintf(stdout, "new issues introduced: %d\n", len(fixResult.NewIssues))
+				}
+			}
+		}
+	}
+
+	if !fixResult.Verified && len(fixResult.Applied) > 0 {
+		return exitFindingsAtLevel
+	}
+	return exitOK
+}
+
+// cliFactStore wraps a ScanResult to provide a minimal FactStore for fixers.
+// The fixers only need Repo() for path lookups and root directory.
+type cliFactStore struct {
+	scanRes core.ScanResult
+	path    string
+}
+
+func (f *cliFactStore) Repo() model.RepoFacts {
+	// Re-collect filesystem facts. This is lightweight and avoids storing
+	// a full FactStore from the scan (which is internal to core.Scan).
+	repo, err := collectForFix(f.path)
+	if err != nil {
+		return model.RepoFacts{Root: f.path}
+	}
+	return repo
+}
+
+func (f *cliFactStore) Git() (model.GitFacts, bool) {
+	return f.scanRes.Git, f.scanRes.GitAvailable
+}
+
+func (f *cliFactStore) Schemas() model.SchemaFacts {
+	return model.SchemaFacts{}
+}
+
+func (f *cliFactStore) Commands() (model.CommandFacts, bool) {
+	return model.CommandFacts{}, false
+}
+
+func (f *cliFactStore) DepGraph() (model.DepGraphFacts, bool) {
+	return model.DepGraphFacts{}, false
+}
+
+// collectForFix does a lightweight filesystem collect for the fix engine.
+func collectForFix(root string) (model.RepoFacts, error) {
+	// Import cycle prevention: we call the collector directly.
+	// This is acceptable because main.go is the wiring layer.
+	return collectfs.Collect(root)
+}
+
+// ----- Validate-pack subcommand (Step 16, ADR 0006) -----
+
+func cmdValidatePack(args []string, stdout, stderr io.Writer) int {
+	if len(args) != 1 {
+		fmt.Fprintln(stderr, "usage: archfit validate-pack <path>")
+		return exitUsage
+	}
+	dir := args[0]
+	res := packman.ValidatePack(dir)
+
+	for _, e := range res.Errors {
+		fmt.Fprintf(stderr, "error: %s\n", e)
+	}
+	for _, w := range res.Warnings {
+		fmt.Fprintf(stdout, "warning: %s\n", w)
+	}
+	if res.Valid {
+		fmt.Fprintln(stdout, "pack structure is valid")
+		return exitOK
+	}
+	return exitFindingsAtLevel
+}
+
+// ----- Trend subcommand -----
+
+func cmdTrend(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("trend", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	historyDir := fs.String("history", ".archfit-history", "directory containing archived scan JSON files")
+	since := fs.String("since", "", "only show entries on or after this ISO date (YYYY-MM-DD)")
+	format := fs.String("format", "terminal", "output format: terminal, json, csv")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprintf(stderr, "trend: %v\n", err)
+		return exitUsage
+	}
+	if fs.NArg() > 0 {
+		fmt.Fprintln(stderr, "usage: archfit trend [--history <dir>] [--since <date>] [--format {terminal|json|csv}]")
+		return exitUsage
+	}
+
+	dirEntries, err := os.ReadDir(*historyDir)
+	if err != nil {
+		fmt.Fprintf(stderr, "trend: %v\n", err)
+		return exitRuntimeError
+	}
+
+	var files []string
+	for _, e := range dirEntries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
+			continue
+		}
+		if *since != "" && e.Name() < *since {
+			continue
+		}
+		files = append(files, e.Name())
+	}
+	sort.Strings(files)
+
+	if len(files) == 0 {
+		fmt.Fprintln(stderr, "trend: no .json files found in "+*historyDir)
+		return exitOK
+	}
+
+	type trendEntry struct {
+		File        string             `json:"file"`
+		Overall     float64            `json:"overall"`
+		Delta       float64            `json:"delta"`
+		ByPrinciple map[string]float64 `json:"by_principle,omitempty"`
+	}
+
+	var trendData []trendEntry
+	var prevOverall float64
+	first := true
+
+	for _, name := range files {
+		data, err := os.ReadFile(filepath.Join(*historyDir, name))
+		if err != nil {
+			fmt.Fprintf(stderr, "trend: skipping %s: %v\n", name, err)
+			continue
+		}
+		doc, err := report.LoadBaseline(data)
+		if err != nil {
+			fmt.Fprintf(stderr, "trend: skipping %s: %v\n", name, err)
+			continue
+		}
+		delta := 0.0
+		if !first {
+			delta = doc.Scores.Overall - prevOverall
+		}
+		prevOverall = doc.Scores.Overall
+		first = false
+
+		trendData = append(trendData, trendEntry{
+			File:        name,
+			Overall:     doc.Scores.Overall,
+			Delta:       math.Round(delta*10) / 10,
+			ByPrinciple: doc.Scores.ByPrinciple,
+		})
+	}
+
+	switch *format {
+	case "json":
+		enc := json.NewEncoder(stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(trendData); err != nil {
+			fmt.Fprintf(stderr, "trend: %v\n", err)
+			return exitRuntimeError
+		}
+	case "csv":
+		fmt.Fprintln(stdout, "file,overall,delta")
+		for _, e := range trendData {
+			fmt.Fprintf(stdout, "%s,%.1f,%.1f\n", e.File, e.Overall, e.Delta)
+		}
+	default:
+		fmt.Fprintf(stdout, "%-40s %8s %8s\n", "FILE", "SCORE", "DELTA")
+		fmt.Fprintf(stdout, "%-40s %8s %8s\n", strings.Repeat("-", 40), "--------", "--------")
+		for _, e := range trendData {
+			deltaStr := fmt.Sprintf("%+.1f", e.Delta)
+			if e.Delta == 0 {
+				deltaStr = "  ---"
+			}
+			fmt.Fprintf(stdout, "%-40s %8.1f %8s\n", e.File, e.Overall, deltaStr)
+		}
+	}
+	return exitOK
+}
+
+// ----- Compare subcommand (Step 18) -----
+
+// compareEntry holds extracted score data from a single scan JSON file.
+type compareEntry struct {
+	File        string             `json:"file"`
+	Overall     float64            `json:"overall"`
+	ByPrinciple map[string]float64 `json:"by_principle"`
+	Findings    int                `json:"findings"`
+}
+
+func cmdCompare(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("compare", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	format := fs.String("format", "terminal", "output format: terminal, json, csv, md")
+	sortBy := fs.String("sort", "overall", "sort field: overall, name")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprintf(stderr, "compare: %v\n", err)
+		return exitUsage
+	}
+	files := fs.Args()
+	if len(files) < 2 {
+		fmt.Fprintln(stderr, "usage: archfit compare <file1.json> <file2.json> [...]")
+		return exitUsage
+	}
+
+	var entries []compareEntry
+	for _, f := range files {
+		data, err := os.ReadFile(f)
+		if err != nil {
+			fmt.Fprintf(stderr, "compare: %v\n", err)
+			return exitRuntimeError
+		}
+		doc, err := report.LoadBaseline(data)
+		if err != nil {
+			fmt.Fprintf(stderr, "compare: %s: %v\n", f, err)
+			return exitRuntimeError
+		}
+		entries = append(entries, compareEntry{
+			File:        filepath.Base(f),
+			Overall:     doc.Scores.Overall,
+			ByPrinciple: doc.Scores.ByPrinciple,
+			Findings:    len(doc.Findings),
+		})
+	}
+
+	// Sort entries.
+	switch *sortBy {
+	case "name":
+		sort.Slice(entries, func(i, j int) bool { return entries[i].File < entries[j].File })
+	default: // "overall" — descending
+		sort.Slice(entries, func(i, j int) bool { return entries[i].Overall > entries[j].Overall })
+	}
+
+	// Collect principle keys present across all entries for column headers.
+	principles := model.AllPrinciples()
+
+	switch *format {
+	case "json":
+		enc := json.NewEncoder(stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(entries); err != nil {
+			fmt.Fprintf(stderr, "compare: %v\n", err)
+			return exitRuntimeError
+		}
+	case "csv":
+		hdr := []string{"file", "overall"}
+		for _, p := range principles {
+			hdr = append(hdr, string(p))
+		}
+		hdr = append(hdr, "findings")
+		fmt.Fprintln(stdout, strings.Join(hdr, ","))
+		for _, e := range entries {
+			row := []string{e.File, fmt.Sprintf("%.1f", e.Overall)}
+			for _, p := range principles {
+				v := e.ByPrinciple[string(p)]
+				row = append(row, fmt.Sprintf("%.1f", v))
+			}
+			row = append(row, fmt.Sprintf("%d", e.Findings))
+			fmt.Fprintln(stdout, strings.Join(row, ","))
+		}
+	case "md":
+		hdr := []string{"File", "Overall"}
+		sep := []string{"---", "---"}
+		for _, p := range principles {
+			hdr = append(hdr, string(p))
+			sep = append(sep, "---")
+		}
+		hdr = append(hdr, "Findings")
+		sep = append(sep, "---")
+		fmt.Fprintf(stdout, "| %s |\n", strings.Join(hdr, " | "))
+		fmt.Fprintf(stdout, "| %s |\n", strings.Join(sep, " | "))
+		for _, e := range entries {
+			row := []string{e.File, fmt.Sprintf("%.1f", e.Overall)}
+			for _, p := range principles {
+				v := e.ByPrinciple[string(p)]
+				row = append(row, fmt.Sprintf("%.1f", v))
+			}
+			row = append(row, fmt.Sprintf("%d", e.Findings))
+			fmt.Fprintf(stdout, "| %s |\n", strings.Join(row, " | "))
+		}
+	default: // terminal
+		// Build header.
+		fmt.Fprintf(stdout, "%-30s %8s", "FILE", "OVERALL")
+		for _, p := range principles {
+			fmt.Fprintf(stdout, " %6s", string(p))
+		}
+		fmt.Fprintf(stdout, " %8s\n", "FINDINGS")
+
+		fmt.Fprintf(stdout, "%-30s %8s", strings.Repeat("-", 30), "--------")
+		for range principles {
+			fmt.Fprintf(stdout, " %6s", "------")
+		}
+		fmt.Fprintf(stdout, " %8s\n", "--------")
+
+		for _, e := range entries {
+			fmt.Fprintf(stdout, "%-30s %8.1f", e.File, e.Overall)
+			for _, p := range principles {
+				v := e.ByPrinciple[string(p)]
+				fmt.Fprintf(stdout, " %6.1f", v)
+			}
+			fmt.Fprintf(stdout, " %8d\n", e.Findings)
+		}
+	}
+	return exitOK
+}
+
+// ----- Pack SDK subcommands -----
+
+func cmdNewPack(args []string, stdout, stderr io.Writer) int {
+	if len(args) < 1 || len(args) > 2 {
+		fmt.Fprintln(stderr, "usage: archfit new-pack <name> [path]")
+		return exitUsage
+	}
+	name := args[0]
+	base := "."
+	if len(args) == 2 {
+		base = args[1]
+	}
+	packDir := filepath.Join(base, name)
+	if _, err := os.Stat(packDir); err == nil {
+		fmt.Fprintf(stderr, "new-pack: directory %s already exists\n", packDir)
+		return exitConfigError
+	}
+
+	// Scaffold the pack directory structure.
+	dirs := []string{
+		packDir,
+		filepath.Join(packDir, "resolvers"),
+		filepath.Join(packDir, "fixtures"),
+	}
+	for _, d := range dirs {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			fmt.Fprintf(stderr, "new-pack: %v\n", err)
+			return exitRuntimeError
+		}
+	}
+
+	// Convert hyphenated name to underscore for Go package name.
+	goPkg := strings.ReplaceAll(name, "-", "_")
+
+	files := map[string]string{
+		filepath.Join(packDir, "AGENTS.md"):    "# " + name + " pack\n\nAgent-facing documentation for the " + name + " rule pack.\n",
+		filepath.Join(packDir, "INTENT.md"):    "# " + name + " — intent\n\nThis pack checks...\n",
+		filepath.Join(packDir, "pack.go"):      "package " + goPkg + "\n\nimport (\n\t\"github.com/shibuiwilliam/archfit/internal/model\"\n\t\"github.com/shibuiwilliam/archfit/internal/rule\"\n)\n\n// PackName is the unique identifier for this pack.\nconst PackName = \"" + name + "\"\n\n// Rules returns the rules in this pack.\nfunc Rules() []model.Rule {\n\treturn []model.Rule{\n\t\t// Add rules here.\n\t}\n}\n\n// Register adds this pack's rules to the registry.\nfunc Register(reg *rule.Registry) error {\n\treturn reg.Register(PackName, Rules()...)\n}\n",
+		filepath.Join(packDir, "pack_test.go"): "package " + goPkg + "_test\n",
+	}
+	for path, content := range files {
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			fmt.Fprintf(stderr, "new-pack: %v\n", err)
+			return exitRuntimeError
+		}
+	}
+
+	fmt.Fprintf(stdout, "created pack scaffold at %s\n", packDir)
+	return exitOK
+}
+
+func cmdTestPack(args []string, stdout, stderr io.Writer) int {
+	if len(args) != 1 {
+		fmt.Fprintln(stderr, "usage: archfit test-pack <path>")
+		return exitUsage
+	}
+	packPath := args[0]
+
+	cmd := osexec.Command("go", "test", "-race", "-count=1", packPath)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	if err := cmd.Run(); err != nil {
+		if exitErr, ok := err.(*osexec.ExitError); ok {
+			return exitErr.ExitCode()
+		}
+		fmt.Fprintf(stderr, "test-pack: %v\n", err)
+		return exitRuntimeError
 	}
 	return exitOK
 }

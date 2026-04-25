@@ -1,0 +1,81 @@
+site_name: archfit
+site_description: Architecture fitness evaluator for the coding-agent era
+site_url: https://shibuiwilliam.github.io/archfit/
+repo_url: https://github.com/shibuiwilliam/archfit
+repo_name: shibuiwilliam/archfit
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - search.suggest
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Quick Start: getting-started.md
+      - Configuration: configuration.md
+      - Exit Codes: exit-codes.md
+  - Principles & Rules:
+      - Overview: rules/index.md
+      - P1.LOC.001 - Root Agent Docs: rules/P1.LOC.001.md
+      - P1.LOC.002 - Slice Agent Docs: rules/P1.LOC.002.md
+      - P2.SPC.010 - Versioned Schema: rules/P2.SPC.010.md
+      - P3.EXP.001 - Env Documentation: rules/P3.EXP.001.md
+      - P4.VER.001 - Verification Entrypoint: rules/P4.VER.001.md
+      - P5.AGG.001 - Security Aggregation: rules/P5.AGG.001.md
+      - P6.REV.001 - Rollback Documentation: rules/P6.REV.001.md
+      - P7.MRD.001 - Exit Code Docs: rules/P7.MRD.001.md
+      - P7.MRD.002 - Changelog: rules/P7.MRD.002.md
+      - P7.MRD.003 - ADR Directory: rules/P7.MRD.003.md
+  - Features:
+      - LLM Integration: llm.md
+      - Auto-Fix: fix.md
+      - CI/CD Integration: ci-cd.md
+      - Deployment: deployment.md
+  - Development:
+      - Architecture: development/architecture.md
+      - Implementation Plan: development/implementation-plan.md
+      - Testing Strategy: development/testing-strategy.md
+      - Pack Development: development/pack-development.md
+      - API Reference: development/api-reference.md
+      - Dependencies: dependencies.md
+  - ADRs:
+      - "0001 - Architecture Overview": adr/0001-architecture-overview.md
+      - "0002 - Phase 2 Dogfood and SARIF": adr/0002-phase2-dogfood-and-sarif.md
+      - "0003 - LLM Explanation": adr/0003-llm-explanation.md
+      - "0004 - Fix Engine": adr/0004-fix-engine.md
+      - "0005 - FactStore Extension": adr/0005-factstore-extension.md
+      - "0006 - External Packs": adr/0006-external-packs.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - toc:
+      permalink: true
+
+plugins:
+  - search

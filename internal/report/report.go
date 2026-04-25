@@ -23,6 +23,7 @@ const OutputSchemaVersion = "0.1.0"
 // Format enumerates the supported renderers. Add entries here, not elsewhere.
 type Format string
 
+// Supported output format constants.
 const (
 	FormatTerminal Format = "terminal"
 	FormatJSON     Format = "json"
@@ -30,6 +31,7 @@ const (
 	FormatSARIF    Format = "sarif"
 )
 
+// ParseFormat converts a string to a Format, defaulting to terminal.
 func ParseFormat(s string) (Format, error) {
 	switch Format(s) {
 	case FormatTerminal, FormatJSON, FormatMarkdown, FormatSARIF:
@@ -89,9 +91,10 @@ type jsonGit struct {
 }
 
 type jsonSummary struct {
-	RulesEvaluated int          `json:"rules_evaluated"`
-	FindingsTotal  int          `json:"findings_total"`
-	BySeverity     jsonSeverity `json:"by_severity"`
+	RulesEvaluated    int          `json:"rules_evaluated"`
+	RulesWithFindings int          `json:"rules_with_findings"`
+	FindingsTotal     int          `json:"findings_total"`
+	BySeverity        jsonSeverity `json:"by_severity"`
 }
 
 type jsonSeverity struct {
@@ -112,8 +115,9 @@ func toJSON(res core.ScanResult, toolVersion, profile string) jsonOutput {
 		Tool:          jsonTool{Name: "archfit", Version: toolVersion},
 		Target:        jsonTarget{Path: res.Root, Profile: profile},
 		Summary: jsonSummary{
-			RulesEvaluated: res.RulesEvaluated,
-			FindingsTotal:  len(res.Findings),
+			RulesEvaluated:    res.RulesEvaluated,
+			RulesWithFindings: res.RulesWithFindings,
+			FindingsTotal:     len(res.Findings),
 		},
 		Findings: res.Findings,
 		Metrics:  res.Metrics,
@@ -164,7 +168,7 @@ func renderJSON(w io.Writer, res core.ScanResult, toolVersion, profile string) e
 
 func renderTerminal(w io.Writer, res core.ScanResult, toolVersion, profile string) error {
 	fmt.Fprintf(w, "archfit %s — target %s (profile=%s)\n", toolVersion, res.Root, profile)
-	fmt.Fprintf(w, "rules evaluated: %d, findings: %d\n", res.RulesEvaluated, len(res.Findings))
+	fmt.Fprintf(w, "rules evaluated: %d (%d with findings), findings: %d\n", res.RulesEvaluated, res.RulesWithFindings, len(res.Findings))
 	fmt.Fprintf(w, "overall score: %.1f\n", res.Scores.Overall)
 	if len(res.Scores.ByPrinciple) > 0 {
 		keys := make([]string, 0, len(res.Scores.ByPrinciple))
@@ -222,8 +226,8 @@ func writeIndented(w io.Writer, s, prefix string) {
 
 func renderMarkdown(w io.Writer, res core.ScanResult, toolVersion, profile string) error {
 	fmt.Fprintf(w, "# archfit report\n\n")
-	fmt.Fprintf(w, "- tool: archfit %s\n- target: `%s`\n- profile: `%s`\n- rules evaluated: %d\n- overall score: **%.1f**\n\n",
-		toolVersion, res.Root, profile, res.RulesEvaluated, res.Scores.Overall)
+	fmt.Fprintf(w, "- tool: archfit %s\n- target: `%s`\n- profile: `%s`\n- rules evaluated: %d (%d with findings)\n- overall score: **%.1f**\n\n",
+		toolVersion, res.Root, profile, res.RulesEvaluated, res.RulesWithFindings, res.Scores.Overall)
 
 	if len(res.Scores.ByPrinciple) > 0 {
 		fmt.Fprintln(w, "## Score by principle")

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "project_type": ["agent-tool", "web-saas", "iac", "mobile", "data-event", "desktop"],
+  "profile": "strict",
+  "packs": {
+    "enabled": ["core", "agent-tool", "web-saas", "iac", "mobile", "data-event"]
+  },
+  "risk_tiers": {
+    "high": ["cmd/**", "internal/adapter/**", "internal/model/**", "schemas/**"],
+    "medium": ["internal/**", "packs/**"],
+    "low": ["docs/**", "testdata/**", "scripts/**"]
+  },
+  "overrides": {},
+  "ignore": []
+}

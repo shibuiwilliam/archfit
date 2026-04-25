@@ -42,10 +42,26 @@ func Rules() []model.Rule {
 			Weight:           1,
 			Rationale:        "Each slice should be independently understandable. An AGENTS.md per slice bounds the context an agent must load.",
 			Remediation: model.Remediation{
-				Summary:  "Add AGENTS.md at the root of every immediate child of packs/, services/, or modules/.",
+				Summary:  "Add AGENTS.md at the root of every immediate child of packs/, services/, modules/, packages/, apps/, libs/, or other recognized slice containers.",
 				GuideRef: "docs/rules/P1.LOC.002.md",
 			},
 			Resolver: resolvers.LocP1LOC002,
+		},
+		{
+			ID:               "P3.EXP.001",
+			Principle:        model.P3ShallowExplicitness,
+			Dimension:        "EXP",
+			Title:            "Environment and application configuration is documented explicitly",
+			Severity:         model.SeverityWarn,
+			EvidenceStrength: model.EvidenceStrong,
+			Stability:        model.StabilityExperimental,
+			Weight:           1,
+			Rationale:        "Hidden configuration is the opposite of shallow explicitness. .env files, Spring Boot profiles, Terraform tfvars, and Rails environments must be documented so agents can discover required settings.",
+			Remediation: model.Remediation{
+				Summary:  "Add .env.example, config/README.md, terraform.tfvars.example, or equivalent documentation for your stack's configuration mechanism.",
+				GuideRef: "docs/rules/P3.EXP.001.md",
+			},
+			Resolver: resolvers.ExpP3EXP001,
 		},
 		{
 			ID:               "P4.VER.001",
@@ -58,10 +74,42 @@ func Rules() []model.Rule {
 			Weight:           1,
 			Rationale:        "A single documented command to run the fast checks. Without one, agents guess.",
 			Remediation: model.Remediation{
-				Summary:  "Add a Makefile (or justfile, Taskfile.yml, package.json, pyproject.toml, Cargo.toml) at the repo root.",
+				Summary:  "Add a Makefile (or justfile, Taskfile, package.json, pyproject.toml, Cargo.toml, pom.xml, build.gradle, Gemfile, Rakefile, composer.json, etc.) at the repo root.",
 				GuideRef: "docs/rules/P4.VER.001.md",
 			},
 			Resolver: resolvers.VerP4VER001,
+		},
+		{
+			ID:               "P5.AGG.001",
+			Principle:        model.P5Aggregation,
+			Dimension:        "AGG",
+			Title:            "Security-sensitive files are concentrated in few directories",
+			Severity:         model.SeverityWarn,
+			EvidenceStrength: model.EvidenceStrong,
+			Stability:        model.StabilityExperimental,
+			Weight:           1,
+			Rationale:        "Dangerous capabilities (auth, secrets, migrations, deploy) should be concentrated so they can be audited and guarded, not scattered across the tree.",
+			Remediation: model.Remediation{
+				Summary:  "Consolidate security-sensitive files under at most 2 top-level directories per category.",
+				GuideRef: "docs/rules/P5.AGG.001.md",
+			},
+			Resolver: resolvers.AggP5AGG001,
+		},
+		{
+			ID:               "P6.REV.001",
+			Principle:        model.P6Reversibility,
+			Dimension:        "REV",
+			Title:            "Deployment has rollback documentation",
+			Severity:         model.SeverityWarn,
+			EvidenceStrength: model.EvidenceStrong,
+			Stability:        model.StabilityExperimental,
+			Weight:           1,
+			Rationale:        "If a repo deploys, it must document how to roll back. Reversibility requires knowing the undo procedure before things go wrong.",
+			Remediation: model.Remediation{
+				Summary:  "Add docs/deployment.md or RUNBOOK.md documenting deploy, verify, and rollback procedures.",
+				GuideRef: "docs/rules/P6.REV.001.md",
+			},
+			Resolver: resolvers.RevP6REV001,
 		},
 		{
 			ID:               "P7.MRD.001",
@@ -84,5 +132,15 @@ func Rules() []model.Rule {
 
 // Register wires the core pack into the given registry.
 func Register(reg *rule.Registry) error {
-	return reg.Register(PackName, Rules()...)
+	if err := reg.Register(PackName, Rules()...); err != nil {
+		return err
+	}
+	reg.RegisterPack(rule.Pack{
+		Name:        PackName,
+		Version:     "0.3.0",
+		Description: "Universal rules that apply to every repository",
+		Principles:  []model.Principle{model.P1Locality, model.P4Verifiability, model.P7MachineReadability},
+		RuleCount:   len(Rules()),
+	})
+	return nil
 }

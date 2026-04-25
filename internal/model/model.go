@@ -12,8 +12,10 @@ import (
 	"sort"
 )
 
+// Principle identifies one of the seven architecture principles archfit evaluates.
 type Principle string
 
+// Architecture principle constants (P1 through P7).
 const (
 	P1Locality            Principle = "P1"
 	P2SpecFirst           Principle = "P2"
@@ -29,12 +31,14 @@ var allPrinciples = []Principle{
 	P5Aggregation, P6Reversibility, P7MachineReadability,
 }
 
+// AllPrinciples returns a copy of all defined principles.
 func AllPrinciples() []Principle {
 	out := make([]Principle, len(allPrinciples))
 	copy(out, allPrinciples)
 	return out
 }
 
+// Valid reports whether p is a recognised principle.
 func (p Principle) Valid() bool {
 	switch p {
 	case P1Locality, P2SpecFirst, P3ShallowExplicitness, P4Verifiability,
@@ -44,8 +48,10 @@ func (p Principle) Valid() bool {
 	return false
 }
 
+// Severity classifies a finding's impact level.
 type Severity string
 
+// Severity level constants from least to most severe.
 const (
 	SeverityInfo     Severity = "info"
 	SeverityWarn     Severity = "warn"
@@ -53,7 +59,7 @@ const (
 	SeverityCritical Severity = "critical"
 )
 
-// severityRank orders severities from least to most severe. Used for sorting
+// Rank orders severities from least to most severe. Used for sorting
 // findings descending by severity and for --fail-on threshold comparisons.
 func (s Severity) Rank() int {
 	switch s {
@@ -69,10 +75,13 @@ func (s Severity) Rank() int {
 	return 0
 }
 
+// Valid reports whether s is a recognised severity.
 func (s Severity) Valid() bool { return s.Rank() > 0 }
 
+// EvidenceStrength describes how reliably a rule's finding can be verified.
 type EvidenceStrength string
 
+// Evidence strength constants from strongest to weakest.
 const (
 	EvidenceStrong  EvidenceStrength = "strong"
 	EvidenceMedium  EvidenceStrength = "medium"
@@ -80,6 +89,7 @@ const (
 	EvidenceSampled EvidenceStrength = "sampled"
 )
 
+// Valid reports whether e is a recognised evidence strength.
 func (e EvidenceStrength) Valid() bool {
 	switch e {
 	case EvidenceStrong, EvidenceMedium, EvidenceWeak, EvidenceSampled:
@@ -88,14 +98,17 @@ func (e EvidenceStrength) Valid() bool {
 	return false
 }
 
+// Stability tracks a rule's lifecycle stage.
 type Stability string
 
+// Stability lifecycle constants.
 const (
 	StabilityExperimental Stability = "experimental"
 	StabilityStable       Stability = "stable"
 	StabilityDeprecated   Stability = "deprecated"
 )
 
+// Valid reports whether s is a recognised stability value.
 func (s Stability) Valid() bool {
 	switch s {
 	case StabilityExperimental, StabilityStable, StabilityDeprecated:
@@ -104,18 +117,21 @@ func (s Stability) Valid() bool {
 	return false
 }
 
+// Applicability declares which project types, languages, and paths a rule targets.
 type Applicability struct {
 	ProjectTypes []string
 	Languages    []string
 	PathGlobs    []string
 }
 
+// Remediation describes how to fix a finding.
 type Remediation struct {
 	Summary     string `json:"summary"`
 	GuideRef    string `json:"guide_ref,omitempty"`
 	AutoFixable bool   `json:"auto_fixable,omitempty"`
 }
 
+// Rule is a single archfit evaluation rule with its resolver function.
 type Rule struct {
 	ID               string
 	Principle        Principle
@@ -133,8 +149,9 @@ type Rule struct {
 
 // ruleIDPattern mirrors schemas/rule.schema.json. Kept here so tests can assert
 // the pattern without loading the schema.
-var ruleIDPattern = regexp.MustCompile(`^P[1-7]\.[A-Z]{3}\.[0-9]{3}$`)
+var ruleIDPattern = regexp.MustCompile(`^P[1-7]\.[A-Z]{3}\.\d{3}$`)
 
+// Validate checks that all required fields conform to the rule schema.
 func (r Rule) Validate() error {
 	if !ruleIDPattern.MatchString(r.ID) {
 		return fmt.Errorf("rule %q: id must match P<n>.<DIM>.<nnn>", r.ID)
@@ -164,8 +181,10 @@ func (r Rule) Validate() error {
 	return nil
 }
 
+// ResolverFunc is the function signature for rule evaluation logic.
 type ResolverFunc func(ctx context.Context, facts FactStore) ([]Finding, []Metric, error)
 
+// Finding is a single rule violation or observation emitted by a resolver.
 type Finding struct {
 	RuleID           string           `json:"rule_id"`
 	Principle        Principle        `json:"principle"`
@@ -193,6 +212,7 @@ type LLMSuggestion struct {
 	LatencyMS int64  `json:"latency_ms,omitempty"`
 }
 
+// Metric is a numeric measurement emitted alongside findings.
 type Metric struct {
 	Name      string  `json:"name"`
 	Value     float64 `json:"value"`
@@ -243,6 +263,12 @@ type FactStore interface {
 	Git() (GitFacts, bool)
 	// Schemas returns JSON-Schema facts collected from the repo.
 	Schemas() SchemaFacts
+	// Commands returns command timing facts, or (CommandFacts{}, false) when
+	// the command collector was not run (e.g. depth != "deep"). See ADR 0005.
+	Commands() (CommandFacts, bool)
+	// DepGraph returns dependency graph facts, or (DepGraphFacts{}, false) when
+	// the source was not parseable or the collector was skipped. See ADR 0005.
+	DepGraph() (DepGraphFacts, bool)
 }
 
 // SchemaFacts aggregates what the schema collector saw on the repository.
@@ -259,6 +285,7 @@ type SchemaFile struct {
 	ParseError string
 }
 
+// RepoFacts aggregates filesystem-level facts collected from the repository.
 type RepoFacts struct {
 	Root      string
 	Files     []FileFact
@@ -267,6 +294,7 @@ type RepoFacts struct {
 	Languages map[string]int      // language-by-extension -> file count
 }
 
+// FileFact holds metadata for a single file in the repository.
 type FileFact struct {
 	Path  string
 	Size  int64
@@ -274,6 +302,7 @@ type FileFact struct {
 	Ext   string
 }
 
+// GitFacts holds facts collected from git history.
 type GitFacts struct {
 	CommitCount   int
 	RecentCommits []Commit
@@ -281,9 +310,29 @@ type GitFacts struct {
 	CurrentCommit string
 }
 
+// Commit represents a single git commit sampled from the repository.
 type Commit struct {
 	Hash    string
 	Subject string
 	// FilesChanged is a coarse count from --numstat; 0 if unknown.
 	FilesChanged int
+}
+
+// CommandFacts holds timing results from running verification commands.
+type CommandFacts struct {
+	Results []CommandResult
+}
+
+// CommandResult records a timed command execution.
+type CommandResult struct {
+	Command    string `json:"command"`
+	DurationMS int64  `json:"duration_ms"`
+	ExitCode   int    `json:"exit_code"`
+}
+
+// DepGraphFacts holds the dependency graph from source analysis.
+type DepGraphFacts struct {
+	PackageCount int    `json:"package_count"`
+	MaxReach     int    `json:"max_reach"`
+	MaxReachPkg  string `json:"max_reach_pkg"`
 }

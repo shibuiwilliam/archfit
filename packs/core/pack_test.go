@@ -41,9 +41,20 @@ func TestCorePack_Fixtures(t *testing.T) {
 		if !e.IsDir() {
 			continue
 		}
-		ruleID := e.Name()
-		t.Run(ruleID, func(t *testing.T) {
-			fixtureDir := filepath.Join("fixtures", ruleID)
+		fixtureName := e.Name()
+		// Support variant fixtures like "P1.LOC.002-packages" where the
+		// rule ID is the prefix before the first hyphen-separated suffix
+		// that doesn't match the P<n>.<DIM>.<nnn> pattern.
+		ruleID := fixtureName
+		if idx := strings.LastIndex(fixtureName, "-"); idx > 0 {
+			candidate := fixtureName[:idx]
+			// Only trim the suffix if the prefix looks like a valid rule ID.
+			if len(candidate) >= 10 && candidate[0] == 'P' {
+				ruleID = candidate
+			}
+		}
+		t.Run(fixtureName, func(t *testing.T) {
+			fixtureDir := filepath.Join("fixtures", fixtureName)
 			input := filepath.Join(fixtureDir, "input")
 			expectedPath := filepath.Join(fixtureDir, "expected.json")
 

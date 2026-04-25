@@ -1,4 +1,4 @@
-# Configuration reference
+# Configuration Reference
 
 archfit reads `.archfit.yaml` (or `.archfit.yml` / `.archfit.json`) from the
 repository root. All fields are optional; omitted fields take the defaults in

@@ -32,7 +32,7 @@ func MrdP7MRD001(_ context.Context, facts model.FactStore) ([]model.Finding, []m
 	}
 	return []model.Finding{{
 		Path:       "docs/",
-		Message:    "CLI entrypoint detected (cmd/ or bin/) but exit codes are not documented",
+		Message:    "CLI entrypoint detected (cmd/, bin/, or exe/) but exit codes are not documented",
 		Confidence: 0.95,
 		Evidence: map[string]any{
 			"looked_for": exitCodeDocCandidates,
@@ -40,10 +40,44 @@ func MrdP7MRD001(_ context.Context, facts model.FactStore) ([]model.Finding, []m
 	}}, nil, nil
 }
 
+// cliDirPrefixes are directory prefixes that conventionally hold CLI entrypoints.
+var cliDirPrefixes = []string{"cmd/", "bin/", "exe/"}
+
+// cliSourceExts are file extensions recognized as CLI source files.
+var cliSourceExts = []string{
+	".go", ".py", ".ts", ".js", ".rs",
+	".rb", ".java", ".kt", ".swift", ".php", ".sh",
+}
+
+// cliIndicatorBasenames are file basenames (without path) that strongly
+// indicate the repo ships a CLI, even without a cmd/bin/exe directory.
+// These catch Python CLIs (__main__.py), and explicitly named CLI modules.
+var cliIndicatorBasenames = []string{
+	"__main__.py", // Python CLI convention (python -m pkg)
+	"cli.go", "cli.py", "cli.ts", "cli.js", "cli.rb",
+}
+
 func hasCLIEntrypoint(repo model.RepoFacts) bool {
+	// Check conventional CLI directories.
 	for _, f := range repo.Files {
-		if strings.HasPrefix(f.Path, "cmd/") || strings.HasPrefix(f.Path, "bin/") {
-			if strings.HasSuffix(f.Path, ".go") || strings.HasSuffix(f.Path, ".py") || strings.HasSuffix(f.Path, ".ts") || strings.HasSuffix(f.Path, ".rs") {
+		for _, prefix := range cliDirPrefixes {
+			if strings.HasPrefix(f.Path, prefix) {
+				for _, ext := range cliSourceExts {
+					if strings.HasSuffix(f.Path, ext) {
+						return true
+					}
+				}
+			}
+		}
+	}
+	// Check for CLI indicator basenames at any depth.
+	for _, f := range repo.Files {
+		base := f.Path
+		if idx := strings.LastIndex(base, "/"); idx >= 0 {
+			base = base[idx+1:]
+		}
+		for _, indicator := range cliIndicatorBasenames {
+			if base == indicator {
 				return true
 			}
 		}

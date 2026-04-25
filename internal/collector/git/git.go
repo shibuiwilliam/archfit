@@ -22,6 +22,7 @@ const MaxRecentCommits = 50
 // surface this as "no git facts available" rather than a fatal error.
 var ErrNoGit = errors.New("git: not a working tree")
 
+// Collect gathers git facts from the working tree at root using runner.
 func Collect(ctx context.Context, runner exec.Runner, root string) (model.GitFacts, error) {
 	if _, err := runner.Run(ctx, root, "git", "rev-parse", "--is-inside-work-tree"); err != nil {
 		return model.GitFacts{}, ErrNoGit

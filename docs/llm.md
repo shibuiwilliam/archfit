@@ -1,16 +1,21 @@
-# LLM-assisted explanation (`--with-llm`)
+# LLM Integration (`--with-llm`)
 
-Phase 3a adds an **opt-in** LLM path: archfit can call Google Gemini to produce a finding-specific explanation on top of the static rule docs. This document is the contract between archfit and its users for that feature.
+archfit supports **opt-in** LLM enrichment: it can call Claude, OpenAI, or Gemini to produce finding-specific explanations on top of the static rule docs. This document is the contract between archfit and its users for that feature.
 
 The full design rationale is in [ADR 0003](./adr/0003-llm-explanation.md).
 
 ## TL;DR
 
 ```bash
-export GOOGLE_API_KEY=...           # or GEMINI_API_KEY
+# Any of these API keys enables LLM support:
+export ANTHROPIC_API_KEY=sk-...     # Claude (highest priority)
+export OPENAI_API_KEY=sk-...        # OpenAI
+export GOOGLE_API_KEY=...           # Gemini
+
 ./bin/archfit scan --with-llm .     # at most 5 findings are enriched
 ./bin/archfit explain --with-llm P1.LOC.001
 ./bin/archfit check --with-llm P7.MRD.001 .
+./bin/archfit fix --with-llm --all .
 ./bin/archfit scan --with-llm --llm-budget=20 --json . | jq '.findings[].llm_suggestion'
 ```
 
@@ -36,16 +41,27 @@ The LLM is instructed to produce ≤200 words in three short sections: *why it m
 - **It is not deterministic.** Golden tests under `testdata/e2e/` explicitly run without the flag. Do not pin LLM output as a golden.
 - **It does not auto-fix anything.** `archfit fix` is a separate feature in Phase 3c. The suggestion is advisory — the agent or human still performs the change.
 
+## Supported Providers
+
+| Provider | Env Var | Default Model | `--llm-backend` |
+|---|---|---|---|
+| Claude (Anthropic) | `ANTHROPIC_API_KEY` | `claude-sonnet-4-6-20250627` | `claude` |
+| OpenAI | `OPENAI_API_KEY` | `gpt-5.4-mini` | `openai` |
+| Google Gemini | `GOOGLE_API_KEY` / `GEMINI_API_KEY` | `gemini-2.5-flash` | `gemini` |
+
+Auto-detection priority: `ANTHROPIC_API_KEY` > `OPENAI_API_KEY` > `GOOGLE_API_KEY`.
+
 ## Configuration
 
 | Setting | Where | Default |
 |---|---|---|
-| API key | `GOOGLE_API_KEY` env, or `GEMINI_API_KEY` | **required** — command exits `4` if missing |
-| Model | `LLM_MODEL` env | `gemini-2.5-flash` |
+| API key | Environment variable (see above) | **required** — command exits `4` if missing |
+| Model | `LLM_MODEL` env | Provider default (see above) |
+| Backend | `--llm-backend` flag | Auto-detected from env |
 | Per-run budget | `--llm-budget N` | `5` |
 | Per-call timeout | (not configurable) | `30s` |
 
-API keys are never written to logs, never read from `.archfit.yaml`, and never embedded in the binary. See [`SECURITY.md`](../SECURITY.md) for data-handling guidance.
+API keys are never written to logs, never read from `.archfit.yaml`, and never embedded in the binary.
 
 ## Cost safety
 
@@ -85,6 +101,6 @@ If the evidence map contains values longer than 8 KiB total, the prompt is trunc
 - When a deterministic, auditable output is required — SARIF's core fields are deterministic without `--with-llm`, but the `llm_suggestion` property is not.
 - In CI gates that compare output byte-for-byte. Use `archfit scan` (no LLM) for the gate, then `archfit scan --with-llm` for the PR comment.
 
-## Extension points (Phase 3b+)
+## Extension Points
 
-The adapter interface (`internal/adapter/llm/Client`) is provider-agnostic. Adding OpenAI, Anthropic, or a local Ollama backend is a single-file implementation plus a `--llm-provider` flag. See `DEVELOPMENT_PLAN.md`.
+The adapter interface (`internal/adapter/llm/Client`) is provider-agnostic. All three backends (Claude, OpenAI, Gemini) share the same interface, budget, and cache layers. Adding a fourth backend (e.g., local Ollama) requires a single file implementation. See [LLM Integration](../development/llm-integration.md) for developer documentation.

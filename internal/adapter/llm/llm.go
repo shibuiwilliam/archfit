@@ -5,12 +5,16 @@
 // scan path. Every other package depends on the `Client` interface defined
 // here — never on a concrete SDK type.
 //
-// Two implementations:
+// Three implementations:
 //
 //   - Fake (fake.go): returns canned responses. Drives every unit test.
 //   - Real (real.go): wraps google.golang.org/genai. Instantiated only from
-//     cmd/archfit/main.go when the user passes --with-llm and an API key is
-//     configured.
+//     cmd/archfit/main.go when the user passes --with-llm and a Gemini API key
+//     is configured.
+//   - OpenAI (openai.go): wraps github.com/openai/openai-go/v3. Same wiring
+//     as Real, selected when OPENAI_API_KEY is set or --llm-backend=openai.
+//   - Anthropic (anthropic.go): wraps github.com/anthropics/anthropic-sdk-go.
+//     Same wiring, selected when ANTHROPIC_API_KEY is set or --llm-backend=claude.
 //
 // Errors are non-fatal to the caller by convention: when the Client returns
 // an error, the CLI logs it to stderr and degrades to static remediation.
@@ -30,9 +34,27 @@ import (
 // enough that a hung call does not block a CI job.
 const DefaultTimeout = 30 * time.Second
 
-// DefaultModel is Gemini's current cost/quality sweet spot for short
+// DefaultGeminiModel is Gemini's current cost/quality sweet spot for short
 // explanations. Override via LLM_MODEL env var at runtime.
-const DefaultModel = "gemini-2.5-flash"
+const DefaultGeminiModel = "gemini-2.5-flash"
+
+// DefaultOpenAIModel is OpenAI's cost/quality sweet spot for short
+// explanations. Override via LLM_MODEL env var at runtime.
+const DefaultOpenAIModel = "gpt-5.4-mini"
+
+// DefaultClaudeModel is Anthropic's cost/quality sweet spot for short
+// explanations. Override via LLM_MODEL env var at runtime.
+const DefaultClaudeModel = "claude-sonnet-4-6-20250627"
+
+// Backend identifies which LLM provider to use.
+type Backend string
+
+// Supported LLM backends.
+const (
+	BackendGemini Backend = "gemini"
+	BackendOpenAI Backend = "openai"
+	BackendClaude Backend = "claude"
+)
 
 // Prompt is the LLM adapter's input. The caller constructs it from a Rule
 // and a Finding; the adapter is not concerned with archfit's scoring model.
@@ -76,13 +98,14 @@ type Client interface {
 
 // ErrNotConfigured is returned by constructors when required configuration
 // (e.g., an API key) is missing. The CLI maps this to exit code 4.
-var ErrNotConfigured = errors.New("llm: not configured (set GOOGLE_API_KEY or GEMINI_API_KEY)")
+var ErrNotConfigured = errors.New("llm: not configured (set ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_API_KEY, or GEMINI_API_KEY)")
 
 // ErrBudgetExhausted is returned when a caller exceeds its per-run LLM budget.
 var ErrBudgetExhausted = errors.New("llm: per-run budget exhausted")
 
-// Config is the adapter-level configuration shared by Real and any future backends.
+// Config is the adapter-level configuration shared by all backends.
 type Config struct {
+	Backend Backend
 	APIKey  string
 	Model   string
 	Timeout time.Duration
@@ -92,17 +115,76 @@ type Config struct {
 // "(Config, ok=false)" result when no API key is present so they can emit
 // a clear "llm not configured" message without needing to sniff env vars
 // themselves.
+//
+// Detection order (first key found wins):
+//  1. ANTHROPIC_API_KEY → BackendClaude
+//  2. OPENAI_API_KEY → BackendOpenAI
+//  3. GOOGLE_API_KEY → BackendGemini
+//  4. GEMINI_API_KEY → BackendGemini
+//
+// The caller can override the detected backend via --llm-backend.
 func FromEnv(getenv func(string) string) (Config, bool) {
-	key := getenv("GOOGLE_API_KEY")
-	if key == "" {
-		key = getenv("GEMINI_API_KEY")
-	}
+	backend, key := detectBackend(getenv)
+	defaultModel := defaultModelFor(backend)
 	cfg := Config{
+		Backend: backend,
 		APIKey:  key,
-		Model:   orDefault(getenv("LLM_MODEL"), DefaultModel),
+		Model:   orDefault(getenv("LLM_MODEL"), defaultModel),
 		Timeout: DefaultTimeout,
 	}
 	return cfg, key != ""
+}
+
+// FromEnvWithBackend is like FromEnv but forces the given backend.
+// It reads only the API key for that backend from the environment.
+func FromEnvWithBackend(getenv func(string) string, backend Backend) (Config, bool) {
+	var key string
+	switch backend {
+	case BackendClaude:
+		key = getenv("ANTHROPIC_API_KEY")
+	case BackendOpenAI:
+		key = getenv("OPENAI_API_KEY")
+	default: // gemini
+		backend = BackendGemini
+		key = getenv("GOOGLE_API_KEY")
+		if key == "" {
+			key = getenv("GEMINI_API_KEY")
+		}
+	}
+	cfg := Config{
+		Backend: backend,
+		APIKey:  key,
+		Model:   orDefault(getenv("LLM_MODEL"), defaultModelFor(backend)),
+		Timeout: DefaultTimeout,
+	}
+	return cfg, key != ""
+}
+
+func detectBackend(getenv func(string) string) (backend Backend, key string) {
+	if key := getenv("ANTHROPIC_API_KEY"); key != "" {
+		return BackendClaude, key
+	}
+	if key := getenv("OPENAI_API_KEY"); key != "" {
+		return BackendOpenAI, key
+	}
+	if key := getenv("GOOGLE_API_KEY"); key != "" {
+		return BackendGemini, key
+	}
+	if key := getenv("GEMINI_API_KEY"); key != "" {
+		return BackendGemini, key
+	}
+	return BackendGemini, ""
+}
+
+func defaultModelFor(b Backend) string {
+	switch b {
+	case BackendClaude:
+		return DefaultClaudeModel
+	case BackendOpenAI:
+		return DefaultOpenAIModel
+	default:
+		return DefaultGeminiModel
+	}
 }
 
 func orDefault(s, def string) string {

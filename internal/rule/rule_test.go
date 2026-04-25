@@ -11,9 +11,11 @@ import (
 
 type stubFacts struct{}
 
-func (stubFacts) Repo() model.RepoFacts       { return model.RepoFacts{} }
-func (stubFacts) Git() (model.GitFacts, bool) { return model.GitFacts{}, false }
-func (stubFacts) Schemas() model.SchemaFacts  { return model.SchemaFacts{} }
+func (stubFacts) Repo() model.RepoFacts                 { return model.RepoFacts{} }
+func (stubFacts) Git() (model.GitFacts, bool)           { return model.GitFacts{}, false }
+func (stubFacts) Schemas() model.SchemaFacts            { return model.SchemaFacts{} }
+func (stubFacts) Commands() (model.CommandFacts, bool)  { return model.CommandFacts{}, false }
+func (stubFacts) DepGraph() (model.DepGraphFacts, bool) { return model.DepGraphFacts{}, false }
 
 func mkRule(id string, fn model.ResolverFunc) model.Rule {
 	return model.Rule{

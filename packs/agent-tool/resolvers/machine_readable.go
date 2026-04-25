@@ -36,7 +36,7 @@ func P7MRD003(_ context.Context, facts model.FactStore) ([]model.Finding, []mode
 	}
 	return []model.Finding{{
 		Path:       "docs/adr/",
-		Message:    "CLI entrypoint detected but no docs/adr/ directory — irreversible design decisions are not recorded for agents",
+		Message:    "CLI entrypoint detected (cmd/, bin/, or exe/) but no docs/adr/ directory — irreversible design decisions are not recorded for agents",
 		Confidence: 0.95,
 		Evidence: map[string]any{
 			"looked_for": "docs/adr/",
@@ -44,21 +44,55 @@ func P7MRD003(_ context.Context, facts model.FactStore) ([]model.Finding, []mode
 	}}, nil, nil
 }
 
+// cliDirPrefixes are directory prefixes that conventionally hold CLI entrypoints.
+var cliDirPrefixes = []string{"cmd/", "bin/", "exe/"}
+
+// cliSourceExts are file extensions recognized as CLI source files.
+var cliSourceExts = []string{
+	".go", ".py", ".ts", ".js", ".rs",
+	".rb", ".java", ".kt", ".swift", ".php", ".sh",
+}
+
+// cliIndicatorBasenames are file basenames that strongly indicate the repo
+// ships a CLI, even without a cmd/bin/exe directory.
+var cliIndicatorBasenames = []string{
+	"__main__.py",
+	"cli.go", "cli.py", "cli.ts", "cli.js", "cli.rb",
+}
+
 func hasCLIEntrypoint(repo model.RepoFacts) bool {
 	for _, f := range repo.Files {
-		if strings.HasPrefix(f.Path, "cmd/") && hasSourceExt(f.Path) {
-			return true
+		for _, prefix := range cliDirPrefixes {
+			if strings.HasPrefix(f.Path, prefix) {
+				for _, ext := range cliSourceExts {
+					if strings.HasSuffix(f.Path, ext) {
+						return true
+					}
+				}
+			}
+		}
+	}
+	for _, f := range repo.Files {
+		base := f.Path
+		if idx := strings.LastIndex(base, "/"); idx >= 0 {
+			base = base[idx+1:]
+		}
+		for _, indicator := range cliIndicatorBasenames {
+			if base == indicator {
+				return true
+			}
 		}
 	}
 	return false
 }
 
 func hasSourceExt(p string) bool {
-	return strings.HasSuffix(p, ".go") ||
-		strings.HasSuffix(p, ".py") ||
-		strings.HasSuffix(p, ".ts") ||
-		strings.HasSuffix(p, ".rs") ||
-		strings.HasSuffix(p, ".js")
+	for _, ext := range cliSourceExts {
+		if strings.HasSuffix(p, ext) {
+			return true
+		}
+	}
+	return false
 }
 
 func hasADRDir(repo model.RepoFacts) bool {

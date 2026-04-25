@@ -21,9 +21,16 @@ linters:
     - misspell
     - revive        # replaces golint; configured below for archfit
     - gocritic
-    # Import hygiene
-    - goimports
+    # Import hygiene — goimports is in formatters.enable below (v2 classifies it as a formatter).
   settings:
+    errcheck:
+      # CLI diagnostic output to stdout/stderr. Checking these return values
+      # is universally omitted in Go CLIs — the write target is a pipe/tty
+      # and there is no meaningful recovery on failure.
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
     revive:
       rules:
         - name: blank-imports
@@ -42,6 +49,16 @@ linters:
       disabled-checks:
         # commentFormatting fires on godoc links; not worth the noise.
         - commentFormatting
+      settings:
+        # model.Rule is 256 bytes, core.ScanResult 184 bytes, config.Config
+        # 136 bytes. These are passed by value because: (a) the Client
+        # interface mandates value receivers, and (b) callers don't intend
+        # to mutate. 300 covers all current types without hiding genuinely
+        # wasteful copies of larger aggregates.
+        hugeParam:
+          sizeThreshold: 300
+        rangeValCopy:
+          sizeThreshold: 300
 
 formatters:
   enable:

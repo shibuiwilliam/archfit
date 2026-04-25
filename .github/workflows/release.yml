@@ -1,0 +1,139 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # --- Build cross-platform binaries and upload to GitHub Releases ---
+  binaries:
+    name: build (${{ matrix.goos }}/${{ matrix.goarch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { goos: linux,   goarch: amd64, suffix: "" }
+          - { goos: linux,   goarch: arm64, suffix: "" }
+          - { goos: darwin,  goarch: amd64, suffix: "" }
+          - { goos: darwin,  goarch: arm64, suffix: "" }
+          - { goos: windows, goarch: amd64, suffix: ".exe" }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          BINARY="archfit-${GITHUB_REF_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
+          go build -trimpath \
+            -ldflags "-s -w -X github.com/shibuiwilliam/archfit/internal/version.Version=${VERSION}" \
+            -o "dist/${BINARY}" ./cmd/archfit
+
+      - name: Create archive
+        run: |
+          cd dist
+          BINARY=$(ls archfit-*)
+          if [[ "${{ matrix.goos }}" == "windows" ]]; then
+            zip "${BINARY%.exe}.zip" "${BINARY}"
+          else
+            tar czf "${BINARY}.tar.gz" "${BINARY}"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/archfit-*.{tar.gz,zip}
+          if-no-files-found: error
+
+  # --- Publish release with all binaries ---
+  release:
+    name: github-release
+    needs: binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: binary-*
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum archfit-* > checksums-sha256.txt
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "archfit ${{ github.ref_name }}" \
+            --generate-notes \
+            dist/*
+
+  # --- Build and push Docker image to ghcr.io ---
+  docker:
+    name: docker (ghcr.io)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix=
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

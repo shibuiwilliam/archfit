@@ -168,7 +168,7 @@ func countLines(p string) (int, bool) {
 	if err != nil {
 		return 0, false
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	sc := bufio.NewScanner(f)
 	sc.Buffer(make([]byte, 0, 4096), maxLineLen)
 	n := 0

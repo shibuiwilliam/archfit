@@ -131,19 +131,35 @@ func TestBudget_CacheHitsDontConsumeBudget(t *testing.T) {
 	}
 }
 
+func TestFromEnv_AnthropicKeyWins(t *testing.T) {
+	env := map[string]string{"ANTHROPIC_API_KEY": "ant", "OPENAI_API_KEY": "oai", "GOOGLE_API_KEY": "goog"}
+	cfg, ok := llm.FromEnv(func(k string) string { return env[k] })
+	if !ok || cfg.APIKey != "ant" || cfg.Backend != llm.BackendClaude {
+		t.Errorf("want ANTHROPIC_API_KEY to win with BackendClaude, got %+v ok=%v", cfg, ok)
+	}
+}
+
+func TestFromEnv_OpenAIKeyWins(t *testing.T) {
+	env := map[string]string{"OPENAI_API_KEY": "oai", "GOOGLE_API_KEY": "goog"}
+	cfg, ok := llm.FromEnv(func(k string) string { return env[k] })
+	if !ok || cfg.APIKey != "oai" || cfg.Backend != llm.BackendOpenAI {
+		t.Errorf("want OPENAI_API_KEY to win with BackendOpenAI, got %+v ok=%v", cfg, ok)
+	}
+}
+
 func TestFromEnv_GoogleKeyWins(t *testing.T) {
 	env := map[string]string{"GOOGLE_API_KEY": "goog", "GEMINI_API_KEY": "gem"}
 	cfg, ok := llm.FromEnv(func(k string) string { return env[k] })
-	if !ok || cfg.APIKey != "goog" {
-		t.Errorf("want GOOGLE_API_KEY to win, got %+v ok=%v", cfg, ok)
+	if !ok || cfg.APIKey != "goog" || cfg.Backend != llm.BackendGemini {
+		t.Errorf("want GOOGLE_API_KEY to win with BackendGemini, got %+v ok=%v", cfg, ok)
 	}
 }
 
 func TestFromEnv_GeminiKeyFallback(t *testing.T) {
 	env := map[string]string{"GEMINI_API_KEY": "gem"}
 	cfg, ok := llm.FromEnv(func(k string) string { return env[k] })
-	if !ok || cfg.APIKey != "gem" {
-		t.Errorf("want Gemini fallback, got %+v ok=%v", cfg, ok)
+	if !ok || cfg.APIKey != "gem" || cfg.Backend != llm.BackendGemini {
+		t.Errorf("want Gemini fallback with BackendGemini, got %+v ok=%v", cfg, ok)
 	}
 }
 
@@ -151,6 +167,54 @@ func TestFromEnv_NoKeyReturnsFalse(t *testing.T) {
 	_, ok := llm.FromEnv(func(k string) string { return "" })
 	if ok {
 		t.Errorf("expected ok=false when no keys set")
+	}
+}
+
+func TestFromEnvWithBackend_ForcesOpenAI(t *testing.T) {
+	env := map[string]string{"OPENAI_API_KEY": "oai", "GOOGLE_API_KEY": "goog"}
+	cfg, ok := llm.FromEnvWithBackend(func(k string) string { return env[k] }, llm.BackendOpenAI)
+	if !ok || cfg.APIKey != "oai" || cfg.Backend != llm.BackendOpenAI {
+		t.Errorf("want forced OpenAI backend, got %+v ok=%v", cfg, ok)
+	}
+}
+
+func TestFromEnvWithBackend_ForcesGemini(t *testing.T) {
+	env := map[string]string{"OPENAI_API_KEY": "oai", "GOOGLE_API_KEY": "goog"}
+	cfg, ok := llm.FromEnvWithBackend(func(k string) string { return env[k] }, llm.BackendGemini)
+	if !ok || cfg.APIKey != "goog" || cfg.Backend != llm.BackendGemini {
+		t.Errorf("want forced Gemini backend, got %+v ok=%v", cfg, ok)
+	}
+}
+
+func TestFromEnvWithBackend_ForcesClaude(t *testing.T) {
+	env := map[string]string{"ANTHROPIC_API_KEY": "ant", "OPENAI_API_KEY": "oai"}
+	cfg, ok := llm.FromEnvWithBackend(func(k string) string { return env[k] }, llm.BackendClaude)
+	if !ok || cfg.APIKey != "ant" || cfg.Backend != llm.BackendClaude {
+		t.Errorf("want forced Claude backend, got %+v ok=%v", cfg, ok)
+	}
+}
+
+func TestFromEnv_ClaudeDefaultModel(t *testing.T) {
+	env := map[string]string{"ANTHROPIC_API_KEY": "ant"}
+	cfg, ok := llm.FromEnv(func(k string) string { return env[k] })
+	if !ok || cfg.Model != llm.DefaultClaudeModel {
+		t.Errorf("want default Claude model %q, got %q", llm.DefaultClaudeModel, cfg.Model)
+	}
+}
+
+func TestFromEnv_OpenAIDefaultModel(t *testing.T) {
+	env := map[string]string{"OPENAI_API_KEY": "oai"}
+	cfg, ok := llm.FromEnv(func(k string) string { return env[k] })
+	if !ok || cfg.Model != llm.DefaultOpenAIModel {
+		t.Errorf("want default OpenAI model %q, got %q", llm.DefaultOpenAIModel, cfg.Model)
+	}
+}
+
+func TestFromEnv_GeminiDefaultModel(t *testing.T) {
+	env := map[string]string{"GOOGLE_API_KEY": "goog"}
+	cfg, ok := llm.FromEnv(func(k string) string { return env[k] })
+	if !ok || cfg.Model != llm.DefaultGeminiModel {
+		t.Errorf("want default Gemini model %q, got %q", llm.DefaultGeminiModel, cfg.Model)
 	}
 }
 

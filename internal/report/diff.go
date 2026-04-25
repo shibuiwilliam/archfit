@@ -10,12 +10,21 @@ import (
 	"github.com/shibuiwilliam/archfit/internal/model"
 )
 
-// BaselineDoc is a subset of the JSON output we need to do a diff. It must
-// remain compatible with older JSON versions — only require fields strictly
-// needed to identify a finding.
+// BaselineDoc is a subset of the JSON output we need to do a diff and trend
+// analysis. It must remain compatible with older JSON versions — only require
+// fields strictly needed to identify a finding. Scores is optional (zero value
+// when absent from older outputs).
 type BaselineDoc struct {
 	SchemaVersion string          `json:"schema_version"`
+	Scores        BaselineScores  `json:"scores"`
 	Findings      []model.Finding `json:"findings"`
+}
+
+// BaselineScores captures the score fields from a scan output. Fields are
+// zero-valued when the source document does not contain them.
+type BaselineScores struct {
+	Overall     float64            `json:"overall"`
+	ByPrinciple map[string]float64 `json:"by_principle"`
 }
 
 // DiffResult is the structured outcome of comparing a baseline to a current scan.

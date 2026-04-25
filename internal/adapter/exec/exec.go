@@ -33,8 +33,10 @@ type Real struct {
 	Timeout time.Duration
 }
 
+// NewReal returns a Real runner with a 30-second default timeout.
 func NewReal() *Real { return &Real{Timeout: 30 * time.Second} }
 
+// Run executes the named command in dir and returns its output.
 func (r *Real) Run(ctx context.Context, dir, name string, args ...string) (Result, error) {
 	if r.Timeout > 0 {
 		var cancel context.CancelFunc
@@ -73,9 +75,11 @@ type Fake struct {
 	Calls []string
 }
 
+// NewFake returns a Fake runner with an empty response map.
 func NewFake() *Fake { return &Fake{Responses: map[string]Result{}} }
 
-func (f *Fake) Run(_ context.Context, _ string, name string, args ...string) (Result, error) {
+// Run looks up a pre-registered response keyed by the command string.
+func (f *Fake) Run(_ context.Context, _, name string, args ...string) (Result, error) {
 	key := name
 	for _, a := range args {
 		key += " " + a

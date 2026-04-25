@@ -56,7 +56,9 @@ func TestCompute_AddingRulesWithoutFindingsDoesNotLowerExistingScore(t *testing.
 	findings := []model.Finding{{RuleID: "P1.LOC.001", Severity: model.SeverityError}}
 	baseScore := score.Compute(baseline, findings).Overall
 
-	extended := append(baseline, mkRule("P2.SPC.001", model.P2SpecFirst, model.SeverityWarn, 1))
+	extended := make([]model.Rule, len(baseline))
+	copy(extended, baseline)
+	extended = append(extended, mkRule("P2.SPC.001", model.P2SpecFirst, model.SeverityWarn, 1))
 	extScore := score.Compute(extended, findings).Overall
 
 	if extScore < baseScore {

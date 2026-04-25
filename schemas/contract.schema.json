@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/shibuiwilliam/archfit/schemas/contract.schema.json",
+  "title": "archfit fitness contract",
+  "description": "Machine-executable fitness contract for a repository. Consumed by CI, CLI, and coding agents.",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "hard_constraints": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/constraint" }
+    },
+    "soft_targets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/target" }
+    },
+    "area_budgets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/area_budget" }
+    },
+    "agent_directives": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/agent_directive" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "constraint": {
+      "type": "object",
+      "required": ["scope"],
+      "properties": {
+        "principle": { "type": "string", "pattern": "^(P[1-7]|overall)$" },
+        "rule": { "type": "string", "pattern": "^P[1-7]\\.[A-Z]{3}\\.\\d{3}$" },
+        "min_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "max_findings": { "type": "integer", "minimum": 0 },
+        "scope": { "type": "string", "minLength": 1 },
+        "rationale": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "principle": { "type": "string" },
+        "metric": { "type": "string" },
+        "target_score": { "type": "number" },
+        "target": { "type": "number" },
+        "current": { "type": "number" },
+        "deadline": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "area_budget": {
+      "type": "object",
+      "required": ["path", "max_findings"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "max_findings": { "type": "integer", "minimum": 0 },
+        "max_new_findings_per_pr": { "type": "integer", "minimum": 0 },
+        "principles": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^P[1-7]$" }
+        },
+        "owner": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "agent_directive": {
+      "type": "object",
+      "required": ["when", "action"],
+      "properties": {
+        "when": { "type": "string", "minLength": 1 },
+        "action": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  }
+}

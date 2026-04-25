@@ -50,6 +50,9 @@ archfit scan [path]                # full scan
 archfit scan --json [path]         # JSON to stdout (the contract)
 archfit score [path]               # numbers only, no finding list
 archfit check <rule-id> [path]     # run a single rule
+archfit fix [rule-id] [path]       # auto-fix a finding (strong-evidence rules)
+archfit fix --all [path]           # fix all fixable findings
+archfit fix --plan [rule-id] [path]# show fix plan without applying
 archfit report [path]              # Markdown report
 archfit diff <baseline.json>       # PR gate on new findings only
 archfit explain <rule-id>          # rule rationale + remediation

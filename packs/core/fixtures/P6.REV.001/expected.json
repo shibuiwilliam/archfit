@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P6.REV.001",
+      "severity": "warn",
+      "path": "docs/",
+      "message_contains": "no rollback/deployment documentation"
+    }
+  ]
+}

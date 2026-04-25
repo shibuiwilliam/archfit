@@ -9,11 +9,14 @@ entry below, and (c) an ADR when the dep affects the architecture.
 | Module | Version | First used in | Why | ADR |
 |---|---|---|---|---|
 | `google.golang.org/genai` | `v1.54.0` | `internal/adapter/llm/real.go` (Phase 3a) | Official Google SDK for the Gemini Developer API and Vertex AI. Used behind the `llm.Client` adapter to implement `--with-llm`. LLM calls are strictly opt-in and off the hot path (CLAUDE.md §13). | [ADR 0003](./adr/0003-llm-explanation.md) |
+| `github.com/openai/openai-go/v3` | `v3.32.0` | `internal/adapter/llm/openai.go` (Phase 3b) | Official OpenAI Go SDK for the Chat Completions API. Second LLM backend behind `llm.Client`. Selected when `OPENAI_API_KEY` is set or `--llm-backend=openai` is passed. Same opt-in/budget/cache model as the Gemini backend. | [ADR 0003](./adr/0003-llm-explanation.md) |
+| `github.com/anthropics/anthropic-sdk-go` | `v1.38.0` | `internal/adapter/llm/anthropic.go` (Phase 3b) | Official Anthropic Go SDK for the Messages API. Third LLM backend behind `llm.Client`. Selected when `ANTHROPIC_API_KEY` is set or `--llm-backend=claude` is passed. Same opt-in/budget/cache model as the other backends. | [ADR 0003](./adr/0003-llm-explanation.md) |
 
 ## Transitive dependencies
 
-These are pulled in by `google.golang.org/genai` and never imported directly
-by archfit's own code. They are listed for auditability, not for use:
+These are pulled in by `google.golang.org/genai` and `github.com/openai/openai-go/v3`
+and never imported directly by archfit's own code. They are listed for
+auditability, not for use:
 
 - `cloud.google.com/go`, `cloud.google.com/go/auth`, `cloud.google.com/go/compute/metadata` — Google auth / ADC support for Vertex backend.
 - `google.golang.org/grpc`, `google.golang.org/genproto/...`, `google.golang.org/protobuf` — RPC transport for Vertex.
@@ -21,6 +24,7 @@ by archfit's own code. They are listed for auditability, not for use:
 - `github.com/golang/groupcache`, `github.com/google/go-cmp`, `github.com/google/s2a-go`, `github.com/googleapis/enterprise-certificate-proxy` — auth / TLS support.
 - `go.opencensus.io` — SDK-internal tracing.
 - `golang.org/x/{crypto,net,sys,text}` — standard-library-adjacent modules the SDK relies on.
+- `github.com/tidwall/{gjson,match,pretty,sjson}` — JSON manipulation used by the OpenAI and Anthropic SDKs.
 
 ## Go toolchain
 
@@ -34,8 +38,9 @@ requires it). See ADR 0003 for the rationale.
   commands are small enough that `flag` is enough and the explicit dispatch
   in `main.go` is the feature, not the bug.
 - A vendor-neutral LLM abstraction library (LangChain Go, etc.) — the
-  `llm.Client` interface inside `internal/adapter/llm/` is enough abstraction
-  for the second provider when one is added (see Phase 3b in `DEVELOPMENT_PLAN.md`).
+  `llm.Client` interface inside `internal/adapter/llm/` is enough abstraction.
+  All three backends (Gemini, OpenAI, Claude) share the same interface, budget,
+  and cache layers without any third-party abstraction framework.
 
 ## Planned for later phases
 

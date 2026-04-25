@@ -34,7 +34,7 @@ func NewReal(ctx context.Context, cfg Config) (*Real, error) {
 		return nil, ErrNotConfigured
 	}
 	if cfg.Model == "" {
-		cfg.Model = DefaultModel
+		cfg.Model = DefaultGeminiModel
 	}
 	if cfg.Timeout == 0 {
 		cfg.Timeout = DefaultTimeout

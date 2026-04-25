@@ -15,21 +15,35 @@ import (
 	"github.com/shibuiwilliam/archfit/internal/model"
 )
 
+// Pack describes a rule pack's metadata: its identity, the principles it
+// covers, and how many rules it contributes.
+type Pack struct {
+	Name        string
+	Version     string
+	Description string
+	Principles  []model.Principle
+	RuleCount   int
+}
+
 // Registry holds the set of rules known to the program. It is not populated
 // by import side effects — callers Register explicitly at startup.
 type Registry struct {
-	mu    sync.RWMutex
-	rules map[string]model.Rule
-	packs map[string][]string // pack -> rule IDs
+	mu       sync.RWMutex
+	rules    map[string]model.Rule
+	packs    map[string][]string // pack -> rule IDs
+	packMeta map[string]Pack     // pack name -> metadata
 }
 
+// NewRegistry returns an empty rule registry.
 func NewRegistry() *Registry {
 	return &Registry{
-		rules: map[string]model.Rule{},
-		packs: map[string][]string{},
+		rules:    map[string]model.Rule{},
+		packs:    map[string][]string{},
+		packMeta: map[string]Pack{},
 	}
 }
 
+// Register adds rules to the registry under the given pack name.
 func (r *Registry) Register(pack string, rules ...model.Rule) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -58,6 +72,7 @@ func (r *Registry) Rules() []model.Rule {
 	return out
 }
 
+// Rule returns the rule with the given ID, if registered.
 func (r *Registry) Rule(id string) (model.Rule, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -75,6 +90,33 @@ func (r *Registry) Packs() map[string][]string {
 		sort.Strings(cp)
 		out[name] = cp
 	}
+	return out
+}
+
+// RegisterPack stores pack metadata alongside rule registration.
+func (r *Registry) RegisterPack(p Pack) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.packMeta[p.Name] = p
+}
+
+// PackInfo returns metadata for a named pack.
+func (r *Registry) PackInfo(name string) (Pack, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	p, ok := r.packMeta[name]
+	return p, ok
+}
+
+// AllPacks returns metadata for all registered packs, sorted by name.
+func (r *Registry) AllPacks() []Pack {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := make([]Pack, 0, len(r.packMeta))
+	for _, p := range r.packMeta {
+		out = append(out, p)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out
 }
 
@@ -118,37 +160,40 @@ func toSet(ss []string) map[string]struct{} {
 // keeps output deterministic without synchronization effort.
 type Engine struct{}
 
+// NewEngine returns a new rule evaluation engine.
 func NewEngine() *Engine { return &Engine{} }
 
 // EvalResult is what the scheduler returns to callers.
 type EvalResult struct {
-	Findings       []model.Finding
-	Metrics        []model.Metric
-	RulesEvaluated int
-	Errors         []RuleError
+	Findings          []model.Finding
+	Metrics           []model.Metric
+	RulesEvaluated    int
+	RulesWithFindings int // count of rules that produced ≥1 finding
+	Errors            []EvalError
 }
 
-// RuleError captures a non-fatal resolver failure. Per CLAUDE.md §13, parse
+// EvalError captures a non-fatal resolver failure. Per CLAUDE.md §13, parse
 // failures should be findings — but an unhandled resolver panic/error becomes
-// a RuleError so it remains visible.
-type RuleError struct {
+// a EvalError so it remains visible.
+type EvalError struct {
 	RuleID string
 	Err    error
 }
 
-func (e RuleError) Error() string { return e.RuleID + ": " + e.Err.Error() }
+func (e EvalError) Error() string { return e.RuleID + ": " + e.Err.Error() }
 
+// Evaluate runs all rules against facts and returns the aggregated result.
 func (e *Engine) Evaluate(ctx context.Context, rules []model.Rule, facts model.FactStore) EvalResult {
 	var res EvalResult
 	for _, rule := range rules {
 		if ctx.Err() != nil {
-			res.Errors = append(res.Errors, RuleError{RuleID: rule.ID, Err: ctx.Err()})
+			res.Errors = append(res.Errors, EvalError{RuleID: rule.ID, Err: ctx.Err()})
 			continue
 		}
 		findings, metrics, err := evalOne(ctx, rule, facts)
 		res.RulesEvaluated++
 		if err != nil {
-			res.Errors = append(res.Errors, RuleError{RuleID: rule.ID, Err: err})
+			res.Errors = append(res.Errors, EvalError{RuleID: rule.ID, Err: err})
 			continue
 		}
 		// Back-fill any fields the resolver left blank — centralizing the
@@ -172,6 +217,9 @@ func (e *Engine) Evaluate(ctx context.Context, rules []model.Rule, facts model.F
 			if findings[i].Evidence == nil {
 				findings[i].Evidence = map[string]any{}
 			}
+		}
+		if len(findings) > 0 {
+			res.RulesWithFindings++
 		}
 		res.Findings = append(res.Findings, findings...)
 		res.Metrics = append(res.Metrics, metrics...)

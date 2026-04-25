@@ -19,6 +19,7 @@ import (
 	"time"
 )
 
+// Config is the deserialized .archfit.yaml configuration.
 type Config struct {
 	Version     int                       `json:"version"`
 	ProjectType []string                  `json:"project_type,omitempty"`
@@ -29,11 +30,13 @@ type Config struct {
 	Ignore      []Ignore                  `json:"ignore,omitempty"`
 }
 
+// Packs controls which rule packs are enabled or disabled.
 type Packs struct {
 	Enabled  []string `json:"enabled,omitempty"`
 	Disabled []string `json:"disabled,omitempty"`
 }
 
+// Ignore suppresses a rule with a mandatory reason and expiry date.
 type Ignore struct {
 	Rule    string   `json:"rule"`
 	Paths   []string `json:"paths,omitempty"`
@@ -53,9 +56,23 @@ func Default() Config {
 // Candidate filenames, in priority order.
 var candidates = []string{".archfit.yaml", ".archfit.yml", ".archfit.json"}
 
+// LoadFile reads a configuration from an explicit file path. Use this when the
+// caller specifies --config; use Load for the default discovery behaviour.
+func LoadFile(path string) (Config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Config{}, err
+	}
+	cfg, err := ParseJSON(data)
+	if err != nil {
+		return Config{}, fmt.Errorf("%s: %w", path, err)
+	}
+	return cfg, nil
+}
+
 // Load reads a configuration from root, returning Default() with a descriptive
 // warning path when none is present. The boolean reports whether a file was found.
-func Load(root string) (Config, string, bool, error) {
+func Load(root string) (cfg Config, path string, found bool, err error) {
 	for _, name := range candidates {
 		p := filepath.Join(root, name)
 		data, err := os.ReadFile(p)
@@ -88,6 +105,7 @@ func ParseJSON(data []byte) (Config, error) {
 	return raw, nil
 }
 
+// Validate checks that all config fields are well-formed.
 func (c Config) Validate() error {
 	if c.Version != 1 {
 		return fmt.Errorf("unsupported config version %d (want 1)", c.Version)

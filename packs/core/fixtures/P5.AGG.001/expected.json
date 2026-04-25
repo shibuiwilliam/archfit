@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P5.AGG.001",
+      "severity": "warn",
+      "path": "",
+      "message_contains": "auth-related files are scattered"
+    }
+  ]
+}

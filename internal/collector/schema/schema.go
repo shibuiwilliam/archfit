@@ -20,6 +20,7 @@ import (
 // marked as a parse error rather than loaded into memory.
 const MaxBytes = 1 << 20 // 1 MiB
 
+// Collect scans repo for JSON Schema files and returns the parsed facts.
 func Collect(repo model.RepoFacts) model.SchemaFacts {
 	var facts model.SchemaFacts
 	for _, f := range repo.Files {
