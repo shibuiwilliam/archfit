@@ -107,22 +107,40 @@ You can auto-fix many of them:
 
 ## Commands
 
+### Scanning and analysis
+
 ```
 archfit scan [path]                  run all enabled rules (default: .)
 archfit check <rule-id> [path]       run a single rule against the target
 archfit score [path]                 summary only (same scan, no finding list)
 archfit report [path]                Markdown report (shorthand for scan --format=md)
-archfit diff <baseline.json> [current.json]
-                                     compare findings between two scans
-archfit fix [rule-id] [path]         auto-fix findings (strong-evidence rules)
-archfit trend                        show score trends from archived scans
-archfit compare <f1.json> <f2.json>  compare scans across repos
 archfit explain <rule-id>            show a rule's rationale and remediation
+```
+
+### Comparing and tracking
+
+```
+archfit diff <baseline.json> [current.json]
+                                     compare findings between two scans — exits 1 on regressions
+archfit trend                        show score trends from archived scans
+archfit compare <f1.json> <f2.json> [...]
+                                     compare scans across repos side by side
+```
+
+### Fixing
+
+```
+archfit fix [rule-id] [path]         auto-fix findings (strong-evidence rules)
+```
+
+### Configuration and packs
+
+```
 archfit init [path]                  scaffold .archfit.yaml with defaults
+archfit validate-config [path]       check .archfit.yaml without scanning
 archfit list-rules                   list all registered rules
 archfit list-packs                   list all registered rule packs
-archfit validate-config [path]       check .archfit.yaml without scanning
-archfit validate-pack <path>         check pack structure
+archfit validate-pack <path>         check pack structure (AGENTS.md, resolvers/, fixtures/)
 archfit new-pack <name> [path]       scaffold a new rule pack
 archfit test-pack <path>             run pack tests
 archfit version                      print the version
@@ -137,13 +155,15 @@ archfit version                      print the version
 | `--fail-on {info\|warn\|error\|critical}` | Exit `1` at this severity | `error` |
 | `--config <file>` | Path to config file | `.archfit.yaml` in target dir |
 | `--depth {shallow\|standard\|deep}` | Scan depth (`deep` runs verification commands) | `standard` |
-| `-C <dir>` | Change directory before running | |
 | `--policy <file>` | Organization policy file (JSON) | |
+| `-C <dir>` | Change directory before running | |
 | `--with-llm` | Enrich findings with LLM explanations | off |
 | `--llm-backend {claude\|openai\|gemini}` | LLM provider | auto-detected |
 | `--llm-budget N` | Max LLM calls per run | `5` |
 
-The `fix` command has its own flags: `--all`, `--dry-run`, `--plan`, `--json`.
+The `fix` command adds: `--all`, `--dry-run`, `--plan`, `--json`.
+The `trend` command adds: `--history <dir>`, `--since <date>`, `--format {terminal|json|csv}`.
+The `compare` command adds: `--format {terminal|json|csv|md}`, `--sort {overall|name}`.
 
 ### Exit codes
 
@@ -170,11 +190,11 @@ Treat `1` as "read the JSON output", not as a crash.
 |---|---|---|
 | [`P1.LOC.001`](./docs/rules/P1.LOC.001.md) | Locality | `CLAUDE.md` or `AGENTS.md` exists at the repo root |
 | [`P1.LOC.002`](./docs/rules/P1.LOC.002.md) | Locality | Vertical-slice directories carry their own `AGENTS.md` |
-| [`P3.EXP.001`](./docs/rules/P3.EXP.001.md) | Shallow explicitness | Configuration is documented: `.env` → `.env.example`, Spring `application-*.yml` → `config/README.md`, Terraform `*.tfvars` → `terraform.tfvars.example`, Rails `config/environments/` → config docs |
-| [`P4.VER.001`](./docs/rules/P4.VER.001.md) | Verifiability | A fast verification entrypoint exists (`Makefile`, `package.json`, `go.mod`, `pom.xml`, `build.gradle`, `Gemfile`, `Cargo.toml`, and 20+ more) |
+| [`P3.EXP.001`](./docs/rules/P3.EXP.001.md) | Shallow explicitness | Configuration is documented: `.env` files, Spring Boot profiles, Terraform tfvars, Rails environments (see [details below](#language-and-stack-support)) |
+| [`P4.VER.001`](./docs/rules/P4.VER.001.md) | Verifiability | A fast verification entrypoint exists (Makefile, package.json, go.mod, pom.xml, build.gradle, Gemfile, Cargo.toml, and [20+ more](#language-and-stack-support)) |
 | [`P5.AGG.001`](./docs/rules/P5.AGG.001.md) | Aggregation of danger | Security-sensitive files (auth, secrets, migrations, deploy) are concentrated, not scattered |
 | [`P6.REV.001`](./docs/rules/P6.REV.001.md) | Reversibility | Deployment artifacts present → rollback documentation must exist |
-| [`P7.MRD.001`](./docs/rules/P7.MRD.001.md) | Machine-readability | CLI repos (`cmd/`, `bin/`, `exe/`) document their exit codes |
+| [`P7.MRD.001`](./docs/rules/P7.MRD.001.md) | Machine-readability | CLI repos document their exit codes |
 
 ### `agent-tool` pack (3 rules) — opt-in, for agent-consumed tools
 
@@ -192,60 +212,120 @@ Ten solid `strong`-evidence rules beat a hundred weak ones.
 ## Language and stack support
 
 archfit is language-agnostic by design. Its rules check architectural terrain,
-not language syntax.
+not language syntax. Here's what each rule recognizes across stacks:
 
-**P4.VER.001** recognizes build systems for: Go, Node/TypeScript, Python, Rust,
-Java (Maven + Gradle), Ruby, PHP, Elixir, Scala, C/C++ (CMake, Meson), Deno,
-Bazel, Earthly, and generic task runners (Make, Just, Task).
+### P4.VER.001 — verification entrypoints
 
-**P3.EXP.001** checks configuration documentation across four ecosystems:
-`.env` (Node, Python, Ruby), Spring Boot profiles (`application-*.yml`),
-Terraform variables (`*.tfvars`), and Rails environments
-(`config/environments/`).
+Go (`go.mod`), Node/TypeScript (`package.json`), Python (`pyproject.toml`),
+Rust (`Cargo.toml`), Java (`pom.xml`, `build.gradle`, `build.gradle.kts`,
+`settings.gradle`, `settings.gradle.kts`), Ruby (`Gemfile`, `Rakefile`),
+PHP (`composer.json`), Elixir (`mix.exs`), Scala (`build.sbt`),
+C/C++ (`CMakeLists.txt`, `meson.build`), Deno (`deno.json`, `deno.jsonc`),
+Bazel (`BUILD.bazel`), Earthly (`Earthfile`), and generic task runners
+(`Makefile`, `justfile`, `Taskfile.yml`).
 
-**P1.LOC.002** recognizes vertical-slice containers used by monorepos
-(`packages/`, `apps/`, `libs/`), DDD projects (`domains/`, `features/`),
-Rails engines (`engines/`), plugin architectures (`plugins/`, `components/`),
-and service-oriented repos (`services/`, `modules/`).
+### P3.EXP.001 — configuration documentation
 
-**P6.REV.001** detects deployment artifacts from Docker, Kubernetes, Helm,
-Terraform, AWS CDK, Serverless Framework, Cloud Build, Skaffold, Vercel,
-Netlify, Fly.io, Render, Railway, Heroku (Procfile), and all major CI systems
-(GitHub Actions, CircleCI, GitLab CI, Buildkite).
+Four config ecosystems are checked independently:
 
-**P2.SPC.010** recognizes JSON Schema, OpenAPI/Swagger, Protocol Buffers,
-GraphQL, Apache Avro, and AsyncAPI as valid spec-first formats.
+| Ecosystem | Config files detected | Documentation expected |
+|---|---|---|
+| Node/Python/Ruby | `.env`, `.env.*` | `.env.example`, `.env.sample`, or `.env.template` |
+| Spring Boot | `application-*.yml`, `application-*.yaml`, `application-*.properties` | `config/README.md` or `docs/config.md` |
+| Terraform | `*.tfvars` | `terraform.tfvars.example` or `example.tfvars` |
+| Rails | `config/environments/*.rb` | `config/README.md` or `docs/config.md` |
+
+### P1.LOC.002 — vertical-slice containers
+
+`packs/`, `services/`, `modules/`, `packages/`, `apps/`, `libs/`,
+`plugins/`, `engines/`, `components/`, `domains/`, `features/` — covering
+monorepos (NX, Turborepo, Lerna), DDD projects, Rails engines, plugin
+architectures, and service-oriented repos.
+
+### P6.REV.001 — deployment artifacts
+
+Docker (`Dockerfile`, `docker-compose.yml`, `compose.yml`),
+Kubernetes (`kubernetes/`, `k8s/`), Helm (`helm/`),
+Terraform (`terraform/`), AWS CDK (`cdk.json`, `cdk/`),
+Serverless Framework (`serverless.yml`), Cloud Build (`cloudbuild.yaml`),
+Skaffold (`skaffold.yaml`), PaaS (Vercel, Netlify, Fly.io, Render,
+Railway, Heroku `Procfile`), and CI systems (GitHub Actions, CircleCI,
+GitLab CI, Buildkite).
+
+### P7.MRD.001 — CLI detection
+
+CLI entrypoints are detected via `cmd/`, `bin/`, or `exe/` directories
+containing source files in any of 11 languages (`.go`, `.py`, `.ts`, `.js`,
+`.rs`, `.rb`, `.java`, `.kt`, `.swift`, `.php`, `.sh`), plus indicator files
+like `__main__.py`, `cli.go`, `cli.py`, `cli.ts`, `cli.js`, `cli.rb`.
+
+### P2.SPC.010 — spec-first formats
+
+JSON Schema (`schemas/*.schema.json` with `$id`), OpenAPI/Swagger
+(`openapi.yaml`, `swagger.json`), Protocol Buffers (`.proto`),
+GraphQL (`.graphql`, `.gql`), Apache Avro (`.avsc`), and
+AsyncAPI (`.asyncapi`).
 
 ---
 
 ## Auto-fix
 
-`archfit fix` closes the scan → fix → verify loop. It ships 7 static fixers
-for all rules that have deterministic fixes:
+`archfit fix` closes the scan → fix → verify loop. It ships 7 static fixers —
+one for every rule with a deterministic fix:
+
+| Rule | What the fixer creates |
+|---|---|
+| P1.LOC.001 | `CLAUDE.md` at repo root |
+| P1.LOC.002 | `AGENTS.md` in each slice directory |
+| P4.VER.001 | `Makefile` with test and lint targets |
+| P7.MRD.001 | `docs/exit-codes.md` |
+| P7.MRD.002 | `CHANGELOG.md` (Keep a Changelog format) |
+| P7.MRD.003 | `docs/adr/0001-initial-architecture.md` |
+| P2.SPC.010 | `schemas/output.schema.json` with `$id` |
 
 ```bash
-# Fix one rule
-archfit fix P1.LOC.001 .
-
-# Fix everything fixable
-archfit fix --all .
-
-# See the plan without applying
-archfit fix --plan --all .
-
-# Dry run — show what would change
-archfit fix --dry-run P7.MRD.002 .
-
-# JSON output for automation
-archfit fix --json --all .
+archfit fix P1.LOC.001 .             # fix one rule
+archfit fix --all .                  # fix everything fixable
+archfit fix --plan --all .           # see the plan without applying
+archfit fix --dry-run P7.MRD.002 .   # show what would change
+archfit fix --json --all .           # JSON output for automation
 ```
 
 Every fix is **verified by automatic re-scan**. If the finding persists or new
 findings appear, changes are rolled back. Fix actions are logged to
 `.archfit-fix-log.json` for audit.
 
-LLM-assisted fixers (for context-dependent content) are available via
-`--with-llm` — they enrich the static templates with repo-specific context.
+LLM-assisted fixers enrich the static templates with repo-specific context
+when `--with-llm` is set.
+
+---
+
+## Tracking fitness over time
+
+### Diff — PR gate on regressions
+
+```bash
+# Compare against a baseline (exits 1 if new findings appear)
+archfit diff baseline.json current.json
+archfit diff baseline.json              # current from stdin
+```
+
+### Trend — score history
+
+```bash
+# Archive scans into a directory, then view trends
+archfit scan --json . > .archfit-history/2026-04-25.json
+archfit trend --history .archfit-history
+archfit trend --since 2026-01-01 --format csv
+```
+
+### Compare — cross-repo scoreboard
+
+```bash
+# Compare multiple repos side by side
+archfit compare api.json frontend.json infra.json
+archfit compare --format md --sort name *.json
+```
 
 ---
 
@@ -263,6 +343,34 @@ evidence. **False positives are treated as bugs.**
 
 JSON output is deterministic (severity desc, rule_id asc, path asc) so agents
 can make stable references and `archfit diff` produces reliable deltas.
+
+### Scoring
+
+Each finding penalizes the score for its principle based on severity:
+
+| Severity | Penalty (% of rule weight) |
+|---|---|
+| info | 10% |
+| warn | 40% |
+| error | 80% |
+| critical | 100% |
+
+Scores are 0–100, computed per-principle and overall as
+`100 × (1 − penalty / totalWeight)`. Adding rules does not inflate
+scores — scoring is weight-based and normalized per applicable rule set.
+
+### Metrics
+
+Six quantitative metrics are computed alongside findings:
+
+| Metric | Principle | What it measures |
+|---|---|---|
+| `context_span_p50` | P1 | Median files touched per commit |
+| `parallel_conflict_rate` | P1 | Merge commit frequency |
+| `verification_latency_s` | P4 | Wall-clock test execution time (deep scan only) |
+| `invariant_coverage` | P4 | Fraction of rules with no error+ findings |
+| `blast_radius_score` | P5 | Max transitive package reach |
+| `rollback_signal` | P6 | Revert commit frequency |
 
 ---
 
@@ -321,6 +429,38 @@ suppressions surface as warnings — they cannot silently rot.
 
 Full reference: [`docs/configuration.md`](./docs/configuration.md).
 
+### Fitness contracts
+
+For teams that want machine-enforceable fitness goals, archfit supports
+contracts in `.archfit-contract.yaml`:
+
+```json
+{
+  "version": 1,
+  "hard_constraints": [
+    { "principle": "overall", "min_score": 80.0, "scope": "**" }
+  ],
+  "soft_targets": [
+    { "principle": "P4", "target_score": 95.0, "deadline": "2026-06-30" }
+  ],
+  "area_budgets": [
+    { "path": "src/auth/**", "max_findings": 0, "owner": "@security-team" }
+  ]
+}
+```
+
+Hard constraints fail the scan. Soft targets are aspirational. Area budgets
+give teams SRE-style finding allowances per directory.
+
+### Organization policies
+
+The `--policy` flag loads an org-wide policy that enforces minimum scores,
+required packs, and rule severity overrides across all repos:
+
+```bash
+archfit scan --policy org-policy.json .
+```
+
 ---
 
 ## How it works
@@ -346,8 +486,8 @@ Full reference: [`docs/configuration.md`](./docs/configuration.md).
                                         (opt-in only)
 ```
 
-- **Collectors** gather facts from the filesystem, git history, schemas,
-  dependency graphs, and command timing. They observe; they do not judge.
+- **Collectors** gather facts from the filesystem, git history, JSON schemas,
+  dependency graphs (Go), and command timing. They observe; they do not judge.
 - **Rule packs** declare rules and implement resolver functions. Resolvers are
   pure functions of a read-only `FactStore` — no I/O. This is archfit's own
   P5 (aggregation) enforced on itself.
@@ -509,6 +649,8 @@ archfit/
 │   ├── core/                 # Scheduler: collectors → FactStore → rules → scores
 │   ├── model/                # Rule, Finding, Metric, FactStore, ParseFailure
 │   ├── config/               # .archfit.yaml loading + validation
+│   ├── contract/             # Fitness contracts (.archfit-contract.yaml)
+│   ├── policy/               # Organization policies (--policy)
 │   ├── collector/            # Fact gatherers: fs, git, schema, depgraph, command
 │   ├── adapter/
 │   │   ├── exec/             # Fake-able subprocess runner
@@ -516,21 +658,22 @@ archfit/
 │   ├── fix/                  # Fix engine + 7 static fixers + LLM fixers
 │   │   ├── static/           # Deterministic fixers with embedded templates
 │   │   └── llmfix/           # LLM-assisted fixers (opt-in via --with-llm)
+│   ├── packman/              # Pack validation (validate-pack command)
 │   ├── rule/                 # Rule engine core
 │   ├── report/               # Renderers: terminal, json, md, sarif
-│   └── score/                # Weight-based normalized scoring
+│   └── score/                # Weight-based normalized scoring + 6 metrics
 ├── packs/
 │   ├── core/                 # 7 rules covering P1, P3, P4, P5, P6, P7
 │   │   ├── resolvers/        # Pure functions of FactStore
 │   │   ├── fixtures/         # One golden repo per rule + expected.json
 │   │   └── pack_test.go      # Fixture-driven table tests
 │   └── agent-tool/           # 3 rules covering P2, P7 (opt-in)
-├── schemas/                  # Versioned JSON Schema: rule, config, output
+├── schemas/                  # Versioned JSON Schema: rule, config, output, contract
 ├── testdata/e2e/             # End-to-end golden tests
 ├── .claude/skills/archfit/   # Claude Code agent skill (auto-discovered)
 │   └── reference/remediation/  # 10 per-rule remediation guides
 ├── .github/workflows/
-│   ├── ci.yml                # lint + test + self-scan + cross-build
+│   ├── ci.yml                # lint + test + self-scan + cross-build (5 platforms)
 │   └── release.yml           # binaries + GitHub Release + Docker (ghcr.io)
 ├── docs/
 │   ├── adr/                  # Architecture Decision Records
@@ -543,6 +686,8 @@ archfit/
 ├── Makefile
 ├── CLAUDE.md                 # Contributor contract
 ├── CHANGELOG.md              # Keep-a-Changelog 1.1.0 format
+├── CONTRIBUTING.md           # Contribution guide
+├── SECURITY.md               # Security policy
 └── LICENSE                   # Apache 2.0
 ```
 
@@ -557,8 +702,9 @@ Collector. Enforced by [`.go-arch-lint.yaml`](./.go-arch-lint.yaml).
 ```bash
 make build            # build to ./bin/archfit
 make test             # unit + pack tests (with -race)
+make test-short       # quick tests (skip long)
 make e2e              # end-to-end golden tests
-make lint             # gofmt + go vet (+ golangci-lint if installed)
+make lint             # gofmt + go vet + golangci-lint + go-arch-lint
 make self-scan        # archfit on itself — must exit 0
 make self-scan-json   # same, JSON to stdout
 make update-golden    # regenerate expected.json (review the diff!)
