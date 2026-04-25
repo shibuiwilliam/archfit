@@ -80,10 +80,12 @@ func (o *OpenAI) Explain(ctx context.Context, rule model.Rule, finding model.Fin
 	text := resp.Choices[0].Message.Content
 	maxTok := int32(prompt.MaxOutputTokens)
 	return Suggestion{
-		Text:      text,
-		Model:     o.model,
-		Truncated: maxTok > 0 && int32(len(text)) >= maxTok*4, // rough heuristic; tokens ~ 4 bytes
-		LatencyMS: time.Since(start).Milliseconds(),
+		Text:         text,
+		Model:        o.model,
+		Truncated:    maxTok > 0 && int32(len(text)) >= maxTok*4, // rough heuristic; tokens ~ 4 bytes
+		LatencyMS:    time.Since(start).Milliseconds(),
+		InputTokens:  resp.Usage.PromptTokens,
+		OutputTokens: resp.Usage.CompletionTokens,
 	}, nil
 }
 

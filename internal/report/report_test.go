@@ -117,8 +117,8 @@ func TestRenderTerminal_ShowsLLMSuggestion(t *testing.T) {
 		t.Fatal(err)
 	}
 	out := buf.String()
-	if !strings.Contains(out, "llm") || !strings.Contains(out, "(cached)") {
-		t.Errorf("terminal output missing llm section with cached tag:\n%s", out)
+	if !strings.Contains(out, "llm") || !strings.Contains(out, "cached") || !strings.Contains(out, "fake") {
+		t.Errorf("terminal output missing llm section with model and cached tag:\n%s", out)
 	}
 	if !strings.Contains(out, "line one") || !strings.Contains(out, "line two") {
 		t.Errorf("multiline LLM text not preserved:\n%s", out)

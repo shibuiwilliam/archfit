@@ -282,7 +282,11 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 	}
 	if llmClient != nil {
 		defer func() { _ = llmClient.Close() }()
-		enrichFindings(ctx, llmClient, rules, res.Findings, cfg.ProjectType, stderr)
+		if len(res.Findings) == 0 {
+			fmt.Fprintln(stderr, "llm: no findings to enrich (score 100)")
+		} else {
+			enrichFindings(ctx, llmClient, rules, res.Findings, cfg.ProjectType, stderr)
+		}
 	}
 
 	// Policy enforcement (advisory — does not change exit code).
@@ -465,7 +469,11 @@ func cmdExplain(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stderr, "explain: llm: %v (static explanation above still applies)\n", err)
 			return exitOK
 		}
-		fmt.Fprintf(stdout, "\nLLM explanation (%s):\n", sug.Model)
+		tokenInfo := ""
+		if sug.InputTokens > 0 || sug.OutputTokens > 0 {
+			tokenInfo = fmt.Sprintf(", %d+%d tokens", sug.InputTokens, sug.OutputTokens)
+		}
+		fmt.Fprintf(stdout, "\nLLM explanation (%s%s):\n", sug.Model, tokenInfo)
 		writeIndentedStdout(stdout, sug.Text, "  ")
 	}
 	return exitOK
@@ -667,11 +675,13 @@ func enrichFindings(ctx context.Context, client llm.Client, rules []model.Rule, 
 			continue
 		}
 		findings[i].LLMSuggestion = &model.LLMSuggestion{
-			Text:      sug.Text,
-			Model:     sug.Model,
-			CacheHit:  sug.CacheHit,
-			Truncated: sug.Truncated,
-			LatencyMS: sug.LatencyMS,
+			Text:         sug.Text,
+			Model:        sug.Model,
+			CacheHit:     sug.CacheHit,
+			Truncated:    sug.Truncated,
+			LatencyMS:    sug.LatencyMS,
+			InputTokens:  sug.InputTokens,
+			OutputTokens: sug.OutputTokens,
 		}
 	}
 }
@@ -765,7 +775,11 @@ func cmdCheck(args []string, stdout, stderr io.Writer) int {
 	}
 	if llmClient != nil {
 		defer func() { _ = llmClient.Close() }()
-		enrichFindings(ctx, llmClient, []model.Rule{r}, res.Findings, nil, stderr)
+		if len(res.Findings) == 0 {
+			fmt.Fprintln(stderr, "llm: no findings to enrich")
+		} else {
+			enrichFindings(ctx, llmClient, []model.Rule{r}, res.Findings, nil, stderr)
+		}
 	}
 	if format == report.FormatSARIF {
 		if err := report.RenderSARIF(stdout, res, []model.Rule{r}, version.Version); err != nil {

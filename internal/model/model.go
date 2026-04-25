@@ -205,11 +205,13 @@ type Finding struct {
 // LLMSuggestion is the structured form of an LLM-authored explanation.
 // The text is always present; other fields record provenance for auditability.
 type LLMSuggestion struct {
-	Text      string `json:"text"`
-	Model     string `json:"model,omitempty"`
-	CacheHit  bool   `json:"cache_hit,omitempty"`
-	Truncated bool   `json:"truncated,omitempty"`
-	LatencyMS int64  `json:"latency_ms,omitempty"`
+	Text         string `json:"text"`
+	Model        string `json:"model,omitempty"`
+	CacheHit     bool   `json:"cache_hit,omitempty"`
+	Truncated    bool   `json:"truncated,omitempty"`
+	LatencyMS    int64  `json:"latency_ms,omitempty"`
+	InputTokens  int64  `json:"input_tokens,omitempty"`
+	OutputTokens int64  `json:"output_tokens,omitempty"`
 }
 
 // Metric is a numeric measurement emitted alongside findings.

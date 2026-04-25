@@ -77,12 +77,17 @@ func (r *Real) Explain(ctx context.Context, rule model.Rule, finding model.Findi
 		return Suggestion{}, errors.New("llm.Explain: nil response")
 	}
 	text := resp.Text()
-	return Suggestion{
+	sug := Suggestion{
 		Text:      text,
 		Model:     r.model,
 		Truncated: maxTok > 0 && int32(len(text)) >= maxTok*4, // rough heuristic; tokens ≈ 4 bytes
 		LatencyMS: time.Since(start).Milliseconds(),
-	}, nil
+	}
+	if resp.UsageMetadata != nil {
+		sug.InputTokens = int64(resp.UsageMetadata.PromptTokenCount)
+		sug.OutputTokens = int64(resp.UsageMetadata.CandidatesTokenCount)
+	}
+	return sug, nil
 }
 
 // Close releases SDK resources. Safe to call more than once.

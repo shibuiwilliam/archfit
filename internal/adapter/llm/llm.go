@@ -77,11 +77,13 @@ const MaxUserBytes = 8 * 1024
 
 // Suggestion is the adapter's output. A Client populates exactly these fields.
 type Suggestion struct {
-	Text      string `json:"text"`
-	Model     string `json:"model"`
-	Truncated bool   `json:"truncated,omitempty"`
-	CacheHit  bool   `json:"cache_hit,omitempty"`
-	LatencyMS int64  `json:"latency_ms,omitempty"`
+	Text         string `json:"text"`
+	Model        string `json:"model"`
+	Truncated    bool   `json:"truncated,omitempty"`
+	CacheHit     bool   `json:"cache_hit,omitempty"`
+	LatencyMS    int64  `json:"latency_ms,omitempty"`
+	InputTokens  int64  `json:"input_tokens,omitempty"`
+	OutputTokens int64  `json:"output_tokens,omitempty"`
 }
 
 // Client is the LLM boundary. Only this interface is visible to callers.

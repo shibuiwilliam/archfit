@@ -81,10 +81,12 @@ func (a *Anthropic) Explain(ctx context.Context, rule model.Rule, finding model.
 
 	text := extractAnthropicText(resp)
 	return Suggestion{
-		Text:      text,
-		Model:     a.model,
-		Truncated: resp.StopReason == anthropic.StopReasonMaxTokens,
-		LatencyMS: time.Since(start).Milliseconds(),
+		Text:         text,
+		Model:        a.model,
+		Truncated:    resp.StopReason == anthropic.StopReasonMaxTokens,
+		LatencyMS:    time.Since(start).Milliseconds(),
+		InputTokens:  resp.Usage.InputTokens,
+		OutputTokens: resp.Usage.OutputTokens,
 	}, nil
 }
 

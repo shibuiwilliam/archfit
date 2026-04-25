@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 
 	"github.com/shibuiwilliam/archfit/internal/core"
 	"github.com/shibuiwilliam/archfit/internal/model"
@@ -192,11 +193,21 @@ func renderTerminal(w io.Writer, res core.ScanResult, toolVersion, profile strin
 		}
 		fmt.Fprintf(w, "  [%s] %s %s — %s\n", f.Severity, f.RuleID, path, f.Message)
 		if f.LLMSuggestion != nil && f.LLMSuggestion.Text != "" {
-			cacheTag := ""
-			if f.LLMSuggestion.CacheHit {
-				cacheTag = " (cached)"
+			var tags []string
+			if f.LLMSuggestion.Model != "" {
+				tags = append(tags, f.LLMSuggestion.Model)
 			}
-			fmt.Fprintf(w, "    ─ llm%s:\n", cacheTag)
+			if f.LLMSuggestion.CacheHit {
+				tags = append(tags, "cached")
+			}
+			if f.LLMSuggestion.InputTokens > 0 || f.LLMSuggestion.OutputTokens > 0 {
+				tags = append(tags, fmt.Sprintf("%d+%d tokens", f.LLMSuggestion.InputTokens, f.LLMSuggestion.OutputTokens))
+			}
+			tagStr := ""
+			if len(tags) > 0 {
+				tagStr = " (" + strings.Join(tags, ", ") + ")"
+			}
+			fmt.Fprintf(w, "    ─ llm%s:\n", tagStr)
 			writeIndented(w, f.LLMSuggestion.Text, "      ")
 		}
 	}
