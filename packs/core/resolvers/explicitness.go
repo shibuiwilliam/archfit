@@ -237,6 +237,7 @@ var fixturePathPrefixes = []string{
 	"tests/fixtures/",
 	"packs/core/fixtures/",
 	"packs/agent-tool/fixtures/",
+	".claude/worktrees/",
 }
 
 // fileBase returns the basename of a path (last segment after /).

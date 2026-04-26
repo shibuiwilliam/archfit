@@ -171,7 +171,7 @@ Both follow the same pattern as the Gemini backend:
   It is the only file that imports the Anthropic SDK.
 - Configuration via `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` environment
   variables respectively.
-- Default models: `gpt-5.4-mini` (OpenAI), `claude-sonnet-4-6-20250627`
+- Default models: `gpt-5.4-mini` (OpenAI), `claude-sonnet-4-20250514`
   (Claude).
 - Auto-detection: `FromEnv()` detects the backend from whichever API key
   is present. Priority: `ANTHROPIC_API_KEY` > `OPENAI_API_KEY` >

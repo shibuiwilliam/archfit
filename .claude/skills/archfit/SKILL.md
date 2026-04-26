@@ -109,12 +109,16 @@ The JSON output follows `schemas/output.schema.json`. Minimum shape:
 
 ## Remediation guides (progressive disclosure)
 
-When a finding appears, load the matching guide:
+When a finding appears, load `reference/remediation/<rule-id>.md`.
+All 14 rules have guides:
 
-- `reference/remediation/P1.LOC.001.md`
-- `reference/remediation/P1.LOC.002.md`
-- `reference/remediation/P4.VER.001.md`
-- `reference/remediation/P7.MRD.001.md`
+- P1.LOC.001, P1.LOC.002, P1.LOC.003, P1.LOC.004 (locality)
+- P2.SPC.010 (spec-first)
+- P3.EXP.001 (explicitness)
+- P4.VER.001, P4.VER.002, P4.VER.003 (verifiability)
+- P5.AGG.001 (aggregation)
+- P6.REV.001 (reversibility)
+- P7.MRD.001, P7.MRD.002, P7.MRD.003 (machine-readability)
 
 Guides are kept under 100 lines each. For deeper context they link to
 `docs/rules/<rule-id>.md` in the main repo.

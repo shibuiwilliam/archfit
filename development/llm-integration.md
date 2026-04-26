@@ -71,7 +71,7 @@ Override with `--llm-backend={claude|openai|gemini}`.
 ### Claude (`anthropic.go`)
 
 - SDK: `github.com/anthropics/anthropic-sdk-go` v1.38.0
-- Default model: `claude-sonnet-4-6-20250627`
+- Default model: `claude-sonnet-4-20250514`
 - Override: `LLM_MODEL` env var
 - Messages API
 

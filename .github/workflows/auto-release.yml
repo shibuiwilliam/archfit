@@ -297,6 +297,7 @@ jobs:
 
       - name: Update VERSION file
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
           CURRENT=$(cat VERSION | tr -d '[:space:]')
@@ -310,4 +311,25 @@ jobs:
           echo "$VERSION" > VERSION
           git add VERSION
           git commit -m "chore: bump VERSION to ${VERSION} [skip ci]"
-          git push origin main
+
+          # Try direct push first (works when main is unprotected).
+          if git push origin main 2>/dev/null; then
+            echo "Pushed VERSION update directly to main."
+            exit 0
+          fi
+
+          # main is protected — create a PR instead.
+          BRANCH="chore/bump-version-${VERSION}"
+          git checkout -b "$BRANCH"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore: bump VERSION to ${VERSION}" \
+            --body "Automated version bump after release v${VERSION}. Safe to merge — contains only the VERSION file update." \
+            || echo "::warning::Could not create PR. Enable 'Allow GitHub Actions to create pull requests' in Settings > Actions > General."
+
+          # Auto-merge if the repo allows it.
+          gh pr merge "$BRANCH" --squash --auto --delete-branch 2>/dev/null \
+            || echo "::notice::PR created but auto-merge not enabled — merge manually."

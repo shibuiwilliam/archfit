@@ -44,7 +44,7 @@ const DefaultOpenAIModel = "gpt-5.4-mini"
 
 // DefaultClaudeModel is Anthropic's cost/quality sweet spot for short
 // explanations. Override via LLM_MODEL env var at runtime.
-const DefaultClaudeModel = "claude-sonnet-4-6-20250627"
+const DefaultClaudeModel = "claude-sonnet-4-20250514"
 
 // Backend identifies which LLM provider to use.
 type Backend string

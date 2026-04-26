@@ -66,6 +66,7 @@ See [Rules Overview](rules/index.md) for the full catalog.
 | [Configuration](configuration.md) | `.archfit.yaml` reference |
 | [Fitness Contract](contract.md) | `.archfit-contract.yaml` — hard constraints, area budgets, agent directives |
 | [Rules](rules/index.md) | Rule catalog with detection patterns and remediation |
+| [Agent Skill](agent-skill.md) | Claude Code skill — scan, remediate, and verify with progressive disclosure |
 | [Auto-Fix](fix.md) | `archfit fix` — scan-fix-verify loop |
 | [LLM Integration](llm.md) | `--with-llm` — Claude, OpenAI, Gemini enrichment |
 | [CI/CD Integration](ci-cd.md) | SARIF, PR gates, trend tracking |

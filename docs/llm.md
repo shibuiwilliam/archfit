@@ -45,7 +45,7 @@ The LLM is instructed to produce ≤200 words in three short sections: *why it m
 
 | Provider | Env Var | Default Model | `--llm-backend` |
 |---|---|---|---|
-| Claude (Anthropic) | `ANTHROPIC_API_KEY` | `claude-sonnet-4-6-20250627` | `claude` |
+| Claude (Anthropic) | `ANTHROPIC_API_KEY` | `claude-sonnet-4-20250514` | `claude` |
 | OpenAI | `OPENAI_API_KEY` | `gpt-5.4-mini` | `openai` |
 | Google Gemini | `GOOGLE_API_KEY` / `GEMINI_API_KEY` | `gemini-2.5-flash` | `gemini` |
 

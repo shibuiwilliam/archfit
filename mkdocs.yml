@@ -63,6 +63,7 @@ nav:
           - P7.MRD.002 - Changelog: rules/P7.MRD.002.md
           - P7.MRD.003 - ADR Directory: rules/P7.MRD.003.md
   - Features:
+      - Agent Skill: agent-skill.md
       - LLM Integration: llm.md
       - Auto-Fix: fix.md
       - CI/CD Integration: ci-cd.md
