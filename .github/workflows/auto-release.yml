@@ -166,7 +166,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: binary-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: dist/archfit-*.{tar.gz,zip}
+          path: |
+            dist/archfit-*.tar.gz
+            dist/archfit-*.zip
           if-no-files-found: error
 
   # --- Run self-scan and archive the report ---
