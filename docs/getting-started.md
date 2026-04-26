@@ -84,6 +84,7 @@ Every fix is verified by automatic re-scan. If the finding persists or new findi
 | `archfit diff <baseline.json>` | Compare two scans |
 | `archfit report [path]` | Markdown report |
 | `archfit init [path]` | Scaffold `.archfit.yaml` |
+| `archfit help` | Show all commands and flags |
 
 ## Key Flags
 
