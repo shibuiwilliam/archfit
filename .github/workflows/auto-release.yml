@@ -294,7 +294,7 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Update VERSION file
+      - name: Update VERSION file via PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.version.outputs.version }}
@@ -304,14 +304,23 @@ jobs:
             echo "VERSION already up to date"
             exit 0
           fi
-          # Use the GitHub Contents API to update the file directly.
-          # This works with protected branches when the workflow has
-          # contents:write permission — git push does not.
-          FILE_SHA=$(gh api "repos/${{ github.repository }}/contents/VERSION" --jq '.sha')
-          CONTENT=$(echo -n "$VERSION" | base64)
-          gh api --method PUT "repos/${{ github.repository }}/contents/VERSION" \
-            -f message="chore: bump VERSION to ${VERSION} [skip ci]" \
-            -f content="$CONTENT" \
-            -f sha="$FILE_SHA" \
-            -f branch="main"
-          echo "Updated VERSION to $VERSION via API"
+
+          # Branch protection requires a PR — create one and auto-merge.
+          BRANCH="chore/bump-version-${VERSION}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          echo "$VERSION" > VERSION
+          git add VERSION
+          git commit -m "chore: bump VERSION to ${VERSION} [skip ci]"
+          git push origin "$BRANCH"
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore: bump VERSION to ${VERSION}" \
+            --body "Automated version bump after release v${VERSION}. Safe to merge — contains only the VERSION file update."
+
+          # Auto-merge if the repo allows it; otherwise leave the PR open.
+          gh pr merge "$BRANCH" --squash --auto --delete-branch \
+            || echo "Auto-merge not enabled — PR created and awaiting manual merge."
