@@ -1,0 +1,143 @@
+{
+  "schema_version": "0.1.0",
+  "tool": {
+    "name": "archfit",
+    "version": "e2e-golden"
+  },
+  "target": {
+    "path": "<fixture>",
+    "profile": "standard"
+  },
+  "summary": {
+    "rules_evaluated": 14,
+    "rules_with_findings": 4,
+    "findings_total": 4,
+    "by_severity": {
+      "info": 1,
+      "warn": 3,
+      "error": 0,
+      "critical": 0
+    }
+  },
+  "scores": {
+    "overall": 90.7,
+    "by_principle": {
+      "P1": 90,
+      "P2": 60,
+      "P3": 100,
+      "P4": 96.7,
+      "P5": 100,
+      "P6": 100,
+      "P7": 86.7
+    }
+  },
+  "findings": [
+    {
+      "rule_id": "P1.LOC.001",
+      "principle": "P1",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.99,
+      "path": "",
+      "message": "no CLAUDE.md or AGENTS.md at repo root — agents have no canonical entry point",
+      "evidence": {
+        "checked_paths": [
+          "CLAUDE.md",
+          "AGENTS.md"
+        ]
+      },
+      "remediation": {
+        "summary": "Add CLAUDE.md (or AGENTS.md) at the repository root.",
+        "guide_ref": "docs/rules/P1.LOC.001.md"
+      }
+    },
+    {
+      "rule_id": "P2.SPC.010",
+      "principle": "P2",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.97,
+      "path": "schemas/",
+      "message": "no spec-first artifacts found (checked JSON Schema under schemas/, OpenAPI, Protobuf, GraphQL) — agent consumers cannot discover the output contract",
+      "evidence": {
+        "also_checked_basename": [
+          "openapi.yaml",
+          "openapi.yml",
+          "openapi.json",
+          "swagger.yaml",
+          "swagger.yml",
+          "swagger.json"
+        ],
+        "also_checked_formats": [
+          "OpenAPI",
+          "Protobuf",
+          "GraphQL",
+          "Avro"
+        ],
+        "looked_for_pattern": "schemas/*.schema.json"
+      },
+      "remediation": {
+        "summary": "Place a JSON Schema at schemas/output.schema.json with a $id, and emit a schema_version in the tool's output.",
+        "guide_ref": "docs/rules/P2.SPC.010.md"
+      }
+    },
+    {
+      "rule_id": "P7.MRD.002",
+      "principle": "P7",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.98,
+      "path": "",
+      "message": "no CHANGELOG.md at repo root — agents cannot diff tool versions machine-readably",
+      "evidence": {
+        "looked_for": [
+          "CHANGELOG.md",
+          "Changelog.md",
+          "changelog.md",
+          "CHANGES.md"
+        ]
+      },
+      "remediation": {
+        "summary": "Add CHANGELOG.md at the repository root following the Keep a Changelog format.",
+        "guide_ref": "docs/rules/P7.MRD.002.md"
+      }
+    },
+    {
+      "rule_id": "P4.VER.003",
+      "principle": "P4",
+      "severity": "info",
+      "evidence_strength": "strong",
+      "confidence": 0.9,
+      "path": "",
+      "message": "no CI configuration detected — the repository is locally verifiable but not continuously verified",
+      "evidence": {
+        "checked_dir_prefixes": [
+          ".github/workflows/",
+          ".circleci/",
+          ".buildkite/"
+        ],
+        "checked_files": [
+          ".gitlab-ci.yml",
+          ".gitlab-ci.yaml",
+          "Jenkinsfile",
+          ".travis.yml",
+          "azure-pipelines.yml",
+          "bitbucket-pipelines.yml",
+          ".woodpecker.yml"
+        ]
+      },
+      "remediation": {
+        "summary": "Add a CI configuration (.github/workflows/, .gitlab-ci.yml, Jenkinsfile, or similar).",
+        "guide_ref": "docs/rules/P4.VER.003.md"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "name": "invariant_coverage",
+      "value": 1,
+      "unit": "ratio",
+      "principle": "P4"
+    }
+  ]
+}

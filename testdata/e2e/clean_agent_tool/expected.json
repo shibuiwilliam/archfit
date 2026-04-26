@@ -9,7 +9,8 @@
     "profile": "standard"
   },
   "summary": {
-    "rules_evaluated": 7,
+    "rules_evaluated": 14,
+    "rules_with_findings": 0,
     "findings_total": 0,
     "by_severity": {
       "info": 0,
@@ -23,10 +24,20 @@
     "by_principle": {
       "P1": 100,
       "P2": 100,
+      "P3": 100,
       "P4": 100,
+      "P5": 100,
+      "P6": 100,
       "P7": 100
     }
   },
   "findings": [],
-  "metrics": []
+  "metrics": [
+    {
+      "name": "invariant_coverage",
+      "value": 1,
+      "unit": "ratio",
+      "principle": "P4"
+    }
+  ]
 }

@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P4.VER.002",
+      "severity": "info",
+      "path": "",
+      "message_contains": "source directories have test files"
+    }
+  ]
+}

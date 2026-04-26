@@ -42,12 +42,12 @@ See [Getting Started](getting-started.md) for detailed setup instructions.
 
 ## Current Rule Set
 
-10 rules across 2 packs, all with `strong` evidence and `experimental` stability.
+14 rules across 2 packs, all `experimental` stability.
 
-- **`core` pack** (7 rules): P1.LOC.001, P1.LOC.002, P3.EXP.001, P4.VER.001, P5.AGG.001, P6.REV.001, P7.MRD.001
-- **`agent-tool` pack** (3 rules): P2.SPC.010, P7.MRD.002, P7.MRD.003
+- **`core` pack** (11 rules): locality (P1.LOC.001-004), explicitness (P3.EXP.001), verifiability (P4.VER.001-003), aggregation (P5.AGG.001), reversibility (P6.REV.001), machine-readability (P7.MRD.001)
+- **`agent-tool` pack** (3 rules): spec-first (P2.SPC.010), machine-readability (P7.MRD.002, P7.MRD.003)
 
-See [Rules Overview](rules/index.md) for details on each rule.
+See [Rules Overview](rules/index.md) for the full catalog.
 
 ## Key Features
 

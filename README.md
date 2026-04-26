@@ -133,6 +133,13 @@ archfit compare <f1.json> <f2.json> [...]
 archfit fix [rule-id] [path]         auto-fix findings (strong-evidence rules)
 ```
 
+### Contracts
+
+```
+archfit contract check [path]        check scan results against .archfit-contract.yaml
+archfit contract init [path]         scaffold a contract from current scan results
+```
+
 ### Configuration and packs
 
 ```
@@ -160,6 +167,7 @@ archfit version                      print the version
 | `--with-llm` | Enrich findings with LLM explanations | off |
 | `--llm-backend {claude\|openai\|gemini}` | LLM provider | auto-detected |
 | `--llm-budget N` | Max LLM calls per run | `5` |
+| `--record <dir>` | Save scan results (JSON + Markdown) to a timestamped subdirectory | |
 
 The `fix` command adds: `--all`, `--dry-run`, `--plan`, `--json`.
 The `trend` command adds: `--history <dir>`, `--since <date>`, `--format {terminal|json|csv}`.
@@ -182,19 +190,21 @@ Treat `1` as "read the JSON output", not as a crash.
 
 ## The rule set — all 7 principles covered
 
-10 rules across 2 packs. All `strong` evidence, `experimental` stability.
+12 rules across 2 packs. All `experimental` stability.
 
-### `core` pack (7 rules) — applies to every repository
+### `core` pack (9 rules) — applies to every repository
 
-| ID | Principle | What it checks |
-|---|---|---|
-| [`P1.LOC.001`](./docs/rules/P1.LOC.001.md) | Locality | `CLAUDE.md` or `AGENTS.md` exists at the repo root |
-| [`P1.LOC.002`](./docs/rules/P1.LOC.002.md) | Locality | Vertical-slice directories carry their own `AGENTS.md` |
-| [`P3.EXP.001`](./docs/rules/P3.EXP.001.md) | Shallow explicitness | Configuration is documented: `.env` files, Spring Boot profiles, Terraform tfvars, Rails environments (see [details below](#language-and-stack-support)) |
-| [`P4.VER.001`](./docs/rules/P4.VER.001.md) | Verifiability | A fast verification entrypoint exists (Makefile, package.json, go.mod, pom.xml, build.gradle, Gemfile, Cargo.toml, and [20+ more](#language-and-stack-support)) |
-| [`P5.AGG.001`](./docs/rules/P5.AGG.001.md) | Aggregation of danger | Security-sensitive files (auth, secrets, migrations, deploy) are concentrated, not scattered |
-| [`P6.REV.001`](./docs/rules/P6.REV.001.md) | Reversibility | Deployment artifacts present → rollback documentation must exist |
-| [`P7.MRD.001`](./docs/rules/P7.MRD.001.md) | Machine-readability | CLI repos document their exit codes |
+| ID | Principle | What it checks | Severity / Evidence |
+|---|---|---|---|
+| [`P1.LOC.001`](./docs/rules/P1.LOC.001.md) | Locality | `CLAUDE.md` or `AGENTS.md` exists at the repo root | warn / strong |
+| [`P1.LOC.002`](./docs/rules/P1.LOC.002.md) | Locality | Vertical-slice directories carry their own `AGENTS.md` | warn / strong |
+| [`P3.EXP.001`](./docs/rules/P3.EXP.001.md) | Shallow explicitness | Configuration is documented: `.env` files, Spring Boot profiles, Terraform tfvars, Rails environments (see [details below](#language-and-stack-support)) | warn / strong |
+| [`P4.VER.001`](./docs/rules/P4.VER.001.md) | Verifiability | A fast verification entrypoint exists (Makefile, package.json, go.mod, pom.xml, build.gradle, Gemfile, Cargo.toml, and [20+ more](#language-and-stack-support)) | warn / strong |
+| [`P4.VER.002`](./docs/rules/P4.VER.002.md) | Verifiability | Source directories have test files alongside code | info / medium |
+| [`P4.VER.003`](./docs/rules/P4.VER.003.md) | Verifiability | Repository has CI configuration (GitHub Actions, GitLab CI, Jenkins, etc.) | info / strong |
+| [`P5.AGG.001`](./docs/rules/P5.AGG.001.md) | Aggregation of danger | Security-sensitive files (auth, secrets, migrations, deploy) are concentrated, not scattered | warn / strong |
+| [`P6.REV.001`](./docs/rules/P6.REV.001.md) | Reversibility | Deployment artifacts present → rollback documentation must exist | warn / strong |
+| [`P7.MRD.001`](./docs/rules/P7.MRD.001.md) | Machine-readability | CLI repos document their exit codes | warn / strong |
 
 ### `agent-tool` pack (3 rules) — opt-in, for agent-consumed tools
 
@@ -644,7 +654,7 @@ Multi-arch image (`linux/amd64` + `linux/arm64`) published to
 
 ```
 archfit/
-├── cmd/archfit/              # CLI entry point — explicit wiring, 17 subcommands
+├── cmd/archfit/              # CLI entry point — explicit wiring, 18 subcommands
 ├── internal/
 │   ├── core/                 # Scheduler: collectors → FactStore → rules → scores
 │   ├── model/                # Rule, Finding, Metric, FactStore, ParseFailure
@@ -663,7 +673,7 @@ archfit/
 │   ├── report/               # Renderers: terminal, json, md, sarif
 │   └── score/                # Weight-based normalized scoring + 6 metrics
 ├── packs/
-│   ├── core/                 # 7 rules covering P1, P3, P4, P5, P6, P7
+│   ├── core/                 # 9 rules covering P1, P3, P4, P5, P6, P7
 │   │   ├── resolvers/        # Pure functions of FactStore
 │   │   ├── fixtures/         # One golden repo per rule + expected.json
 │   │   └── pack_test.go      # Fixture-driven table tests
@@ -671,10 +681,11 @@ archfit/
 ├── schemas/                  # Versioned JSON Schema: rule, config, output, contract
 ├── testdata/e2e/             # End-to-end golden tests
 ├── .claude/skills/archfit/   # Claude Code agent skill (auto-discovered)
-│   └── reference/remediation/  # 10 per-rule remediation guides
+│   └── reference/remediation/  # Per-rule remediation guides
 ├── .github/workflows/
 │   ├── ci.yml                # lint + test + self-scan + cross-build (5 platforms)
-│   └── release.yml           # binaries + GitHub Release + Docker (ghcr.io)
+│   ├── auto-release.yml      # auto patch-bump, tag, release on main push
+│   └── release.yml           # manual release on v* tag push
 ├── docs/
 │   ├── adr/                  # Architecture Decision Records
 │   ├── rules/                # Per-rule documentation
@@ -682,6 +693,7 @@ archfit/
 │   ├── llm.md                # --with-llm contract
 │   └── exit-codes.md         # Exit code contract
 ├── Dockerfile                # Multi-stage: golang:1.24-alpine → scratch
+├── VERSION                   # SemVer source of truth (read by Makefile + CI)
 ├── .archfit.yaml             # archfit's own config (self-scan)
 ├── Makefile
 ├── CLAUDE.md                 # Contributor contract
@@ -741,6 +753,40 @@ See [`SECURITY.md`](./SECURITY.md). Two things to know:
 - `--with-llm` sends rule metadata and finding evidence to the LLM provider.
   **Source code and file contents are never sent.**
   Full contract: [`docs/llm.md`](./docs/llm.md).
+
+---
+
+## Versioning and releases
+
+archfit follows [SemVer 2.0](https://semver.org/spec/v2.0.0.html). The current
+version lives in the [`VERSION`](./VERSION) file at the repo root.
+
+### Automatic patch releases
+
+Every push to `main` (except docs-only changes) triggers the
+[auto-release](./.github/workflows/auto-release.yml) workflow:
+
+1. Read `VERSION`, find the latest `v0.1.*` tag, bump the patch
+2. Run `make lint`, `make test`, `make self-scan` as a quality gate
+3. Tag the commit (`v0.1.1`, `v0.1.2`, ...)
+4. Cross-compile binaries for 5 platforms
+5. Create a GitHub Release with binaries, checksums, and a self-scan report
+6. Build and push a multi-arch Docker image to `ghcr.io`
+7. Open a PR to update `VERSION` for the next cycle
+
+### Manual minor/major releases
+
+To bump the minor or major version, edit `VERSION` (e.g., `0.2.0` or `1.0.0`)
+before merging to `main`. The auto-release workflow respects the higher number.
+You can also push a `v*` tag directly to trigger the
+[manual release](./.github/workflows/release.yml) workflow.
+
+### Each release includes
+
+- Pre-built binaries: `linux/{amd64,arm64}`, `darwin/{amd64,arm64}`, `windows/amd64`
+- SHA-256 checksums (`checksums-sha256.txt`)
+- Self-scan JSON report for that version
+- Multi-arch Docker image at `ghcr.io/shibuiwilliam/archfit:<version>`
 
 ---
 

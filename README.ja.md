@@ -133,6 +133,13 @@ archfit compare <f1.json> <f2.json> [...]
 archfit fix [rule-id] [path]         検出結果を自動修正（strongエビデンスルール）
 ```
 
+### コントラクト
+
+```
+archfit contract check [path]        スキャン結果を .archfit-contract.yaml と照合
+archfit contract init [path]         現在のスキャン結果からコントラクトを生成
+```
+
 ### 設定とパック
 
 ```
@@ -160,6 +167,7 @@ archfit version                      バージョン表示
 | `--with-llm` | LLMによる説明で検出結果を補強 | off |
 | `--llm-backend {claude\|openai\|gemini}` | LLMプロバイダー | 自動検出 |
 | `--llm-budget N` | 1回あたりのLLM呼び出し上限 | `5` |
+| `--record <dir>` | スキャン結果（JSON + Markdown）をタイムスタンプ付きサブディレクトリに保存 | |
 
 `fix` コマンド専用: `--all`, `--dry-run`, `--plan`, `--json`。
 `trend` コマンド専用: `--history <dir>`, `--since <date>`, `--format {terminal|json|csv}`。
@@ -182,19 +190,21 @@ archfit version                      バージョン表示
 
 ## ルールセット — 全7原則をカバー
 
-2つのパックに計10ルール。すべて `strong` エビデンス、`experimental` 安定性。
+2つのパックに計12ルール。すべて `experimental` 安定性。
 
-### `core` パック（7ルール） — すべてのリポジトリに適用
+### `core` パック（9ルール） — すべてのリポジトリに適用
 
-| ID | 原則 | 検査内容 |
-|---|---|---|
-| [`P1.LOC.001`](./docs/rules/P1.LOC.001.md) | 局所性 | リポジトリルートに `CLAUDE.md` または `AGENTS.md` が存在する |
-| [`P1.LOC.002`](./docs/rules/P1.LOC.002.md) | 局所性 | 垂直スライスディレクトリが独自の `AGENTS.md` を持っている |
-| [`P3.EXP.001`](./docs/rules/P3.EXP.001.md) | 浅い明示性 | 設定の文書化: `.env` ファイル、Spring Bootプロファイル、Terraform tfvars、Rails environments（[詳細は下記](#言語スタック対応)） |
-| [`P4.VER.001`](./docs/rules/P4.VER.001.md) | 検証可能性 | 高速な検証エントリーポイントが存在する（Makefile、package.json、go.mod、pom.xml、build.gradle、Gemfile、Cargo.toml [他20種以上](#言語スタック対応)） |
-| [`P5.AGG.001`](./docs/rules/P5.AGG.001.md) | 危険の集約 | セキュリティ関連ファイル（認証、秘密情報、マイグレーション、デプロイ）が分散せず集中している |
-| [`P6.REV.001`](./docs/rules/P6.REV.001.md) | 可逆性 | デプロイ成果物がある → ロールバックドキュメントが必要 |
-| [`P7.MRD.001`](./docs/rules/P7.MRD.001.md) | 機械可読性 | CLIリポジトリが終了コードを文書化している |
+| ID | 原則 | 検査内容 | 重大度 / エビデンス |
+|---|---|---|---|
+| [`P1.LOC.001`](./docs/rules/P1.LOC.001.md) | 局所性 | リポジトリルートに `CLAUDE.md` または `AGENTS.md` が存在する | warn / strong |
+| [`P1.LOC.002`](./docs/rules/P1.LOC.002.md) | 局所性 | 垂直スライスディレクトリが独自の `AGENTS.md` を持っている | warn / strong |
+| [`P3.EXP.001`](./docs/rules/P3.EXP.001.md) | 浅い明示性 | 設定の文書化: `.env` ファイル、Spring Bootプロファイル、Terraform tfvars、Rails environments（[詳細は下記](#言語スタック対応)） | warn / strong |
+| [`P4.VER.001`](./docs/rules/P4.VER.001.md) | 検証可能性 | 高速な検証エントリーポイントが存在する（Makefile、package.json、go.mod、pom.xml、build.gradle、Gemfile、Cargo.toml [他20種以上](#言語スタック対応)） | warn / strong |
+| [`P4.VER.002`](./docs/rules/P4.VER.002.md) | 検証可能性 | ソースディレクトリにテストファイルが存在する | info / medium |
+| [`P4.VER.003`](./docs/rules/P4.VER.003.md) | 検証可能性 | CIが設定されている（GitHub Actions、GitLab CI、Jenkins等） | info / strong |
+| [`P5.AGG.001`](./docs/rules/P5.AGG.001.md) | 危険の集約 | セキュリティ関連ファイル（認証、秘密情報、マイグレーション、デプロイ）が分散せず集中している | warn / strong |
+| [`P6.REV.001`](./docs/rules/P6.REV.001.md) | 可逆性 | デプロイ成果物がある → ロールバックドキュメントが必要 | warn / strong |
+| [`P7.MRD.001`](./docs/rules/P7.MRD.001.md) | 機械可読性 | CLIリポジトリが終了コードを文書化している | warn / strong |
 
 ### `agent-tool` パック（3ルール） — オプトイン、エージェント向けツール用
 
@@ -634,7 +644,7 @@ docker run --rm -v "$PWD:/repo" ghcr.io/shibuiwilliam/archfit:latest scan /repo
 
 ```
 archfit/
-├── cmd/archfit/              # CLIエントリーポイント — 明示的な配線、17サブコマンド
+├── cmd/archfit/              # CLIエントリーポイント — 明示的な配線、18サブコマンド
 ├── internal/
 │   ├── core/                 # スケジューラー: collectors → FactStore → rules → scores
 │   ├── model/                # Rule, Finding, Metric, FactStore, ParseFailure
@@ -653,7 +663,7 @@ archfit/
 │   ├── report/               # レンダラー: terminal, json, md, sarif
 │   └── score/                # 重み付け正規化スコアリング + 6メトリクス
 ├── packs/
-│   ├── core/                 # 7ルール（P1, P3, P4, P5, P6, P7）
+│   ├── core/                 # 9ルール（P1, P3, P4, P5, P6, P7）
 │   │   ├── resolvers/        # FactStoreの純粋関数
 │   │   ├── fixtures/         # ルールごとのゴールデンリポジトリ + expected.json
 │   │   └── pack_test.go      # フィクスチャ駆動テーブルテスト
@@ -661,10 +671,11 @@ archfit/
 ├── schemas/                  # バージョン付きJSON Schema: rule, config, output, contract
 ├── testdata/e2e/             # エンドツーエンドゴールデンテスト
 ├── .claude/skills/archfit/   # Claude Codeエージェントスキル（自動検出）
-│   └── reference/remediation/  # ルールごとの修正ガイド10件
+│   └── reference/remediation/  # ルールごとの修正ガイド
 ├── .github/workflows/
 │   ├── ci.yml                # lint + test + self-scan + cross-build (5プラットフォーム)
-│   └── release.yml           # バイナリ + GitHub Release + Docker (ghcr.io)
+│   ├── auto-release.yml      # mainプッシュ時に自動パッチバンプ・タグ・リリース
+│   └── release.yml           # v*タグプッシュ時の手動リリース
 ├── docs/
 │   ├── adr/                  # アーキテクチャ決定記録
 │   ├── rules/                # ルールごとのドキュメント
@@ -672,6 +683,7 @@ archfit/
 │   ├── llm.md                # --with-llm の契約
 │   └── exit-codes.md         # 終了コードの契約
 ├── Dockerfile                # マルチステージ: golang:1.24-alpine → scratch
+├── VERSION                   # SemVerのソース・オブ・トゥルース（Makefile + CIが参照）
 ├── .archfit.yaml             # archfit自身の設定（self-scan用）
 ├── Makefile
 ├── CLAUDE.md                 # コントリビューター契約
@@ -728,6 +740,40 @@ PRを作成する前に [`CLAUDE.md`](./CLAUDE.md) と
 
 - archfit はスキャン対象リポジトリに対して `git log` を実行します。信頼できないリポジトリにはサンドボックスを使用してください。
 - `--with-llm` はルールメタデータと検出エビデンスをLLMプロバイダーに送信します。**ソースコードとファイル内容は送信されません。** 詳細な契約: [`docs/llm.md`](./docs/llm.md)。
+
+---
+
+## バージョニングとリリース
+
+archfit は [SemVer 2.0](https://semver.org/spec/v2.0.0.html) に従います。
+現在のバージョンはリポジトリルートの [`VERSION`](./VERSION) ファイルに記載されています。
+
+### 自動パッチリリース
+
+`main` へのプッシュごと（ドキュメントのみの変更を除く）に
+[auto-release](./.github/workflows/auto-release.yml) ワークフローが実行されます：
+
+1. `VERSION` を読み取り、最新の `v0.1.*` タグを検索してパッチをバンプ
+2. `make lint`、`make test`、`make self-scan` を品質ゲートとして実行
+3. コミットにタグ付け（`v0.1.1`、`v0.1.2`、...）
+4. 5プラットフォーム向けにクロスコンパイル
+5. バイナリ、チェックサム、self-scanレポート付きでGitHub Releaseを作成
+6. マルチアーキテクチャDockerイメージを `ghcr.io` にプッシュ
+7. 次のサイクルに向けて `VERSION` 更新のPRを作成
+
+### 手動マイナー/メジャーリリース
+
+マイナーまたはメジャーバージョンをバンプするには、`main` にマージする前に
+`VERSION` を編集（例：`0.2.0` や `1.0.0`）してください。auto-release
+ワークフローはより大きい番号を尊重します。`v*` タグを直接プッシュして
+[手動リリース](./.github/workflows/release.yml) ワークフローを起動することも可能です。
+
+### 各リリースに含まれるもの
+
+- ビルド済みバイナリ: `linux/{amd64,arm64}`、`darwin/{amd64,arm64}`、`windows/amd64`
+- SHA-256チェックサム（`checksums-sha256.txt`）
+- そのバージョンのself-scan JSONレポート
+- マルチアーキテクチャDockerイメージ: `ghcr.io/shibuiwilliam/archfit:<version>`
 
 ---
 

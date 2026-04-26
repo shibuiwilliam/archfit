@@ -24,6 +24,7 @@ import (
 	"github.com/shibuiwilliam/archfit/internal/adapter/llm"
 	collectfs "github.com/shibuiwilliam/archfit/internal/collector/fs"
 	"github.com/shibuiwilliam/archfit/internal/config"
+	"github.com/shibuiwilliam/archfit/internal/contract"
 	"github.com/shibuiwilliam/archfit/internal/core"
 	"github.com/shibuiwilliam/archfit/internal/fix"
 	"github.com/shibuiwilliam/archfit/internal/fix/static"
@@ -45,6 +46,10 @@ const (
 	exitUsage           = 2
 	exitRuntimeError    = 3
 	exitConfigError     = 4
+	// exitContractSoftMiss indicates that all hard constraints passed but at
+	// least one soft target was missed. Advisory, not blocking.
+	// See docs/adr/0008-contract-exit-codes.md.
+	exitContractSoftMiss = 5
 )
 
 func main() {
@@ -93,6 +98,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdNewPack(rest, stdout, stderr)
 	case "test-pack":
 		return cmdTestPack(rest, stdout, stderr)
+	case "contract":
+		return cmdContract(rest, stdout, stderr)
 	case "version", "--version", "-v":
 		fmt.Fprintf(stdout, "archfit %s\n", version.Version)
 		return exitOK
@@ -125,6 +132,8 @@ usage:
   archfit list-rules                   list all registered rules
   archfit list-packs                   list all registered rule packs
   archfit validate-config [path]       check .archfit.yaml without scanning
+  archfit contract check [path]         check scan results against .archfit-contract.yaml
+  archfit contract init [path]         scaffold a contract from current scan results
   archfit validate-pack <path>         check pack structure
   archfit new-pack <name> [path]       scaffold a new rule pack
   archfit test-pack <path>             run pack tests
@@ -143,31 +152,34 @@ global flags (where applicable):
   --llm-budget N                       cap the number of LLM calls per run (default: 5)
   --record <dir>                       save scan results (JSON + Markdown) to a timestamped
                                        subdirectory under <dir> (e.g., --record .archfit-records)
+  --explain-coverage                   append a summary showing which rules fired vs. passed
 
 Exit codes:
   0   success (or: findings below --fail-on threshold)
-  1   findings present at or above --fail-on threshold
+  1   findings present at or above --fail-on threshold (or: contract hard violation)
   2   usage error
   3   runtime error
   4   configuration error
+  5   contract soft target missed (no hard violations)
 
 See docs/exit-codes.md and PROJECT.md for the full contract.
 `)
 }
 
 type scanFlags struct {
-	format     string
-	json       bool
-	failOn     string
-	workDir    string
-	configPath string
-	path       string
-	depth      string
-	policy     string
-	withLLM    bool
-	llmBackend string
-	llmBudget  int
-	recordDir  string
+	format          string
+	json            bool
+	failOn          string
+	workDir         string
+	configPath      string
+	path            string
+	depth           string
+	policy          string
+	withLLM         bool
+	llmBackend      string
+	llmBudget       int
+	recordDir       string
+	explainCoverage bool
 }
 
 func parseScanFlags(args []string, cmd string) (scanFlags, error) {
@@ -185,6 +197,7 @@ func parseScanFlags(args []string, cmd string) (scanFlags, error) {
 	fs.StringVar(&f.llmBackend, "llm-backend", "", "LLM provider: gemini, openai, or claude (auto-detected from env if omitted)")
 	fs.IntVar(&f.llmBudget, "llm-budget", 5, "maximum LLM calls per run (only when --with-llm)")
 	fs.StringVar(&f.recordDir, "record", "", "save scan results (JSON + Markdown) to a timestamped subdirectory under this path")
+	fs.BoolVar(&f.explainCoverage, "explain-coverage", false, "append a coverage summary showing which rules fired vs. passed silently")
 	if err := fs.Parse(args); err != nil {
 		return f, err
 	}
@@ -331,12 +344,37 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 		}
 	}
 
+	// Coverage explanation (--explain-coverage).
+	if flags.explainCoverage {
+		printCoverageExplanation(stderr, rules, res)
+	}
+
 	for _, f := range res.Findings {
 		if f.Severity.Rank() >= threshold.Rank() {
 			return exitFindingsAtLevel
 		}
 	}
 	return exitOK
+}
+
+func printCoverageExplanation(w io.Writer, rules []model.Rule, res core.ScanResult) {
+	firedRules := map[string]bool{}
+	for _, f := range res.Findings {
+		firedRules[f.RuleID] = true
+	}
+	var clean []string
+	for _, r := range rules {
+		if !firedRules[r.ID] {
+			clean = append(clean, r.ID)
+		}
+	}
+	sort.Strings(clean)
+	fmt.Fprintf(w, "coverage: %d rules evaluated, %d with findings, %d clean\n",
+		res.RulesEvaluated, res.RulesWithFindings, len(clean))
+	if len(clean) > 0 {
+		fmt.Fprintf(w, "  clean rules: %s\n", strings.Join(clean, ", "))
+	}
+	fmt.Fprintln(w, "  hint: rules may pass because they are satisfied OR because they found no applicable signal")
 }
 
 // recordScanResults writes JSON and Markdown files to a timestamped subdirectory
@@ -701,22 +739,86 @@ func cmdInit(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "init: %s already exists; refusing to overwrite\n", target)
 		return exitConfigError
 	}
-	template := []byte(`{
-  "version": 1,
-  "project_type": [],
-  "profile": "standard",
-  "packs": {
-    "enabled": ["core"]
-  },
-  "ignore": []
-}
-`)
-	if err := os.WriteFile(target, template, 0o644); err != nil {
+
+	// Detect project stack to generate stack-aware defaults.
+	projectType, packs := detectProjectStack(path)
+
+	doc := map[string]any{
+		"version":      1,
+		"project_type": projectType,
+		"profile":      "standard",
+		"packs":        map[string]any{"enabled": packs},
+		"ignore":       []any{},
+	}
+	out, err := json.MarshalIndent(doc, "", "  ")
+	if err != nil {
 		fmt.Fprintf(stderr, "init: %v\n", err)
 		return exitRuntimeError
 	}
-	fmt.Fprintf(stdout, "wrote %s\n", target)
+	if err := os.WriteFile(target, append(out, '\n'), 0o644); err != nil {
+		fmt.Fprintf(stderr, "init: %v\n", err)
+		return exitRuntimeError
+	}
+	if len(projectType) > 0 {
+		fmt.Fprintf(stdout, "wrote %s (detected: %s)\n", target, strings.Join(projectType, ", "))
+	} else {
+		fmt.Fprintf(stdout, "wrote %s\n", target)
+	}
 	return exitOK
+}
+
+// detectProjectStack inspects the filesystem to determine project type and
+// appropriate packs. Returns empty slices if detection fails gracefully.
+func detectProjectStack(path string) (projectType, packs []string) {
+	packs = []string{"core"} // core always enabled
+
+	repo, err := collectfs.Collect(path)
+	if err != nil {
+		return nil, packs
+	}
+
+	// Determine primary language.
+	var primaryLang string
+	maxCount := 0
+	for lang, count := range repo.Languages {
+		if count > maxCount {
+			primaryLang = lang
+			maxCount = count
+		}
+	}
+
+	// Check for CLI entrypoint (cmd/ or bin/ directory).
+	hasCLI := false
+	for _, f := range repo.Files {
+		if strings.HasPrefix(f.Path, "cmd/") || strings.HasPrefix(f.Path, "bin/") {
+			hasCLI = true
+			break
+		}
+	}
+
+	// Check for Terraform.
+	hasTerraform := repo.Languages["terraform"] > 0
+
+	// Map language + signals to project type and packs.
+	if hasTerraform {
+		projectType = append(projectType, "iac")
+	}
+	if hasCLI {
+		projectType = append(projectType, "agent-tool")
+		packs = append(packs, "agent-tool")
+	}
+	switch primaryLang {
+	case "go", "python", "typescript", "javascript", "java", "ruby":
+		if !hasCLI {
+			projectType = append(projectType, "web-saas")
+		}
+	}
+
+	if len(projectType) == 0 {
+		// Fallback: no specific type detected.
+		return nil, packs
+	}
+	return projectType, packs
 }
 
 // filepathJoin is a thin wrapper that keeps the import list short at the top of main.go.
@@ -1383,5 +1485,210 @@ func cmdTestPack(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "test-pack: %v\n", err)
 		return exitRuntimeError
 	}
+	return exitOK
+}
+
+// ----- Contract subcommands -----
+
+func cmdContract(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 0 {
+		fmt.Fprintln(stderr, `usage:
+  archfit contract check [path]   check scan results against .archfit-contract.yaml
+  archfit contract init [path]    scaffold a contract from current scan results`)
+		return exitUsage
+	}
+	sub := args[0]
+	rest := args[1:]
+	switch sub {
+	case "check":
+		return cmdContractCheck(rest, stdout, stderr)
+	case "init":
+		return cmdContractInit(rest, stdout, stderr)
+	default:
+		fmt.Fprintf(stderr, "archfit contract: unknown subcommand %q\n", sub)
+		return exitUsage
+	}
+}
+
+func cmdContractCheck(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("contract check", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	formatStr := fs.String("format", "terminal", "output format")
+	jsonFlag := fs.Bool("json", false, "shorthand for --format=json")
+	workDir := fs.String("C", "", "change to directory before running")
+	configPath := fs.String("config", "", "path to config file")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprintf(stderr, "contract check: %v\n", err)
+		return exitUsage
+	}
+	if *jsonFlag {
+		*formatStr = "json"
+	}
+	path := "."
+	if rest := fs.Args(); len(rest) == 1 {
+		path = rest[0]
+	}
+	if *workDir != "" {
+		path = joinIfRelative(*workDir, path)
+	}
+
+	// Load contract.
+	c, cpath, found, err := contract.Load(path)
+	if err != nil {
+		fmt.Fprintf(stderr, "contract check: %v\n", err)
+		return exitConfigError
+	}
+	if !found {
+		fmt.Fprintln(stderr, "contract check: no .archfit-contract.yaml found — run 'archfit contract init' to create one")
+		return exitOK
+	}
+	fmt.Fprintf(stderr, "contract: loaded %s\n", cpath)
+
+	// Run scan.
+	reg, err := buildRegistry()
+	if err != nil {
+		fmt.Fprintf(stderr, "contract check: %v\n", err)
+		return exitRuntimeError
+	}
+	cfg, err := loadConfig(*configPath, path)
+	if err != nil {
+		fmt.Fprintf(stderr, "contract check: %v\n", err)
+		return exitConfigError
+	}
+	rules := filterRules(reg, cfg)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	res, err := core.Scan(ctx, core.ScanInput{Root: path, Rules: rules, Runner: exec.NewReal()})
+	if err != nil {
+		fmt.Fprintf(stderr, "contract check: %v\n", err)
+		return exitRuntimeError
+	}
+
+	// Check contract.
+	result := contract.Check(c, res.Scores, res.Findings)
+
+	// Render.
+	if *formatStr == "json" {
+		enc := json.NewEncoder(stdout)
+		enc.SetIndent("", "  ")
+		_ = enc.Encode(result)
+	} else {
+		renderContractTerminal(stdout, result)
+	}
+
+	if !result.Passed {
+		return exitFindingsAtLevel
+	}
+	if len(result.SoftMisses) > 0 {
+		return exitContractSoftMiss
+	}
+	return exitOK
+}
+
+func renderContractTerminal(w io.Writer, r contract.CheckResult) {
+	if r.Passed {
+		fmt.Fprintln(w, "contract: PASSED (all hard constraints satisfied)")
+	} else {
+		fmt.Fprintln(w, "contract: FAILED")
+	}
+	if len(r.HardViolations) > 0 {
+		fmt.Fprintln(w, "hard violations:")
+		for _, v := range r.HardViolations {
+			fmt.Fprintf(w, "  ✗ %s\n", v.Detail)
+		}
+	}
+	if len(r.SoftMisses) > 0 {
+		fmt.Fprintln(w, "soft target misses:")
+		for _, m := range r.SoftMisses {
+			fmt.Fprintf(w, "  ○ %s\n", m.Detail)
+		}
+	}
+	if len(r.BudgetStatus) > 0 {
+		fmt.Fprintln(w, "area budgets:")
+		for _, b := range r.BudgetStatus {
+			status := "ok"
+			if b.Exhausted {
+				status = "EXHAUSTED"
+			}
+			fmt.Fprintf(w, "  %s: %d/%d findings (%s)\n", b.Budget.Path, b.Current, b.Budget.MaxFindings, status)
+		}
+	}
+}
+
+func cmdContractInit(args []string, stdout, stderr io.Writer) int {
+	path := "."
+	if len(args) == 1 {
+		path = args[0]
+	} else if len(args) > 1 {
+		fmt.Fprintln(stderr, "usage: archfit contract init [path]")
+		return exitUsage
+	}
+
+	// Check if contract already exists.
+	if _, _, found, _ := contract.Load(path); found {
+		fmt.Fprintln(stderr, "contract init: .archfit-contract.yaml already exists")
+		return exitConfigError
+	}
+
+	// Run scan to get current scores.
+	reg, err := buildRegistry()
+	if err != nil {
+		fmt.Fprintf(stderr, "contract init: %v\n", err)
+		return exitRuntimeError
+	}
+	cfg, cerr := loadConfig("", path)
+	if cerr != nil {
+		fmt.Fprintf(stderr, "contract init: %v\n", cerr)
+		return exitConfigError
+	}
+	rules := filterRules(reg, cfg)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	res, err := core.Scan(ctx, core.ScanInput{Root: path, Rules: rules, Runner: exec.NewReal()})
+	if err != nil {
+		fmt.Fprintf(stderr, "contract init: %v\n", err)
+		return exitRuntimeError
+	}
+
+	// Generate contract: hard constraints set 5 points below current scores.
+	c := contract.Contract{Version: 1}
+	overallFloor := math.Floor(res.Scores.Overall/5) * 5 // round down to nearest 5
+	if overallFloor < 0 {
+		overallFloor = 0
+	}
+	c.HardConstraints = append(c.HardConstraints, contract.Constraint{
+		Principle: "overall",
+		MinScore:  overallFloor,
+		Scope:     "**",
+		Rationale: "Do not let overall fitness drop below current level",
+	})
+
+	// Add a soft target at current score (aspirational: maintain or improve).
+	if res.Scores.Overall < 100 {
+		c.SoftTargets = append(c.SoftTargets, contract.Target{
+			Principle:   "overall",
+			TargetScore: 100,
+			Current:     res.Scores.Overall,
+		})
+	}
+
+	// Add a default agent directive.
+	c.AgentDirectives = append(c.AgentDirectives, contract.AgentDirective{
+		When:   "finding.severity >= error",
+		Action: "stop and ask the user before proceeding",
+	})
+
+	// Write .archfit-contract.yaml.
+	out, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		fmt.Fprintf(stderr, "contract init: %v\n", err)
+		return exitRuntimeError
+	}
+	contractPath := filepath.Join(path, ".archfit-contract.yaml")
+	if err := os.WriteFile(contractPath, append(out, '\n'), 0o644); err != nil {
+		fmt.Fprintf(stderr, "contract init: %v\n", err)
+		return exitRuntimeError
+	}
+	fmt.Fprintf(stdout, "created %s (overall floor: %.0f, current: %.1f)\n", contractPath, overallFloor, res.Scores.Overall)
 	return exitOK
 }

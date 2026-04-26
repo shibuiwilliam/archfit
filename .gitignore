@@ -69,3 +69,8 @@ Thumbs.db
 # Temp directories
 /tmp/
 /temp/
+
+# mkdocs build output
+/site/
+
+archfit

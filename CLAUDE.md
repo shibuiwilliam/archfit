@@ -197,6 +197,8 @@ archfit fix <rule-id> [path]     # auto-fix (strong-evidence rules only)
 archfit init                     # scaffold .archfit.yaml
 archfit report [path]            # Markdown report
 archfit diff <baseline.json>     # diff against a baseline scan
+archfit contract check [path]    # check scan results against .archfit-contract.yaml
+archfit contract init [path]     # scaffold contract from current scan
 archfit list-rules
 archfit list-packs
 archfit validate-config
@@ -341,7 +343,7 @@ Each numbered step is a self-contained PR-sized unit of work. For detailed techn
 - **Contract types**: `Contract`, `Constraint`, `AreaBudget`, `AgentDirective` in `internal/contract/contract.go`.
 - **Check function**: `Check(contract, scores, findings) → CheckResult`. Pure function, no I/O.
 - **Loading**: same JSON-in-YAML pattern as `internal/config/`.
-- **CLI** (next step): `archfit contract check/status/init`. New exit code 5 for soft-target miss (ADR required).
+- **CLI** (implemented): `archfit contract check` (exit 0/1/5) and `archfit contract init` (generates contract from current scan). ADR 0008.
 - **Agent integration** (next step): skill reads contract before starting work, respects area budgets, follows directives.
 - See `development/fitness-contract.md` for full design.
 

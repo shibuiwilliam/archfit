@@ -103,4 +103,4 @@ If the evidence map contains values longer than 8 KiB total, the prompt is trunc
 
 ## Extension Points
 
-The adapter interface (`internal/adapter/llm/Client`) is provider-agnostic. All three backends (Claude, OpenAI, Gemini) share the same interface, budget, and cache layers. Adding a fourth backend (e.g., local Ollama) requires a single file implementation. See [LLM Integration](../development/llm-integration.md) for developer documentation.
+The adapter interface (`internal/adapter/llm/Client`) is provider-agnostic. All three backends (Claude, OpenAI, Gemini) share the same interface, budget, and cache layers. Adding a fourth backend (e.g., local Ollama) requires a single file implementation. See [LLM Integration](development/llm-integration.md) for developer documentation.

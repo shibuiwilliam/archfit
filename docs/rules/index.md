@@ -14,25 +14,29 @@ P<principle>.<dimension>.<number>
 
 ## Current Rules
 
-### `core` pack — applies to every repository
+### `core` pack — applies to every repository (11 rules)
 
-| Rule | Principle | Severity | What it checks |
-|---|---|---|---|
-| [P1.LOC.001](P1.LOC.001.md) | P1 Locality | warn | `CLAUDE.md` or `AGENTS.md` exists at repo root |
-| [P1.LOC.002](P1.LOC.002.md) | P1 Locality | warn | Vertical-slice directories carry `AGENTS.md` |
-| [P3.EXP.001](P3.EXP.001.md) | P3 Explicitness | warn | `.env` files → `.env.example` must exist |
-| [P4.VER.001](P4.VER.001.md) | P4 Verifiability | warn | Fast verification entrypoint exists |
-| [P5.AGG.001](P5.AGG.001.md) | P5 Aggregation | warn | Security-sensitive files concentrated |
-| [P6.REV.001](P6.REV.001.md) | P6 Reversibility | warn | Deployment artifacts → rollback docs exist |
-| [P7.MRD.001](P7.MRD.001.md) | P7 Machine-readability | warn | CLI repos document exit codes |
+| Rule | Principle | Severity | Evidence | What it checks |
+|---|---|---|---|---|
+| [P1.LOC.001](P1.LOC.001.md) | P1 Locality | warn | strong | `CLAUDE.md` or `AGENTS.md` exists at repo root |
+| [P1.LOC.002](P1.LOC.002.md) | P1 Locality | warn | strong | Vertical-slice directories carry `AGENTS.md` |
+| [P1.LOC.003](P1.LOC.003.md) | P1 Locality | info | medium | Dependency coupling is bounded (max reach ≤10) |
+| [P1.LOC.004](P1.LOC.004.md) | P1 Locality | info | sampled | Commits touch a bounded number of files (≤8) |
+| [P3.EXP.001](P3.EXP.001.md) | P3 Explicitness | warn | strong | Config documented (.env, Spring profiles, tfvars, Rails) |
+| [P4.VER.001](P4.VER.001.md) | P4 Verifiability | warn | strong | Verification entrypoint exists (Makefile, pom.xml, etc.) |
+| [P4.VER.002](P4.VER.002.md) | P4 Verifiability | info | medium | ≥70% of source directories have test files |
+| [P4.VER.003](P4.VER.003.md) | P4 Verifiability | info | strong | CI configuration present (GitHub Actions, GitLab, etc.) |
+| [P5.AGG.001](P5.AGG.001.md) | P5 Aggregation | warn | strong | Security-sensitive files concentrated (≤2 top-level dirs) |
+| [P6.REV.001](P6.REV.001.md) | P6 Reversibility | warn | strong | Deployment artifacts → rollback docs exist |
+| [P7.MRD.001](P7.MRD.001.md) | P7 Machine-readability | warn | strong | CLI repos document exit codes |
 
-### `agent-tool` pack — opt-in, for agent-consumed tools
+### `agent-tool` pack — opt-in, for agent-consumed tools (3 rules)
 
-| Rule | Principle | Severity | What it checks |
-|---|---|---|---|
-| [P2.SPC.010](P2.SPC.010.md) | P2 Spec-first | warn | Versioned JSON output schema with `$id` |
-| [P7.MRD.002](P7.MRD.002.md) | P7 Machine-readability | warn | `CHANGELOG.md` at repo root |
-| [P7.MRD.003](P7.MRD.003.md) | P7 Machine-readability | warn | `cmd/` repos have `docs/adr/` directory |
+| Rule | Principle | Severity | Evidence | What it checks |
+|---|---|---|---|---|
+| [P2.SPC.010](P2.SPC.010.md) | P2 Spec-first | warn | strong | Spec-first artifacts exist (JSON Schema, OpenAPI, Protobuf, GraphQL) |
+| [P7.MRD.002](P7.MRD.002.md) | P7 Machine-readability | warn | strong | `CHANGELOG.md` at repo root |
+| [P7.MRD.003](P7.MRD.003.md) | P7 Machine-readability | warn | strong | CLI repos have `docs/adr/` directory |
 
 ## Rule Qualities
 
@@ -42,8 +46,6 @@ Every finding carries:
 - **Evidence strength**: `strong` / `medium` / `weak` / `sampled` — how reliable is the detection?
 - **Confidence**: 0.0-1.0 numeric score
 - **Remediation**: summary + guide reference + auto-fixable flag
-
-All current rules have `strong` evidence and `experimental` stability.
 
 ## Constraint
 

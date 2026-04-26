@@ -3,6 +3,7 @@ site_description: Architecture fitness evaluator for the coding-agent era
 site_url: https://shibuiwilliam.github.io/archfit/
 repo_url: https://github.com/shibuiwilliam/archfit
 repo_name: shibuiwilliam/archfit
+edit_uri: edit/main/docs/
 
 theme:
   name: material
@@ -23,27 +24,44 @@ theme:
     - navigation.sections
     - navigation.expand
     - navigation.top
+    - navigation.indexes
     - content.code.copy
+    - content.action.edit
     - search.suggest
+    - search.highlight
+  icon:
+    repo: fontawesome/brands/github
 
 nav:
   - Home: index.md
   - Getting Started:
       - Quick Start: getting-started.md
       - Configuration: configuration.md
+      - Fitness Contract: contract.md
       - Exit Codes: exit-codes.md
-  - Principles & Rules:
+  - Rules:
       - Overview: rules/index.md
-      - P1.LOC.001 - Root Agent Docs: rules/P1.LOC.001.md
-      - P1.LOC.002 - Slice Agent Docs: rules/P1.LOC.002.md
-      - P2.SPC.010 - Versioned Schema: rules/P2.SPC.010.md
-      - P3.EXP.001 - Env Documentation: rules/P3.EXP.001.md
-      - P4.VER.001 - Verification Entrypoint: rules/P4.VER.001.md
-      - P5.AGG.001 - Security Aggregation: rules/P5.AGG.001.md
-      - P6.REV.001 - Rollback Documentation: rules/P6.REV.001.md
-      - P7.MRD.001 - Exit Code Docs: rules/P7.MRD.001.md
-      - P7.MRD.002 - Changelog: rules/P7.MRD.002.md
-      - P7.MRD.003 - ADR Directory: rules/P7.MRD.003.md
+      - "P1 — Locality":
+          - P1.LOC.001 - Root Agent Docs: rules/P1.LOC.001.md
+          - P1.LOC.002 - Slice Agent Docs: rules/P1.LOC.002.md
+          - P1.LOC.003 - Coupling Score: rules/P1.LOC.003.md
+          - P1.LOC.004 - Change Isolation: rules/P1.LOC.004.md
+      - "P2 — Spec-first":
+          - P2.SPC.010 - Versioned Schema: rules/P2.SPC.010.md
+      - "P3 — Explicitness":
+          - P3.EXP.001 - Config Documentation: rules/P3.EXP.001.md
+      - "P4 — Verifiability":
+          - P4.VER.001 - Verification Entrypoint: rules/P4.VER.001.md
+          - P4.VER.002 - Test Coverage: rules/P4.VER.002.md
+          - P4.VER.003 - CI Configuration: rules/P4.VER.003.md
+      - "P5 — Aggregation":
+          - P5.AGG.001 - Security Concentration: rules/P5.AGG.001.md
+      - "P6 — Reversibility":
+          - P6.REV.001 - Rollback Documentation: rules/P6.REV.001.md
+      - "P7 — Machine-readability":
+          - P7.MRD.001 - Exit Code Docs: rules/P7.MRD.001.md
+          - P7.MRD.002 - Changelog: rules/P7.MRD.002.md
+          - P7.MRD.003 - ADR Directory: rules/P7.MRD.003.md
   - Features:
       - LLM Integration: llm.md
       - Auto-Fix: fix.md
@@ -53,8 +71,16 @@ nav:
       - Architecture: development/architecture.md
       - Implementation Plan: development/implementation-plan.md
       - Testing Strategy: development/testing-strategy.md
+      - Metrics & Scoring: development/metrics-and-scoring.md
       - Pack Development: development/pack-development.md
       - API Reference: development/api-reference.md
+      - Fix Engine: development/fix-engine.md
+      - LLM Integration: development/llm-integration.md
+      - CI/CD Integration: development/ci-cd-integration.md
+      - Cross-Stack Improvements: development/cross-stack-improvements.md
+      - Fitness Contract: development/fitness-contract.md
+      - Agent Observatory: development/agent-observatory.md
+      - Adaptive Engine: development/adaptive-engine.md
       - Dependencies: dependencies.md
   - ADRs:
       - "0001 - Architecture Overview": adr/0001-architecture-overview.md
@@ -63,6 +89,7 @@ nav:
       - "0004 - Fix Engine": adr/0004-fix-engine.md
       - "0005 - FactStore Extension": adr/0005-factstore-extension.md
       - "0006 - External Packs": adr/0006-external-packs.md
+      - "0008 - Contract Exit Codes": adr/0008-contract-exit-codes.md
 
 markdown_extensions:
   - admonition
@@ -76,6 +103,8 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+  - attr_list
+  - md_in_html
 
 plugins:
   - search
