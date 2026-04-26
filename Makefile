@@ -8,7 +8,7 @@ BIN         := $(BIN_DIR)/archfit
 VERSION     := $(shell cat VERSION 2>/dev/null || echo dev)
 GIT_DIRTY   := $(shell git diff --quiet 2>/dev/null || echo "-dirty")
 BUILD_VER   := $(VERSION)$(GIT_DIRTY)
-LDFLAGS     := -s -w -X github.com/shibuiwilliam/archfit/internal/version.Version=$(BUILD_VER)
+LDFLAGS     := -s -w -X github.com/shibuiwilliam/archfit/internal/version.linkerVersion=$(BUILD_VER)
 
 .PHONY: all
 all: lint test build

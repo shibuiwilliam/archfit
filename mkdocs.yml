@@ -35,6 +35,7 @@ theme:
 nav:
   - Home: index.md
   - Getting Started:
+      - Installation: installation.md
       - Quick Start: getting-started.md
       - Configuration: configuration.md
       - Fitness Contract: contract.md

@@ -62,7 +62,8 @@ See [Rules Overview](rules/index.md) for the full catalog.
 
 | Page | Description |
 |------|-------------|
-| [Getting Started](getting-started.md) | Installation, first scan, common commands |
+| [Installation](installation.md) | Install from source, binaries, `go install`, or Docker |
+| [Getting Started](getting-started.md) | First scan, common commands |
 | [Configuration](configuration.md) | `.archfit.yaml` reference |
 | [Fitness Contract](contract.md) | `.archfit-contract.yaml` — hard constraints, area budgets, agent directives |
 | [Rules](rules/index.md) | Rule catalog with detection patterns and remediation |

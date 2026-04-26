@@ -49,7 +49,7 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           BINARY="archfit-${GITHUB_REF_NAME}-${{ matrix.goos }}-${{ matrix.goarch }}${{ matrix.suffix }}"
           go build -trimpath \
-            -ldflags "-s -w -X github.com/shibuiwilliam/archfit/internal/version.Version=${VERSION}" \
+            -ldflags "-s -w -X github.com/shibuiwilliam/archfit/internal/version.linkerVersion=${VERSION}" \
             -o "dist/${BINARY}" ./cmd/archfit
 
       - name: Create archive
