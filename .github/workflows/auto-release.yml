@@ -213,7 +213,6 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
-          pattern: "{binary-*,self-scan-report}"
           merge-multiple: true
 
       - name: Generate checksums
@@ -297,16 +296,22 @@ jobs:
 
       - name: Update VERSION file
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
-          # Write the just-released version so the next push bumps from it.
-          echo "$VERSION" > VERSION
-          if git diff --quiet VERSION; then
+          CURRENT=$(cat VERSION | tr -d '[:space:]')
+          if [ "$CURRENT" = "$VERSION" ]; then
             echo "VERSION already up to date"
             exit 0
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add VERSION
-          git commit -m "chore: bump VERSION to ${VERSION} [skip ci]"
-          git push origin main
+          # Use the GitHub Contents API to update the file directly.
+          # This works with protected branches when the workflow has
+          # contents:write permission — git push does not.
+          FILE_SHA=$(gh api "repos/${{ github.repository }}/contents/VERSION" --jq '.sha')
+          CONTENT=$(echo -n "$VERSION" | base64)
+          gh api --method PUT "repos/${{ github.repository }}/contents/VERSION" \
+            -f message="chore: bump VERSION to ${VERSION} [skip ci]" \
+            -f content="$CONTENT" \
+            -f sha="$FILE_SHA" \
+            -f branch="main"
+          echo "Updated VERSION to $VERSION via API"
