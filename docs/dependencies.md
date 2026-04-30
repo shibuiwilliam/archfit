@@ -11,6 +11,8 @@ entry below, and (c) an ADR when the dep affects the architecture.
 | `google.golang.org/genai` | `v1.54.0` | `internal/adapter/llm/real.go` (Phase 3a) | Official Google SDK for the Gemini Developer API and Vertex AI. Used behind the `llm.Client` adapter to implement `--with-llm`. LLM calls are strictly opt-in and off the hot path (CLAUDE.md §13). | [ADR 0003](./adr/0003-llm-explanation.md) |
 | `github.com/openai/openai-go/v3` | `v3.32.0` | `internal/adapter/llm/openai.go` (Phase 3b) | Official OpenAI Go SDK for the Chat Completions API. Second LLM backend behind `llm.Client`. Selected when `OPENAI_API_KEY` is set or `--llm-backend=openai` is passed. Same opt-in/budget/cache model as the Gemini backend. | [ADR 0003](./adr/0003-llm-explanation.md) |
 | `github.com/anthropics/anthropic-sdk-go` | `v1.38.0` | `internal/adapter/llm/anthropic.go` (Phase 3b) | Official Anthropic Go SDK for the Messages API. Third LLM backend behind `llm.Client`. Selected when `ANTHROPIC_API_KEY` is set or `--llm-backend=claude` is passed. Same opt-in/budget/cache model as the other backends. | [ADR 0003](./adr/0003-llm-explanation.md) |
+| `github.com/santhosh-tekuri/jsonschema/v6` | `v6.0.2` | `internal/report/schema_test.go` | Pure-Go JSON Schema validator (draft 2020-12). Used in tests to validate every golden `expected.json` against `schemas/output.schema.json`. Zero transitive deps. Test-only in practice, but Go modules do not distinguish test deps. | [ADR 0009](./adr/0009-output-schema-rules-with-findings.md) |
+| `sigs.k8s.io/yaml` | `v1.6.0` | `internal/config/config.go`, `internal/contract/contract.go` | YAML 1.2 parser that uses `json:"..."` struct tags (no tag migration needed). Replaces `encoding/json` so `.archfit.yaml` and `.archfit-contract.yaml` accept idiomatic YAML (comments, unquoted strings, block scalars). One transitive dep (`go.yaml.in/yaml/v2`). | — |
 
 ## Transitive dependencies
 
@@ -25,6 +27,7 @@ auditability, not for use:
 - `go.opencensus.io` — SDK-internal tracing.
 - `golang.org/x/{crypto,net,sys,text}` — standard-library-adjacent modules the SDK relies on.
 - `github.com/tidwall/{gjson,match,pretty,sjson}` — JSON manipulation used by the OpenAI and Anthropic SDKs.
+- `go.yaml.in/yaml/v2` — YAML parser used by `sigs.k8s.io/yaml`.
 
 ## Go toolchain
 
@@ -43,10 +46,5 @@ requires it). See ADR 0003 for the rationale.
   and cache layers without any third-party abstraction framework.
 
 ## Planned for later phases
-
-- `gopkg.in/yaml.v3` — proper YAML parsing for `.archfit.yaml` with anchors,
-  block scalars, and comments. Phase 3b.
-- `github.com/santhosh-tekuri/jsonschema/v5` — schema validation for rule YAML
-  and output JSON. Phase 3c.
 
 Each addition will land with its own ADR.

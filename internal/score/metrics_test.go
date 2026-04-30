@@ -69,6 +69,52 @@ func TestContextSpanP50(t *testing.T) {
 	}
 }
 
+func TestContextSpanP50_HighMedian(t *testing.T) {
+	// Simulate a repo where commits typically touch 12 files (above threshold 8).
+	git := model.GitFacts{RecentCommits: []model.Commit{
+		{FilesChanged: 15},
+		{FilesChanged: 10},
+		{FilesChanged: 12},
+		{FilesChanged: 14},
+		{FilesChanged: 11},
+	}}
+	m := score.ContextSpanP50(git)
+	if m.Value != 12 {
+		t.Errorf("expected median 12, got %v", m.Value)
+	}
+}
+
+func TestContextSpanP50_LowMedian(t *testing.T) {
+	// Simulate a well-scoped repo where commits touch 3 files (below threshold).
+	git := model.GitFacts{RecentCommits: []model.Commit{
+		{FilesChanged: 2},
+		{FilesChanged: 3},
+		{FilesChanged: 4},
+		{FilesChanged: 1},
+		{FilesChanged: 3},
+	}}
+	m := score.ContextSpanP50(git)
+	if m.Value != 3 {
+		t.Errorf("expected median 3, got %v", m.Value)
+	}
+}
+
+func TestContextSpanP50_MixedWithMerges(t *testing.T) {
+	// Merge commits have FilesChanged=0, should be excluded from median.
+	git := model.GitFacts{RecentCommits: []model.Commit{
+		{FilesChanged: 5},
+		{FilesChanged: 0}, // merge
+		{FilesChanged: 3},
+		{FilesChanged: 0}, // merge
+		{FilesChanged: 7},
+	}}
+	m := score.ContextSpanP50(git)
+	// sorted non-zero: [3, 5, 7], median index 1 → 5
+	if m.Value != 5 {
+		t.Errorf("expected median 5 (excluding merges), got %v", m.Value)
+	}
+}
+
 func TestVerificationLatency(t *testing.T) {
 	tests := []struct {
 		name string

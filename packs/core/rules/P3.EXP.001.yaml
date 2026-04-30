@@ -1,0 +1,17 @@
+id: P3.EXP.001
+principle: P3
+dimension: EXP
+title: Environment and application configuration is documented explicitly
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Hidden configuration is the opposite of shallow explicitness. .env files,
+  Spring Boot profiles, Terraform tfvars, and Rails environments must be
+  documented so agents can discover required settings.
+remediation:
+  summary: >-
+    Add .env.example, config/README.md, terraform.tfvars.example, or
+    equivalent documentation for your stack's configuration mechanism.
+  guide_ref: docs/rules/P3.EXP.001.md

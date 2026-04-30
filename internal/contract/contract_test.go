@@ -172,6 +172,55 @@ func TestCheck(t *testing.T) {
 	}
 }
 
+func TestParse_YAML_WithComments(t *testing.T) {
+	data := []byte(`# Fitness contract for the auth service
+version: 1
+
+# The overall score must stay above 80
+hard_constraints:
+  - principle: overall
+    min_score: 80.0
+    scope: "**"
+
+soft_targets:
+  - principle: P4
+    target_score: 95.0
+    deadline: "2030-06-30"
+`)
+	c, err := parse(data)
+	if err != nil {
+		t.Fatalf("YAML with comments should parse: %v", err)
+	}
+	if c.Version != 1 {
+		t.Errorf("version = %d, want 1", c.Version)
+	}
+	if len(c.HardConstraints) != 1 {
+		t.Errorf("hard_constraints = %d, want 1", len(c.HardConstraints))
+	}
+	if len(c.SoftTargets) != 1 || c.SoftTargets[0].TargetScore != 95.0 {
+		t.Errorf("soft_targets = %+v, want 1 entry with target 95.0", c.SoftTargets)
+	}
+}
+
+func TestParse_JSON_BackwardCompat(t *testing.T) {
+	data := []byte(`{"version":1,"hard_constraints":[{"principle":"P1","min_score":70,"scope":"**"}]}`)
+	c, err := parse(data)
+	if err != nil {
+		t.Fatalf("JSON should still parse: %v", err)
+	}
+	if len(c.HardConstraints) != 1 {
+		t.Errorf("hard_constraints = %d, want 1", len(c.HardConstraints))
+	}
+}
+
+func TestParse_YAML_UnknownFieldRejected(t *testing.T) {
+	data := []byte("version: 1\nbogus: true\n")
+	_, err := parse(data)
+	if err == nil {
+		t.Fatal("YAML with unknown field should be rejected by strict parsing")
+	}
+}
+
 func TestValidate(t *testing.T) {
 	tests := []struct {
 		name    string

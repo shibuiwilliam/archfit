@@ -1,22 +1,21 @@
-// Package config loads .archfit.yaml (or .archfit.json) from the target repo.
+// Package config loads .archfit.yaml (or .archfit.yml / .archfit.json) from the
+// target repo.
 //
-// Phase 1 design decision: we parse the config as JSON. YAML 1.2 is a strict
-// superset of JSON, so a JSON document written into .archfit.yaml is a valid
-// YAML document — any YAML-aware tooling round-trips it. Full YAML support
-// (anchors, block scalars, unquoted strings) arrives in Phase 2 with yaml.v3.
-// Keeping Phase 1 dependency-free is worth the temporary restriction.
-//
-// DEVELOPMENT_PLAN.md Phase 2 removes this restriction.
+// Parsing uses sigs.k8s.io/yaml which accepts both YAML 1.2 and JSON. Existing
+// JSON-formatted configs continue to work; idiomatic YAML (comments, unquoted
+// strings, block scalars) is now also supported.
 package config
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"time"
+
+	// sigs.k8s.io/yaml preserves `json:"..."` tag semantics on Go structs,
+	// so no struct tag migration is needed. Justified in docs/dependencies.md.
+	"sigs.k8s.io/yaml"
 )
 
 // Config is the deserialized .archfit.yaml configuration.
@@ -63,9 +62,9 @@ func LoadFile(path string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	cfg, err := ParseJSON(data)
+	cfg, err := Parse(data)
 	if err != nil {
-		return Config{}, fmt.Errorf("%s: %w", path, err)
+		return Config{}, fmt.Errorf("%s: %w\nhint: archfit reads YAML 1.2; check indentation and quoting", path, err)
 	}
 	return cfg, nil
 }
@@ -82,27 +81,31 @@ func Load(root string) (cfg Config, path string, found bool, err error) {
 			}
 			return Config{}, p, true, err
 		}
-		cfg, err := ParseJSON(data)
+		cfg, err := Parse(data)
 		if err != nil {
-			return Config{}, p, true, fmt.Errorf("%s: %w", p, err)
+			return Config{}, p, true, fmt.Errorf("%s: %w\nhint: archfit reads YAML 1.2; check indentation and quoting", p, err)
 		}
 		return cfg, p, true, nil
 	}
 	return Default(), "", false, nil
 }
 
-// ParseJSON validates and decodes a JSON config document.
-func ParseJSON(data []byte) (Config, error) {
+// Parse validates and decodes a YAML (or JSON) config document.
+// It rejects unknown fields to catch typos early.
+func Parse(data []byte) (Config, error) {
 	var raw Config
-	dec := json.NewDecoder(newTrimReader(data))
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&raw); err != nil {
+	if err := yaml.UnmarshalStrict(data, &raw); err != nil {
 		return Config{}, err
 	}
 	if err := raw.Validate(); err != nil {
 		return Config{}, err
 	}
 	return raw, nil
+}
+
+// ParseJSON is a backward-compatible alias for Parse. JSON is valid YAML 1.2.
+func ParseJSON(data []byte) (Config, error) {
+	return Parse(data)
 }
 
 // Validate checks that all config fields are well-formed.
@@ -148,28 +151,4 @@ func (c Config) ExpiredIgnores(now time.Time) []Ignore {
 		}
 	}
 	return out
-}
-
-// newTrimReader strips leading whitespace so an accidental BOM-less empty line
-// does not confuse DisallowUnknownFields. Tiny, inlined.
-type trimReader struct {
-	buf []byte
-	pos int
-}
-
-func newTrimReader(b []byte) *trimReader {
-	i := 0
-	for i < len(b) && (b[i] == ' ' || b[i] == '\t' || b[i] == '\r' || b[i] == '\n') {
-		i++
-	}
-	return &trimReader{buf: b[i:]}
-}
-
-func (r *trimReader) Read(p []byte) (int, error) {
-	if r.pos >= len(r.buf) {
-		return 0, io.EOF
-	}
-	n := copy(p, r.buf[r.pos:])
-	r.pos += n
-	return n, nil
 }

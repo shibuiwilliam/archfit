@@ -1,0 +1,17 @@
+id: P5.AGG.001
+principle: P5
+dimension: AGG
+title: Security-sensitive files are concentrated in few directories
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Dangerous capabilities (auth, secrets, migrations, deploy) should be
+  concentrated so they can be audited and guarded, not scattered across
+  the tree.
+remediation:
+  summary: >-
+    Consolidate security-sensitive files under at most 2 top-level
+    directories per category.
+  guide_ref: docs/rules/P5.AGG.001.md

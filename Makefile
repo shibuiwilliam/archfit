@@ -52,6 +52,10 @@ e2e: ## End-to-end golden tests against testdata/e2e
 update-golden: ## Regenerate testdata/e2e/*/expected.json. Review the diff carefully.
 	$(GO) test -count=1 ./testdata/e2e -update
 
+.PHONY: generate
+generate: ## Regenerate packs/*/generated_rules.go from YAML rule files.
+	$(GO) run -tags tools ./cmd/internal-tools/genrules
+
 .PHONY: self-scan
 self-scan: build ## Run archfit on itself. Must exit 0 under --fail-on=error.
 	$(BIN) scan --fail-on=error .
@@ -59,6 +63,12 @@ self-scan: build ## Run archfit on itself. Must exit 0 under --fail-on=error.
 .PHONY: self-scan-json
 self-scan-json: build
 	$(BIN) scan --json .
+
+.PHONY: self-scan-record
+self-scan-record: build ## Record self-scan snapshot to docs/self-scan/$(VERSION).json.
+	@mkdir -p docs/self-scan
+	$(BIN) scan --json . > docs/self-scan/$(VERSION).json
+	@echo "recorded docs/self-scan/$(VERSION).json"
 
 .PHONY: clean
 clean:

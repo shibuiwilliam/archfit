@@ -1,0 +1,16 @@
+id: P1.LOC.004
+principle: P1
+dimension: LOC
+title: Commits touch a bounded number of files
+severity: info
+evidence_strength: sampled
+stability: experimental
+weight: 1
+rationale: >
+  Repos where typical commits touch many files have poor locality — agents
+  must hold wide context for routine changes.
+remediation:
+  summary: >-
+    Refactor to reduce cross-cutting changes; ensure each commit stays
+    within a narrow slice.
+  guide_ref: docs/rules/P1.LOC.004.md

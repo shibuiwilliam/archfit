@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -86,3 +87,80 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: "0"
         run: go build -trimpath -o /tmp/archfit ./cmd/archfit
+
+  # --- PR score gate: fail if PR drops overall score by > 1.0 ---
+  score-gate:
+    name: score-gate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Scan PR head
+        run: |
+          go build -trimpath -o ./bin/archfit ./cmd/archfit
+          ./bin/archfit scan --json . > /tmp/pr-scan.json
+
+      - name: Get baseline from main
+        run: |
+          # Find the latest self-scan snapshot committed on main.
+          # Fall back to scanning main if no snapshot exists.
+          git show origin/main:docs/self-scan/$(cat VERSION | tr -d '[:space:]').json > /tmp/main-scan.json 2>/dev/null \
+            || (LATEST=$(git ls-tree origin/main docs/self-scan/ 2>/dev/null | awk '{print $4}' | sort -V | tail -1) \
+                && git show "origin/main:${LATEST}" > /tmp/main-scan.json 2>/dev/null) \
+            || echo '{"scores":{"overall":100}}' > /tmp/main-scan.json
+
+      - name: Compare scores
+        id: compare
+        run: |
+          PR_SCORE=$(python3 -c "import json; print(json.load(open('/tmp/pr-scan.json'))['scores']['overall'])")
+          MAIN_SCORE=$(python3 -c "import json; print(json.load(open('/tmp/main-scan.json'))['scores']['overall'])")
+          DELTA=$(python3 -c "print(round($PR_SCORE - $MAIN_SCORE, 1))")
+
+          echo "pr_score=$PR_SCORE" >> "$GITHUB_OUTPUT"
+          echo "main_score=$MAIN_SCORE" >> "$GITHUB_OUTPUT"
+          echo "delta=$DELTA" >> "$GITHUB_OUTPUT"
+
+          echo "main: $MAIN_SCORE → PR: $PR_SCORE (delta: $DELTA)"
+
+          # Fail if score dropped by more than 1.0
+          python3 -c "
+          import sys
+          if $PR_SCORE < ($MAIN_SCORE - 1.0):
+              print(f'::error::archfit score regression: {$MAIN_SCORE} → {$PR_SCORE} (delta {$DELTA})')
+              sys.exit(1)
+          print('Score gate passed.')
+          "
+
+      - name: Post PR comment
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          BODY="### archfit score delta
+
+          | | Score |
+          |---|---|
+          | **main** | ${{ steps.compare.outputs.main_score }} |
+          | **PR** | ${{ steps.compare.outputs.pr_score }} |
+          | **delta** | ${{ steps.compare.outputs.delta }} |
+
+          _Gate: fails if delta < -1.0_"
+
+          # Update existing comment or create new one.
+          EXISTING=$(gh api repos/${{ github.repository }}/issues/${PR_NUMBER}/comments \
+            --jq '.[] | select(.body | contains("archfit score delta")) | .id' | head -1)
+
+          if [ -n "$EXISTING" ]; then
+            gh api repos/${{ github.repository }}/issues/comments/${EXISTING} \
+              -X PATCH -f body="$BODY" >/dev/null
+          else
+            gh pr comment "$PR_NUMBER" --body "$BODY"
+          fi

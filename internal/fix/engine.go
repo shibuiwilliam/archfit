@@ -2,24 +2,35 @@ package fix
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"os"
+	iofs "io/fs"
 	"path/filepath"
 	"time"
 
+	adaptfs "github.com/shibuiwilliam/archfit/internal/adapter/fs"
 	"github.com/shibuiwilliam/archfit/internal/core"
 	"github.com/shibuiwilliam/archfit/internal/model"
 )
 
 // Engine orchestrates the plan-apply-verify loop for auto-fixes.
 // It holds a registry of Fixer implementations keyed by rule ID.
+// All filesystem access goes through the injected adaptfs.FS adapter
+// (CLAUDE.md §3 P5 — no direct os calls).
 type Engine struct {
 	fixers map[string]Fixer
+	fs     adaptfs.FS
 }
 
-// NewEngine returns an Engine with an empty fixer registry.
+// NewEngine returns an Engine backed by the real filesystem.
 func NewEngine() *Engine {
-	return &Engine{fixers: map[string]Fixer{}}
+	return &Engine{fixers: map[string]Fixer{}, fs: adaptfs.NewReal()}
+}
+
+// NewEngineWithFS returns an Engine backed by the given filesystem adapter.
+// Use adaptfs.NewMemory() in tests.
+func NewEngineWithFS(fsys adaptfs.FS) *Engine {
+	return &Engine{fixers: map[string]Fixer{}, fs: fsys}
 }
 
 // Register adds a fixer for a specific rule. If a fixer for the same rule ID
@@ -221,8 +232,8 @@ func (e *Engine) snapshot(root string, plan Plan) ([]fileSnapshot, error) {
 			}
 			seen[absPath] = true
 
-			data, err := os.ReadFile(absPath)
-			if os.IsNotExist(err) {
+			data, err := e.fs.ReadFile(absPath)
+			if isNotExist(err) {
 				snapshots = append(snapshots, fileSnapshot{path: absPath, existed: false})
 				continue
 			}
@@ -235,7 +246,7 @@ func (e *Engine) snapshot(root string, plan Plan) ([]fileSnapshot, error) {
 	return snapshots, nil
 }
 
-// apply writes all changes to disk.
+// apply writes all changes through the adapter.
 func (e *Engine) apply(root string, plan Plan) ([]AppliedFix, error) {
 	var applied []AppliedFix
 
@@ -243,28 +254,28 @@ func (e *Engine) apply(root string, plan Plan) ([]AppliedFix, error) {
 		var files []string
 		for _, c := range pf.Changes {
 			absPath := filepath.Join(root, c.Path)
-			if err := os.MkdirAll(filepath.Dir(absPath), 0o755); err != nil {
+			if err := e.fs.MkdirAll(filepath.Dir(absPath), 0o755); err != nil {
 				return applied, fmt.Errorf("creating directory for %s: %w", c.Path, err)
 			}
 
 			switch c.Action {
 			case ActionCreate:
-				if err := os.WriteFile(absPath, c.Content, 0o644); err != nil {
+				if err := e.fs.WriteFile(absPath, c.Content, 0o644); err != nil {
 					return applied, fmt.Errorf("creating %s: %w", c.Path, err)
 				}
 			case ActionModify:
-				if err := os.WriteFile(absPath, c.Content, 0o644); err != nil {
+				if err := e.fs.WriteFile(absPath, c.Content, 0o644); err != nil {
 					return applied, fmt.Errorf("modifying %s: %w", c.Path, err)
 				}
 			case ActionAppend:
-				existing, err := os.ReadFile(absPath)
-				if err != nil && !os.IsNotExist(err) {
+				existing, err := e.fs.ReadFile(absPath)
+				if err != nil && !isNotExist(err) {
 					return applied, fmt.Errorf("reading %s for append: %w", c.Path, err)
 				}
 				combined := make([]byte, len(existing)+len(c.Content))
 				copy(combined, existing)
 				copy(combined[len(existing):], c.Content)
-				if err := os.WriteFile(absPath, combined, 0o644); err != nil {
+				if err := e.fs.WriteFile(absPath, combined, 0o644); err != nil {
 					return applied, fmt.Errorf("appending to %s: %w", c.Path, err)
 				}
 			default:
@@ -282,14 +293,14 @@ func (e *Engine) rollback(root string, snapshots []fileSnapshot) error {
 	var firstErr error
 	for _, s := range snapshots {
 		if !s.existed {
-			if err := os.Remove(s.path); err != nil && !os.IsNotExist(err) {
+			if err := e.fs.Remove(s.path); err != nil && !isNotExist(err) {
 				if firstErr == nil {
 					firstErr = err
 				}
 			}
 			continue
 		}
-		if err := os.WriteFile(s.path, s.content, 0o644); err != nil {
+		if err := e.fs.WriteFile(s.path, s.content, 0o644); err != nil {
 			if firstErr == nil {
 				firstErr = err
 			}
@@ -311,7 +322,7 @@ func (e *Engine) logFixes(input Input, applied []AppliedFix, verified bool, errM
 		if !verified {
 			action = "rolled_back"
 		}
-		_ = AppendLog(logPath, LogEntry{
+		_ = AppendLogFS(e.fs, logPath, LogEntry{
 			Timestamp: ts,
 			RuleID:    a.RuleID,
 			Action:    action,
@@ -320,4 +331,9 @@ func (e *Engine) logFixes(input Input, applied []AppliedFix, verified bool, errM
 			Error:     errMsg,
 		})
 	}
+}
+
+// isNotExist checks whether an error indicates a file does not exist.
+func isNotExist(err error) bool {
+	return err != nil && errors.Is(err, iofs.ErrNotExist)
 }

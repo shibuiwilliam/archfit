@@ -24,7 +24,7 @@ These documents describe the three capabilities that transform archfit from a po
 
 | Document | Element | Status |
 |---|---|---|
-| [fitness-contract.md](./fitness-contract.md) | Fitness Contract as Code — hard constraints, area budgets, agent directives | Steps 2.1-2.2 done |
+| [fitness-contract.md](./fitness-contract.md) | Fitness Contract as Code — hard constraints, area budgets, agent directives | Implemented (types, check logic, CLI) |
 | [agent-observatory.md](./agent-observatory.md) | Agent Behavior Observatory — trace ingestion and behavioral metrics | Not started |
 | [adaptive-engine.md](./adaptive-engine.md) | Adaptive Rule Engine — learning feedback loop for confidence and thresholds | Not started |
 

@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	adaptfs "github.com/shibuiwilliam/archfit/internal/adapter/fs"
 )
 
 // DefaultLogPath is the default location for the fix audit log.
@@ -22,9 +24,13 @@ type LogEntry struct {
 }
 
 // AppendLog appends a single log entry to the audit file as a JSON line.
-// The file is created if it does not exist. Each entry is one line so
-// concurrent appends are safe (no array wrapping).
+// Uses the real filesystem. For engine-internal use, see AppendLogFS.
 func AppendLog(path string, entry LogEntry) error {
+	return AppendLogFS(adaptfs.NewReal(), path, entry)
+}
+
+// AppendLogFS appends a log entry using the given filesystem adapter.
+func AppendLogFS(fsys adaptfs.FS, path string, entry LogEntry) error {
 	if entry.Timestamp == "" {
 		entry.Timestamp = time.Now().UTC().Format(time.RFC3339)
 	}
@@ -34,13 +40,23 @@ func AppendLog(path string, entry LogEntry) error {
 	}
 	data = append(data, '\n')
 
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return fmt.Errorf("fix log: open: %w", err)
+	// Try OpenFile for append (real FS). If it fails (memory FS), fall back
+	// to read-modify-write via WriteFile.
+	f, openErr := fsys.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if openErr == nil {
+		defer func() { _ = f.Close() }()
+		if _, err := f.Write(data); err != nil {
+			return fmt.Errorf("fix log: write: %w", err)
+		}
+		return nil
 	}
-	defer func() { _ = f.Close() }()
 
-	if _, err := f.Write(data); err != nil {
+	// Fallback for memory FS: read existing + append + write back.
+	existing, _ := fsys.ReadFile(path) // ignore not-found
+	combined := make([]byte, len(existing)+len(data))
+	copy(combined, existing)
+	copy(combined[len(existing):], data)
+	if err := fsys.WriteFile(path, combined, 0o644); err != nil {
 		return fmt.Errorf("fix log: write: %w", err)
 	}
 	return nil

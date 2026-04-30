@@ -1,0 +1,14 @@
+id: P4.VER.002
+principle: P4
+dimension: VER
+title: Source directories have test coverage
+severity: info
+evidence_strength: medium
+stability: experimental
+weight: 1
+rationale: >
+  Agents need test coverage to verify their changes. Directories without test
+  files are unverifiable areas where agents work blind.
+remediation:
+  summary: Add test files alongside source files in untested directories.
+  guide_ref: docs/rules/P4.VER.002.md

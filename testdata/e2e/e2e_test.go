@@ -101,11 +101,11 @@ func diffPreview(got, want string) string {
 	b.WriteString("--- got\n+++ want\n")
 	gotLines := strings.Split(got, "\n")
 	wantLines := strings.Split(want, "\n")
-	max := len(gotLines)
-	if len(wantLines) > max {
-		max = len(wantLines)
+	total := len(gotLines)
+	if len(wantLines) > total {
+		total = len(wantLines)
 	}
-	for i := 0; i < max; i++ {
+	for i := 0; i < total; i++ {
 		var g, w string
 		if i < len(gotLines) {
 			g = gotLines[i]

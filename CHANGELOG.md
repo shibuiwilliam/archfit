@@ -10,6 +10,23 @@ are called out explicitly below with migration notes.
 
 ## [Unreleased]
 
+### Changed
+
+- **Output schema bumped to `0.2.0`**: added `summary.rules_with_findings`
+  (integer) to `schemas/output.schema.json`. This field was already emitted
+  by the renderer but was not declared in the schema, causing strict validation
+  to reject all archfit output. Also declared the optional
+  `findings[].llm_suggestion` object for `--with-llm` runs.
+  See [ADR 0009](./docs/adr/0009-output-schema-rules-with-findings.md).
+
+### Added
+
+- **Schema conformance test** (`internal/report/schema_test.go`): validates
+  every `expected.json` golden file against `schemas/output.schema.json` at
+  build time. Prevents future drift between renderer and schema.
+- New dependency: `github.com/santhosh-tekuri/jsonschema/v6` (pure-Go JSON
+  Schema validator, test-only usage). Documented in `docs/dependencies.md`.
+
 ## [0.3.0] — 2026-04-24
 
 ### Added

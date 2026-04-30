@@ -5,17 +5,19 @@
 // (should work toward), area budgets (SRE-style finding budgets per path),
 // and agent directives (instructions for coding agents).
 //
-// Loading follows the same JSON-in-YAML pattern as internal/config.
+// Parsing uses sigs.k8s.io/yaml which accepts both YAML 1.2 and JSON.
 // Checking is a pure function: no I/O, no imports from adapter/collector.
 package contract
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+
+	// sigs.k8s.io/yaml preserves `json:"..."` tag semantics on Go structs.
+	// Justified in docs/dependencies.md.
+	"sigs.k8s.io/yaml"
 )
 
 // Contract is the deserialized .archfit-contract.yaml.
@@ -79,7 +81,7 @@ func Load(root string) (c Contract, path string, found bool, err error) {
 		}
 		c, err := parse(data)
 		if err != nil {
-			return Contract{}, p, true, fmt.Errorf("%s: %w", p, err)
+			return Contract{}, p, true, fmt.Errorf("%s: %w\nhint: archfit reads YAML 1.2; check indentation and quoting", p, err)
 		}
 		return c, p, true, nil
 	}
@@ -94,16 +96,14 @@ func LoadFile(path string) (Contract, error) {
 	}
 	c, err := parse(data)
 	if err != nil {
-		return Contract{}, fmt.Errorf("%s: %w", path, err)
+		return Contract{}, fmt.Errorf("%s: %w\nhint: archfit reads YAML 1.2; check indentation and quoting", path, err)
 	}
 	return c, nil
 }
 
 func parse(data []byte) (Contract, error) {
 	var c Contract
-	dec := json.NewDecoder(newTrimReader(data))
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(&c); err != nil {
+	if err := yaml.UnmarshalStrict(data, &c); err != nil {
 		return Contract{}, err
 	}
 	if err := c.Validate(); err != nil {
@@ -136,27 +136,4 @@ func (c Contract) Validate() error {
 		}
 	}
 	return nil
-}
-
-// trimReader strips leading whitespace, matching internal/config's pattern.
-type trimReader struct {
-	buf []byte
-	pos int
-}
-
-func newTrimReader(b []byte) *trimReader {
-	i := 0
-	for i < len(b) && (b[i] == ' ' || b[i] == '\t' || b[i] == '\r' || b[i] == '\n') {
-		i++
-	}
-	return &trimReader{buf: b[i:]}
-}
-
-func (r *trimReader) Read(p []byte) (int, error) {
-	if r.pos >= len(r.buf) {
-		return 0, io.EOF
-	}
-	n := copy(p, r.buf[r.pos:])
-	r.pos += n
-	return n, nil
 }

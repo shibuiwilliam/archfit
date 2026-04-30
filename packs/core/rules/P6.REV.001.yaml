@@ -1,0 +1,16 @@
+id: P6.REV.001
+principle: P6
+dimension: REV
+title: Deployment has rollback documentation
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  If a repo deploys, it must document how to roll back. Reversibility
+  requires knowing the undo procedure before things go wrong.
+remediation:
+  summary: >-
+    Add docs/deployment.md or RUNBOOK.md documenting deploy, verify, and
+    rollback procedures.
+  guide_ref: docs/rules/P6.REV.001.md

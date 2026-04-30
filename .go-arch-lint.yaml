@@ -21,10 +21,18 @@ components:
     in: internal/core
   config:
     in: internal/config
+  contract:
+    in: internal/contract
+  policy:
+    in: internal/policy
+  fix:
+    in: internal/fix/**
   score:
     in: internal/score
   report:
     in: internal/report
+  packman:
+    in: internal/packman
   version:
     in: internal/version
   packs:
@@ -80,15 +88,37 @@ deps:
       - model
       - core
 
-  # Config is self-contained aside from model (for validation types).
+  # Config is self-contained.
   config:
+    mayDependOn: []
+
+  # Contract is self-contained.
+  contract:
     mayDependOn:
       - model
+      - score
+
+  # Policy is self-contained.
+  policy:
+    mayDependOn:
+      - model
+      - score
+
+  # Fix engine goes through the adapter for all I/O.
+  fix:
+    mayDependOn:
+      - model
+      - core
+      - adapter
 
   # Score depends only on model.
   score:
     mayDependOn:
       - model
+
+  # Packman validates pack structure.
+  packman:
+    mayDependOn: []
 
   # Main wires everything. This is the one place this breadth is allowed.
   main:
@@ -99,8 +129,12 @@ deps:
       - collector
       - core
       - config
+      - contract
+      - policy
+      - fix
       - report
       - score
+      - packman
       - version
       - packs
 

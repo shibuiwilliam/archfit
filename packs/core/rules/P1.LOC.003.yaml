@@ -1,0 +1,14 @@
+id: P1.LOC.003
+principle: P1
+dimension: LOC
+title: Dependency graph coupling is bounded
+severity: info
+evidence_strength: medium
+stability: experimental
+weight: 1
+rationale: >
+  Packages with high transitive reach force agents to load many neighbors.
+  Bounded coupling keeps context manageable.
+remediation:
+  summary: Split high-reach packages into smaller modules with narrower interfaces.
+  guide_ref: docs/rules/P1.LOC.003.md

@@ -2,30 +2,13 @@
 
 ## Installation
 
-### From Source
+The fastest way to install:
 
 ```bash
-git clone https://github.com/shibuiwilliam/archfit.git
-cd archfit
-make build
-./bin/archfit version
+go install github.com/shibuiwilliam/archfit/cmd/archfit@latest
 ```
 
-Requires **Go 1.24+**. No CGO. Cross-compiles to `linux/{amd64,arm64}`, `darwin/{amd64,arm64}`, and `windows/amd64`.
-
-### From Release Binaries
-
-```bash
-curl -sSL https://github.com/shibuiwilliam/archfit/releases/latest/download/archfit-<version>-linux-amd64.tar.gz \
-  | tar xz
-./archfit version
-```
-
-### Via Docker
-
-```bash
-docker run --rm -v "$PWD:/repo" ghcr.io/shibuiwilliam/archfit:latest scan /repo
-```
+See [Installation](installation.md) for all options (source, binaries, Docker, platform-specific PATH setup).
 
 ## First Scan
 
@@ -42,8 +25,8 @@ archfit scan .
 ### Understanding the Output
 
 ```
-archfit dev — target . (profile=standard)
-rules evaluated: 10, findings: 2
+archfit 0.1.0 — target . (profile=standard)
+rules evaluated: 14 (2 with findings), findings: 2
 overall score: 84.0
   P1: 100.0
   P3: 60.0
@@ -84,6 +67,8 @@ Every fix is verified by automatic re-scan. If the finding persists or new findi
 | `archfit diff <baseline.json>` | Compare two scans |
 | `archfit report [path]` | Markdown report |
 | `archfit init [path]` | Scaffold `.archfit.yaml` |
+| `archfit contract check [path]` | Check against `.archfit-contract.yaml` |
+| `archfit contract init [path]` | Scaffold a contract from current scan |
 | `archfit help` | Show all commands and flags |
 
 ## Key Flags
@@ -94,11 +79,15 @@ Every fix is verified by automatic re-scan. If the finding persists or new findi
 | `--json` | Shorthand for `--format=json` | |
 | `--fail-on {info\|warn\|error\|critical}` | Exit 1 at this severity | `error` |
 | `--with-llm` | Enrich findings with LLM explanations | off |
+| `--record <dir>` | Save JSON + Markdown to timestamped subdirectory | |
+| `--explain-coverage` | Show which rules fired vs. passed | |
 | `-C <dir>` | Change directory before running | |
 
 ## Next Steps
 
 - [Configuration Reference](configuration.md) — customize `.archfit.yaml`
+- [Fitness Contract](contract.md) — declare fitness goals for CI and agents
 - [Rules Overview](rules/index.md) — understand what each rule checks
+- [Agent Skill](agent-skill.md) — set up Claude Code integration
 - [LLM Integration](llm.md) — enable contextual explanations
 - [CI/CD Integration](ci-cd.md) — add archfit to your pipeline

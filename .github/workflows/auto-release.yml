@@ -283,9 +283,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # --- Update VERSION file with the released patch for next run ---
+  # --- Update VERSION file and record self-scan snapshot ---
   bump-version:
-    name: bump VERSION
+    name: bump VERSION + self-scan snapshot
     runs-on: ubuntu-latest
     needs: [version, release]
     if: needs.version.outputs.is_new == 'true'
@@ -295,22 +295,29 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Update VERSION file
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Update VERSION and record self-scan
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
-          CURRENT=$(cat VERSION | tr -d '[:space:]')
-          if [ "$CURRENT" = "$VERSION" ]; then
-            echo "VERSION already up to date"
-            exit 0
-          fi
-
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Update VERSION.
           echo "$VERSION" > VERSION
-          git add VERSION
-          git commit -m "chore: bump VERSION to ${VERSION} [skip ci]"
+
+          # Record self-scan snapshot.
+          make build
+          mkdir -p docs/self-scan
+          ./bin/archfit scan --json . > "docs/self-scan/${VERSION}.json"
+
+          git add VERSION "docs/self-scan/${VERSION}.json"
+          git commit -m "chore: bump VERSION to ${VERSION}, record self-scan [skip ci]"
 
           # Try direct push first (works when main is unprotected).
           if git push origin main 2>/dev/null; then

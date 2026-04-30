@@ -81,7 +81,7 @@ The JSON output follows `schemas/output.schema.json`. Minimum shape:
 
 ```json
 {
-  "schema_version": "0.1.0",
+  "schema_version": "0.2.0",
   "tool": {"name": "archfit", "version": "..."},
   "target": {"path": "...", "profile": "standard"},
   "summary": {
@@ -110,15 +110,9 @@ The JSON output follows `schemas/output.schema.json`. Minimum shape:
 ## Remediation guides (progressive disclosure)
 
 When a finding appears, load `reference/remediation/<rule-id>.md`.
-All 14 rules have guides:
-
-- P1.LOC.001, P1.LOC.002, P1.LOC.003, P1.LOC.004 (locality)
-- P2.SPC.010 (spec-first)
-- P3.EXP.001 (explicitness)
-- P4.VER.001, P4.VER.002, P4.VER.003 (verifiability)
-- P5.AGG.001 (aggregation)
-- P6.REV.001 (reversibility)
-- P7.MRD.001, P7.MRD.002, P7.MRD.003 (machine-readability)
+Every registered rule has a guide — run `archfit list-rules` for the
+current set. CI enforces that both the remediation guide and the docs
+page exist for every rule (see `internal/packman/docs_sync_test.go`).
 
 Guides are kept under 100 lines each. For deeper context they link to
 `docs/rules/<rule-id>.md` in the main repo.

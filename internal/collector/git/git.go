@@ -62,5 +62,85 @@ func Collect(ctx context.Context, runner exec.Runner, root string) (model.GitFac
 		}
 	}
 
+	// Populate FilesChanged from a separate --numstat invocation.
+	// Format: "commit <hash>\n" followed by numstat lines, one per file.
+	// Binary files show "-\t-\tpath" and are counted as 1 file.
+	populateFilesChanged(ctx, runner, root, facts.RecentCommits)
+
 	return facts, nil
+}
+
+// populateFilesChanged issues `git log --numstat` and fills in each commit's
+// FilesChanged count. It modifies commits in place. Errors are silently ignored
+// — FilesChanged stays 0 (documented as "unknown").
+func populateFilesChanged(ctx context.Context, runner exec.Runner, root string, commits []model.Commit) {
+	if len(commits) == 0 {
+		return
+	}
+
+	r, err := runner.Run(ctx, root, "git", "log",
+		"--max-count="+strconv.Itoa(len(commits)),
+		"--numstat",
+		"--pretty=format:commit %H")
+	if err != nil || r.ExitCode != 0 {
+		return
+	}
+
+	parseNumstat(string(r.Stdout), commits)
+}
+
+// parseNumstat parses the combined output of `git log --numstat --pretty=format:commit %H`.
+// Each commit block looks like:
+//
+//	commit abc123
+//	10	5	file1.go
+//	3	1	file2.go
+//	-	-	binary.png
+//
+// Merge commits may have no numstat lines at all. Binary files show "-\t-" for
+// added/deleted counts — they are still counted as one file changed.
+func parseNumstat(output string, commits []model.Commit) {
+	// Build a hash→index map for O(1) lookup.
+	byHash := make(map[string]int, len(commits))
+	for i, c := range commits {
+		byHash[c.Hash] = i
+	}
+
+	currentIdx := -1
+	fileCount := 0
+
+	for _, line := range strings.Split(output, "\n") {
+		line = strings.TrimRight(line, "\r")
+
+		if strings.HasPrefix(line, "commit ") {
+			// Flush previous commit.
+			if currentIdx >= 0 {
+				commits[currentIdx].FilesChanged = fileCount
+			}
+			hash := strings.TrimPrefix(line, "commit ")
+			if idx, ok := byHash[hash]; ok {
+				currentIdx = idx
+			} else {
+				currentIdx = -1
+			}
+			fileCount = 0
+			continue
+		}
+
+		// Numstat lines: "<added>\t<deleted>\t<path>" or "-\t-\t<path>" for binaries.
+		// Empty lines separate commits — skip them.
+		if line == "" {
+			continue
+		}
+
+		parts := strings.SplitN(line, "\t", 3)
+		if len(parts) == 3 {
+			fileCount++
+		}
+	}
+
+	// Flush last commit.
+	if currentIdx >= 0 {
+		commits[currentIdx].FilesChanged = fileCount
+	}
 }

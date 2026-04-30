@@ -1,0 +1,16 @@
+id: P4.VER.003
+principle: P4
+dimension: VER
+title: Repository has CI configuration
+severity: info
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  A repo without CI is locally verifiable but not continuously verified.
+  Agents need CI to confirm changes pass on a clean environment.
+remediation:
+  summary: >-
+    Add a CI configuration (.github/workflows/, .gitlab-ci.yml, Jenkinsfile,
+    or similar).
+  guide_ref: docs/rules/P4.VER.003.md
