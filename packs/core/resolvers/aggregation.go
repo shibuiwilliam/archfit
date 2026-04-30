@@ -47,6 +47,9 @@ func AggP5AGG001(_ context.Context, facts model.FactStore) ([]model.Finding, []m
 		var matchedFiles []string
 
 		for _, f := range repo.Files {
+			if isFixtureOrTestdata(f.Path) {
+				continue
+			}
 			if matchesCategory(f.Path, keywords) {
 				topDirs[topLevelDir(f.Path)] = true
 				matchedFiles = append(matchedFiles, f.Path)

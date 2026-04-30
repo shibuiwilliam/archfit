@@ -5,5 +5,11 @@
   "packs": {
     "enabled": ["core", "agent-tool"]
   },
-  "ignore": []
+  "ignore": [
+    {
+      "rule": "P6.REV.002",
+      "reason": "archfit is a CLI tool, not a deployed runtime service — feature flags do not apply",
+      "expires": "2027-06-01"
+    }
+  ]
 }
