@@ -8,6 +8,7 @@ package git
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -23,9 +24,33 @@ const MaxRecentCommits = 50
 var ErrNoGit = errors.New("git: not a working tree")
 
 // Collect gathers git facts from the working tree at root using runner.
+// If root is a subdirectory of a different git repo (e.g., a fixture inside
+// the archfit repo), git facts are treated as unavailable — the enclosing
+// repo's history is not relevant to the scan target.
 func Collect(ctx context.Context, runner exec.Runner, root string) (model.GitFacts, error) {
 	if _, err := runner.Run(ctx, root, "git", "rev-parse", "--is-inside-work-tree"); err != nil {
 		return model.GitFacts{}, ErrNoGit
+	}
+
+	// Verify the scan root is at or near the git root. If we are deep inside
+	// another repo, the git history belongs to that repo, not to the target.
+	topR, topErr := runner.Run(ctx, root, "git", "rev-parse", "--show-toplevel")
+	if topErr == nil && topR.ExitCode == 0 {
+		gitRoot := strings.TrimSpace(string(topR.Stdout))
+		absRoot := root
+		if !strings.HasPrefix(absRoot, "/") {
+			if abs, err := filepath.Abs(absRoot); err == nil {
+				absRoot = abs
+			}
+		}
+		// Allow the scan root to be the git root itself, or a shallow child
+		// (e.g., monorepo service). Reject deep subdirectories like
+		// testdata/e2e/fixture/input/ which are clearly not the project root.
+		rel := strings.TrimPrefix(absRoot, gitRoot)
+		rel = strings.Trim(rel, "/")
+		if rel != "" && strings.Count(rel, "/") >= 3 {
+			return model.GitFacts{}, ErrNoGit
+		}
 	}
 
 	var facts model.GitFacts
