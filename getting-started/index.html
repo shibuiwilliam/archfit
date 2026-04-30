@@ -451,45 +451,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Installation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-source" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From Source
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-release-binaries" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From Release Binaries
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#via-docker" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Via Docker
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -2654,45 +2615,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Installation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#from-source" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From Source
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#from-release-binaries" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        From Release Binaries
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#via-docker" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Via Docker
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
         <li class="md-nav__item">
@@ -2794,40 +2716,29 @@
 
 <h1 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<h3 id="from-source">From Source<a class="headerlink" href="#from-source" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/shibuiwilliam/archfit.git
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">cd</span><span class="w"> </span>archfit
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>make<span class="w"> </span>build
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>./bin/archfit<span class="w"> </span>version
+<p>The fastest way to install:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>go<span class="w"> </span>install<span class="w"> </span>github.com/shibuiwilliam/archfit/cmd/archfit@latest
 </code></pre></div>
-<p>Requires <strong>Go 1.24+</strong>. No CGO. Cross-compiles to <code>linux/{amd64,arm64}</code>, <code>darwin/{amd64,arm64}</code>, and <code>windows/amd64</code>.</p>
-<h3 id="from-release-binaries">From Release Binaries<a class="headerlink" href="#from-release-binaries" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>-sSL<span class="w"> </span>https://github.com/shibuiwilliam/archfit/releases/latest/download/archfit-&lt;version&gt;-linux-amd64.tar.gz<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p">|</span><span class="w"> </span>tar<span class="w"> </span>xz
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>./archfit<span class="w"> </span>version
-</code></pre></div>
-<h3 id="via-docker">Via Docker<a class="headerlink" href="#via-docker" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">:/repo&quot;</span><span class="w"> </span>ghcr.io/shibuiwilliam/archfit:latest<span class="w"> </span>scan<span class="w"> </span>/repo
-</code></pre></div>
+<p>See <a href="../installation/">Installation</a> for all options (source, binaries, Docker, platform-specific PATH setup).</p>
 <h2 id="first-scan">First Scan<a class="headerlink" href="#first-scan" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">cd</span><span class="w"> </span>/path/to/your/repo
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c1"># Scaffold a config file</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>archfit<span class="w"> </span>init<span class="w"> </span>.
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># Run the scan</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>archfit<span class="w"> </span>scan<span class="w"> </span>.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>/path/to/your/repo
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Scaffold a config file</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>archfit<span class="w"> </span>init<span class="w"> </span>.
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># Run the scan</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>archfit<span class="w"> </span>scan<span class="w"> </span>.
 </code></pre></div>
 <h3 id="understanding-the-output">Understanding the Output<a class="headerlink" href="#understanding-the-output" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>archfit dev — target . (profile=standard)
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>rules evaluated: 10, findings: 2
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>overall score: 84.0
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>  P1: 100.0
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>  P3: 60.0
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>  P6: 60.0
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>findings:
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>  [warn] P3.EXP.001  — repository uses .env files but has no .env.example
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>  [warn] P6.REV.001 docs/ — deployment artifacts detected but no rollback documentation
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>archfit 0.1.0 — target . (profile=standard)
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>rules evaluated: 14 (2 with findings), findings: 2
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>overall score: 84.0
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  P1: 100.0
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  P3: 60.0
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  P6: 60.0
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>findings:
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>  [warn] P3.EXP.001  — repository uses .env files but has no .env.example
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>  [warn] P6.REV.001 docs/ — deployment artifacts detected but no rollback documentation
 </code></pre></div>
 <ul>
 <li><strong>Score</strong>: 0-100 per principle and overall. Higher is better.</li>
@@ -2835,14 +2746,14 @@
 <li><strong>Exit code</strong>: 0 = pass, 1 = findings at or above <code>--fail-on</code> threshold.</li>
 </ul>
 <h2 id="auto-fix">Auto-Fix<a class="headerlink" href="#auto-fix" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Fix a specific rule</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>archfit<span class="w"> </span>fix<span class="w"> </span>P3.EXP.001<span class="w"> </span>.
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Fix all fixable findings</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>archfit<span class="w"> </span>fix<span class="w"> </span>--all<span class="w"> </span>.
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Preview changes without applying</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>archfit<span class="w"> </span>fix<span class="w"> </span>--dry-run<span class="w"> </span>--all<span class="w"> </span>.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Fix a specific rule</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>archfit<span class="w"> </span>fix<span class="w"> </span>P3.EXP.001<span class="w"> </span>.
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Fix all fixable findings</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>archfit<span class="w"> </span>fix<span class="w"> </span>--all<span class="w"> </span>.
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1"># Preview changes without applying</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>archfit<span class="w"> </span>fix<span class="w"> </span>--dry-run<span class="w"> </span>--all<span class="w"> </span>.
 </code></pre></div>
 <p>Every fix is verified by automatic re-scan. If the finding persists or new findings appear, changes are rolled back.</p>
 <h2 id="common-commands">Common Commands<a class="headerlink" href="#common-commands" title="Permanent link">&para;</a></h2>
@@ -2887,6 +2798,14 @@
 <td>Scaffold <code>.archfit.yaml</code></td>
 </tr>
 <tr>
+<td><code>archfit contract check [path]</code></td>
+<td>Check against <code>.archfit-contract.yaml</code></td>
+</tr>
+<tr>
+<td><code>archfit contract init [path]</code></td>
+<td>Scaffold a contract from current scan</td>
+</tr>
+<tr>
 <td><code>archfit help</code></td>
 <td>Show all commands and flags</td>
 </tr>
@@ -2923,6 +2842,16 @@
 <td>off</td>
 </tr>
 <tr>
+<td><code>--record &lt;dir&gt;</code></td>
+<td>Save JSON + Markdown to timestamped subdirectory</td>
+<td></td>
+</tr>
+<tr>
+<td><code>--explain-coverage</code></td>
+<td>Show which rules fired vs. passed</td>
+<td></td>
+</tr>
+<tr>
 <td><code>-C &lt;dir&gt;</code></td>
 <td>Change directory before running</td>
 <td></td>
@@ -2932,7 +2861,9 @@
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../configuration/">Configuration Reference</a> — customize <code>.archfit.yaml</code></li>
+<li><a href="../contract/">Fitness Contract</a> — declare fitness goals for CI and agents</li>
 <li><a href="../rules/">Rules Overview</a> — understand what each rule checks</li>
+<li><a href="../agent-skill/">Agent Skill</a> — set up Claude Code integration</li>
 <li><a href="../llm/">LLM Integration</a> — enable contextual explanations</li>
 <li><a href="../ci-cd/">CI/CD Integration</a> — add archfit to your pipeline</li>
 </ul>

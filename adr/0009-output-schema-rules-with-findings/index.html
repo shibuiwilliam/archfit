@@ -10,7 +10,7 @@
       
       
       
-        <link rel="canonical" href="https://shibuiwilliam.github.io/archfit/development/">
+        <link rel="canonical" href="https://shibuiwilliam.github.io/archfit/adr/0009-output-schema-rules-with-findings/">
       
       
       
@@ -18,19 +18,19 @@
         
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>development/ — Technical Documentation for archfit Development - archfit</title>
+        <title>Add rules_with_findings to output schema and bump to 0.2.0 - archfit</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -49,7 +49,7 @@
       
     
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -74,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#development-technical-documentation-for-archfit-development" class="md-skip">
+        <a href="#context" class="md-skip">
           Skip to content
         </a>
       
@@ -90,7 +90,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="archfit" class="md-header__button md-logo" aria-label="archfit" data-md-component="logo">
+    <a href="../.." title="archfit" class="md-header__button md-logo" aria-label="archfit" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              development/ — Technical Documentation for archfit Development
+              Add rules_with_findings to output schema and bump to 0.2.0
             
           </span>
         </div>
@@ -228,7 +228,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="archfit" class="md-nav__button md-logo" aria-label="archfit" data-md-component="logo">
+    <a href="../.." title="archfit" class="md-nav__button md-logo" aria-label="archfit" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -258,7 +258,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -351,7 +351,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../installation/" class="md-nav__link">
+      <a href="../../installation/" class="md-nav__link">
         
   
   
@@ -379,7 +379,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -407,7 +407,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuration/" class="md-nav__link">
+      <a href="../../configuration/" class="md-nav__link">
         
   
   
@@ -435,7 +435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../contract/" class="md-nav__link">
+      <a href="../../contract/" class="md-nav__link">
         
   
   
@@ -463,7 +463,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../exit-codes/" class="md-nav__link">
+      <a href="../../exit-codes/" class="md-nav__link">
         
   
   
@@ -537,7 +537,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../rules/" class="md-nav__link ">
+            <a href="../../rules/" class="md-nav__link ">
               
   
   
@@ -642,7 +642,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P1.LOC.001/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.001/" class="md-nav__link">
         
   
   
@@ -670,7 +670,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P1.LOC.002/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.002/" class="md-nav__link">
         
   
   
@@ -698,7 +698,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P1.LOC.003/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.003/" class="md-nav__link">
         
   
   
@@ -726,7 +726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P1.LOC.004/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.004/" class="md-nav__link">
         
   
   
@@ -817,7 +817,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P2.SPC.010/" class="md-nav__link">
+      <a href="../../rules/P2.SPC.010/" class="md-nav__link">
         
   
   
@@ -908,7 +908,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P3.EXP.001/" class="md-nav__link">
+      <a href="../../rules/P3.EXP.001/" class="md-nav__link">
         
   
   
@@ -1003,7 +1003,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P4.VER.001/" class="md-nav__link">
+      <a href="../../rules/P4.VER.001/" class="md-nav__link">
         
   
   
@@ -1031,7 +1031,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P4.VER.002/" class="md-nav__link">
+      <a href="../../rules/P4.VER.002/" class="md-nav__link">
         
   
   
@@ -1059,7 +1059,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P4.VER.003/" class="md-nav__link">
+      <a href="../../rules/P4.VER.003/" class="md-nav__link">
         
   
   
@@ -1150,7 +1150,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P5.AGG.001/" class="md-nav__link">
+      <a href="../../rules/P5.AGG.001/" class="md-nav__link">
         
   
   
@@ -1241,7 +1241,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P6.REV.001/" class="md-nav__link">
+      <a href="../../rules/P6.REV.001/" class="md-nav__link">
         
   
   
@@ -1336,7 +1336,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P7.MRD.001/" class="md-nav__link">
+      <a href="../../rules/P7.MRD.001/" class="md-nav__link">
         
   
   
@@ -1364,7 +1364,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P7.MRD.002/" class="md-nav__link">
+      <a href="../../rules/P7.MRD.002/" class="md-nav__link">
         
   
   
@@ -1392,7 +1392,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/P7.MRD.003/" class="md-nav__link">
+      <a href="../../rules/P7.MRD.003/" class="md-nav__link">
         
   
   
@@ -1501,7 +1501,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../agent-skill/" class="md-nav__link">
+      <a href="../../agent-skill/" class="md-nav__link">
         
   
   
@@ -1529,7 +1529,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../llm/" class="md-nav__link">
+      <a href="../../llm/" class="md-nav__link">
         
   
   
@@ -1557,7 +1557,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../fix/" class="md-nav__link">
+      <a href="../../fix/" class="md-nav__link">
         
   
   
@@ -1585,7 +1585,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../ci-cd/" class="md-nav__link">
+      <a href="../../ci-cd/" class="md-nav__link">
         
   
   
@@ -1613,7 +1613,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../deployment/" class="md-nav__link">
+      <a href="../../deployment/" class="md-nav__link">
         
   
   
@@ -1732,7 +1732,7 @@
   
   
     <li class="md-nav__item">
-      <a href="architecture/" class="md-nav__link">
+      <a href="../../development/architecture/" class="md-nav__link">
         
   
   
@@ -1760,7 +1760,7 @@
   
   
     <li class="md-nav__item">
-      <a href="implementation-plan/" class="md-nav__link">
+      <a href="../../development/implementation-plan/" class="md-nav__link">
         
   
   
@@ -1788,7 +1788,7 @@
   
   
     <li class="md-nav__item">
-      <a href="testing-strategy/" class="md-nav__link">
+      <a href="../../development/testing-strategy/" class="md-nav__link">
         
   
   
@@ -1816,7 +1816,7 @@
   
   
     <li class="md-nav__item">
-      <a href="metrics-and-scoring/" class="md-nav__link">
+      <a href="../../development/metrics-and-scoring/" class="md-nav__link">
         
   
   
@@ -1844,7 +1844,7 @@
   
   
     <li class="md-nav__item">
-      <a href="pack-development/" class="md-nav__link">
+      <a href="../../development/pack-development/" class="md-nav__link">
         
   
   
@@ -1872,7 +1872,7 @@
   
   
     <li class="md-nav__item">
-      <a href="api-reference/" class="md-nav__link">
+      <a href="../../development/api-reference/" class="md-nav__link">
         
   
   
@@ -1900,7 +1900,7 @@
   
   
     <li class="md-nav__item">
-      <a href="fix-engine/" class="md-nav__link">
+      <a href="../../development/fix-engine/" class="md-nav__link">
         
   
   
@@ -1928,7 +1928,7 @@
   
   
     <li class="md-nav__item">
-      <a href="llm-integration/" class="md-nav__link">
+      <a href="../../development/llm-integration/" class="md-nav__link">
         
   
   
@@ -1956,7 +1956,7 @@
   
   
     <li class="md-nav__item">
-      <a href="ci-cd-integration/" class="md-nav__link">
+      <a href="../../development/ci-cd-integration/" class="md-nav__link">
         
   
   
@@ -1984,7 +1984,7 @@
   
   
     <li class="md-nav__item">
-      <a href="cross-stack-improvements/" class="md-nav__link">
+      <a href="../../development/cross-stack-improvements/" class="md-nav__link">
         
   
   
@@ -2012,7 +2012,7 @@
   
   
     <li class="md-nav__item">
-      <a href="fitness-contract/" class="md-nav__link">
+      <a href="../../development/fitness-contract/" class="md-nav__link">
         
   
   
@@ -2040,7 +2040,7 @@
   
   
     <li class="md-nav__item">
-      <a href="agent-observatory/" class="md-nav__link">
+      <a href="../../development/agent-observatory/" class="md-nav__link">
         
   
   
@@ -2068,7 +2068,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adaptive-engine/" class="md-nav__link">
+      <a href="../../development/adaptive-engine/" class="md-nav__link">
         
   
   
@@ -2096,7 +2096,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../dependencies/" class="md-nav__link">
+      <a href="../../dependencies/" class="md-nav__link">
         
   
   
@@ -2201,7 +2201,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/0001-architecture-overview/" class="md-nav__link">
+      <a href="../0001-architecture-overview/" class="md-nav__link">
         
   
   
@@ -2236,7 +2236,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/0002-phase2-dogfood-and-sarif/" class="md-nav__link">
+      <a href="../0002-phase2-dogfood-and-sarif/" class="md-nav__link">
         
   
   
@@ -2271,7 +2271,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/0003-llm-explanation/" class="md-nav__link">
+      <a href="../0003-llm-explanation/" class="md-nav__link">
         
   
   
@@ -2306,7 +2306,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/0004-fix-engine/" class="md-nav__link">
+      <a href="../0004-fix-engine/" class="md-nav__link">
         
   
   
@@ -2341,7 +2341,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/0005-factstore-extension/" class="md-nav__link">
+      <a href="../0005-factstore-extension/" class="md-nav__link">
         
   
   
@@ -2376,7 +2376,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/0006-external-packs/" class="md-nav__link">
+      <a href="../0006-external-packs/" class="md-nav__link">
         
   
   
@@ -2411,7 +2411,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../adr/0008-contract-exit-codes/" class="md-nav__link">
+      <a href="../0008-contract-exit-codes/" class="md-nav__link">
         
   
   
@@ -2463,8 +2463,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -2473,60 +2471,32 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#document-index" class="md-nav__link">
+  <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Document Index
+        Context
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Document Index">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#core-subsystems" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Core Subsystems
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#three-strategic-elements" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Three Strategic Elements
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#planning" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Planning
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#how-to-use-these-documents" class="md-nav__link">
+  <a href="#decision" class="md-nav__link">
     <span class="md-ellipsis">
       
-        How to Use These Documents
+        Decision
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
       
     </span>
   </a>
@@ -2550,7 +2520,7 @@
 
 
   
-    <a href="https://github.com/shibuiwilliam/archfit/edit/main/docs/development/README.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/shibuiwilliam/archfit/edit/main/docs/adr/0009-output-schema-rules-with-findings.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -2558,109 +2528,49 @@
   
 
 
-<h1 id="development-technical-documentation-for-archfit-development">development/ — Technical Documentation for archfit Development<a class="headerlink" href="#development-technical-documentation-for-archfit-development" title="Permanent link">&para;</a></h1>
-<p>This directory contains detailed technical documentation to support ongoing development and enhancement of archfit. These documents complement <code>CLAUDE.md</code> (the agent contract) and <code>PROJECT.md</code> (the project overview).</p>
-<h2 id="document-index">Document Index<a class="headerlink" href="#document-index" title="Permanent link">&para;</a></h2>
-<h3 id="core-subsystems">Core Subsystems<a class="headerlink" href="#core-subsystems" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Document</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="architecture/">architecture.md</a></td>
-<td>System architecture, package boundaries, data flow, and extension points</td>
-</tr>
-<tr>
-<td><a href="api-reference/">api-reference.md</a></td>
-<td>Core types, interfaces, and function signatures</td>
-</tr>
-<tr>
-<td><a href="metrics-and-scoring/">metrics-and-scoring.md</a></td>
-<td>How scores and metrics are computed and the normalization algorithm</td>
-</tr>
-<tr>
-<td><a href="testing-strategy/">testing-strategy.md</a></td>
-<td>Three-layer testing approach, fixture conventions, and test helpers</td>
-</tr>
-<tr>
-<td><a href="fix-engine/">fix-engine.md</a></td>
-<td>Fix engine internals: fixer interface, plan-apply-verify loop</td>
-</tr>
-<tr>
-<td><a href="llm-integration/">llm-integration.md</a></td>
-<td>Multi-provider LLM architecture, prompt design, budget/cache system</td>
-</tr>
-<tr>
-<td><a href="pack-development/">pack-development.md</a></td>
-<td>How to create, test, validate, and publish rule packs</td>
-</tr>
-<tr>
-<td><a href="ci-cd-integration/">ci-cd-integration.md</a></td>
-<td>GitHub Action, SARIF, PR gate workflows, trend tracking</td>
-</tr>
-<tr>
-<td><a href="cross-stack-improvements/">cross-stack-improvements.md</a></td>
-<td>Detection pattern expansion for Java, Ruby, PHP, Terraform, monorepos</td>
-</tr>
-</tbody>
-</table>
-<h3 id="three-strategic-elements">Three Strategic Elements<a class="headerlink" href="#three-strategic-elements" title="Permanent link">&para;</a></h3>
-<p>These documents describe the three capabilities that transform archfit from a point-in-time audit tool into continuous architecture infrastructure.</p>
-<table>
-<thead>
-<tr>
-<th>Document</th>
-<th>Element</th>
-<th>Status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="fitness-contract/">fitness-contract.md</a></td>
-<td>Fitness Contract as Code — hard constraints, area budgets, agent directives</td>
-<td>Implemented (types, check logic, CLI)</td>
-</tr>
-<tr>
-<td><a href="agent-observatory/">agent-observatory.md</a></td>
-<td>Agent Behavior Observatory — trace ingestion and behavioral metrics</td>
-<td>Not started</td>
-</tr>
-<tr>
-<td><a href="adaptive-engine/">adaptive-engine.md</a></td>
-<td>Adaptive Rule Engine — learning feedback loop for confidence and thresholds</td>
-<td>Not started</td>
-</tr>
-</tbody>
-</table>
-<h3 id="planning">Planning<a class="headerlink" href="#planning" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Document</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="implementation-plan/">implementation-plan.md</a></td>
-<td>Phased implementation plan with PR-sized work units</td>
-</tr>
-</tbody>
-</table>
-<h2 id="how-to-use-these-documents">How to Use These Documents<a class="headerlink" href="#how-to-use-these-documents" title="Permanent link">&para;</a></h2>
-<p><strong>Claude Code</strong>: reference these documents when working on specific subsystems. The <code>CLAUDE.md</code> contract takes precedence if there is a conflict.</p>
-<p><strong>Human contributors</strong>: read <code>architecture.md</code> first for the big picture, then the relevant subsystem document for your task.</p>
-<p><strong>Adding a new document</strong>: keep documents focused on one subsystem. Link from this README. Do not duplicate content from <code>CLAUDE.md</code> or <code>docs/</code>.</p>
+  <h1>Add rules_with_findings to output schema and bump to 0.2.0</h1>
+
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>The renderer in <code>internal/report/report.go</code> emits <code>summary.rules_with_findings</code>
+in JSON output. However, <code>schemas/output.schema.json</code> declares
+<code>additionalProperties: false</code> on the <code>summary</code> object and does not list the
+field. Any strict JSON Schema validation of archfit output therefore fails.</p>
+<p>This was tracked as CLAUDE.md §7.2 and PROJECT.md §3.2.</p>
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<ol>
+<li>Add <code>rules_with_findings</code> (integer, minimum 0) to <code>summary.properties</code> in
+   <code>schemas/output.schema.json</code> and mark it as required.</li>
+<li>Add <code>llm_suggestion</code> (optional object) to <code>findings.items.properties</code> to
+   cover the <code>--with-llm</code> enrichment that was also undeclared.</li>
+<li>Bump <code>OutputSchemaVersion</code> from <code>0.1.0</code> to <code>0.2.0</code>. Per the pre-1.0
+   stability rules (CLAUDE.md §12), additive field changes are a minor bump.</li>
+<li>Add a CI-runnable schema conformance test (<code>internal/report/schema_test.go</code>)
+   that validates every golden <code>expected.json</code> against the schema. This
+   prevents future drift.</li>
+<li>Use <code>github.com/santhosh-tekuri/jsonschema/v6</code> as the validator — a
+   pure-Go, zero-dependency JSON Schema implementation supporting draft
+   2020-12. This was already listed in <code>docs/dependencies.md</code> as planned.</li>
+</ol>
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Every current and future <code>expected.json</code> golden file must validate against
+  the schema. Adding a field to the renderer without updating the schema will
+  break the build.</li>
+<li>Consumers of <code>--json</code> output that parse <code>schema_version</code> should accept
+  <code>0.2.0</code>. The only change is the new <code>rules_with_findings</code> field in
+  <code>summary</code> — no fields were renamed, removed, or retyped.</li>
+<li>One new test-time dependency: <code>github.com/santhosh-tekuri/jsonschema/v6</code>.
+  It has zero transitive dependencies of its own.</li>
+</ul>
 
 
 
 
 
 
+
+  
+  
 
 
 
@@ -2710,10 +2620,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

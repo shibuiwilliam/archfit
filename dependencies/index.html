@@ -2695,6 +2695,20 @@ entry below, and (c) an ADR when the dep affects the architecture.</p>
 <td>Official Anthropic Go SDK for the Messages API. Third LLM backend behind <code>llm.Client</code>. Selected when <code>ANTHROPIC_API_KEY</code> is set or <code>--llm-backend=claude</code> is passed. Same opt-in/budget/cache model as the other backends.</td>
 <td><a href="../adr/0003-llm-explanation/">ADR 0003</a></td>
 </tr>
+<tr>
+<td><code>github.com/santhosh-tekuri/jsonschema/v6</code></td>
+<td><code>v6.0.2</code></td>
+<td><code>internal/report/schema_test.go</code></td>
+<td>Pure-Go JSON Schema validator (draft 2020-12). Used in tests to validate every golden <code>expected.json</code> against <code>schemas/output.schema.json</code>. Zero transitive deps. Test-only in practice, but Go modules do not distinguish test deps.</td>
+<td><a href="../adr/0009-output-schema-rules-with-findings/">ADR 0009</a></td>
+</tr>
+<tr>
+<td><code>sigs.k8s.io/yaml</code></td>
+<td><code>v1.6.0</code></td>
+<td><code>internal/config/config.go</code>, <code>internal/contract/contract.go</code></td>
+<td>YAML 1.2 parser that uses <code>json:"..."</code> struct tags (no tag migration needed). Replaces <code>encoding/json</code> so <code>.archfit.yaml</code> and <code>.archfit-contract.yaml</code> accept idiomatic YAML (comments, unquoted strings, block scalars). One transitive dep (<code>go.yaml.in/yaml/v2</code>).</td>
+<td>—</td>
+</tr>
 </tbody>
 </table>
 <h2 id="transitive-dependencies">Transitive dependencies<a class="headerlink" href="#transitive-dependencies" title="Permanent link">&para;</a></h2>
@@ -2709,6 +2723,7 @@ auditability, not for use:</p>
 <li><code>go.opencensus.io</code> — SDK-internal tracing.</li>
 <li><code>golang.org/x/{crypto,net,sys,text}</code> — standard-library-adjacent modules the SDK relies on.</li>
 <li><code>github.com/tidwall/{gjson,match,pretty,sjson}</code> — JSON manipulation used by the OpenAI and Anthropic SDKs.</li>
+<li><code>go.yaml.in/yaml/v2</code> — YAML parser used by <code>sigs.k8s.io/yaml</code>.</li>
 </ul>
 <h2 id="go-toolchain">Go toolchain<a class="headerlink" href="#go-toolchain" title="Permanent link">&para;</a></h2>
 <p>Minimum: <strong>Go 1.24</strong> (bumped from 1.23 in Phase 3a because <code>google.golang.org/genai</code>
@@ -2725,12 +2740,6 @@ requires it). See ADR 0003 for the rationale.</p>
   and cache layers without any third-party abstraction framework.</li>
 </ul>
 <h2 id="planned-for-later-phases">Planned for later phases<a class="headerlink" href="#planned-for-later-phases" title="Permanent link">&para;</a></h2>
-<ul>
-<li><code>gopkg.in/yaml.v3</code> — proper YAML parsing for <code>.archfit.yaml</code> with anchors,
-  block scalars, and comments. Phase 3b.</li>
-<li><code>github.com/santhosh-tekuri/jsonschema/v5</code> — schema validation for rule YAML
-  and output JSON. Phase 3c.</li>
-</ul>
 <p>Each addition will land with its own ADR.</p>
 
 
