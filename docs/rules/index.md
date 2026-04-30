@@ -14,7 +14,7 @@ P<principle>.<dimension>.<number>
 
 ## Current Rules
 
-### `core` pack — applies to every repository (11 rules)
+### `core` pack — applies to every repository (14 rules)
 
 | Rule | Principle | Severity | Evidence | What it checks |
 |---|---|---|---|---|
@@ -22,12 +22,15 @@ P<principle>.<dimension>.<number>
 | [P1.LOC.002](P1.LOC.002.md) | P1 Locality | warn | strong | Vertical-slice directories carry `AGENTS.md` |
 | [P1.LOC.003](P1.LOC.003.md) | P1 Locality | info | medium | Dependency coupling is bounded (max reach ≤10) |
 | [P1.LOC.004](P1.LOC.004.md) | P1 Locality | info | sampled | Commits touch a bounded number of files (≤8) |
+| [P2.SPC.001](P2.SPC.001.md) | P2 Spec-first | warn | strong | API boundary has a machine-readable contract |
 | [P3.EXP.001](P3.EXP.001.md) | P3 Explicitness | warn | strong | Config documented (.env, Spring profiles, tfvars, Rails) |
 | [P4.VER.001](P4.VER.001.md) | P4 Verifiability | warn | strong | Verification entrypoint exists (Makefile, pom.xml, etc.) |
 | [P4.VER.002](P4.VER.002.md) | P4 Verifiability | info | medium | ≥70% of source directories have test files |
 | [P4.VER.003](P4.VER.003.md) | P4 Verifiability | info | strong | CI configuration present (GitHub Actions, GitLab, etc.) |
 | [P5.AGG.001](P5.AGG.001.md) | P5 Aggregation | warn | strong | Security-sensitive files concentrated (≤2 top-level dirs) |
+| [P5.AGG.002](P5.AGG.002.md) | P5 Aggregation | warn | strong | Secret scanner runs in CI |
 | [P6.REV.001](P6.REV.001.md) | P6 Reversibility | warn | strong | Deployment artifacts → rollback docs exist |
+| [P6.REV.002](P6.REV.002.md) | P6 Reversibility | info | medium | Deploying repo uses feature-flag mechanism |
 | [P7.MRD.001](P7.MRD.001.md) | P7 Machine-readability | warn | strong | CLI repos document exit codes |
 
 ### `agent-tool` pack — opt-in, for agent-consumed tools (3 rules)

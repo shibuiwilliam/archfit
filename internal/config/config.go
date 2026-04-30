@@ -20,13 +20,21 @@ import (
 
 // Config is the deserialized .archfit.yaml configuration.
 type Config struct {
-	Version     int                       `json:"version"`
-	ProjectType []string                  `json:"project_type,omitempty"`
-	Profile     string                    `json:"profile,omitempty"`
-	RiskTiers   map[string][]string       `json:"risk_tiers,omitempty"`
-	Packs       Packs                     `json:"packs"`
-	Overrides   map[string]map[string]any `json:"overrides,omitempty"`
-	Ignore      []Ignore                  `json:"ignore,omitempty"`
+	Version      int                          `json:"version"`
+	ProjectType  []string                     `json:"project_type,omitempty"`
+	Profile      string                       `json:"profile,omitempty"`
+	RiskTiers    map[string][]string          `json:"risk_tiers,omitempty"`
+	Packs        Packs                        `json:"packs"`
+	Verification map[string]VerificationLayer `json:"verification,omitempty"`
+	Overrides    map[string]map[string]any    `json:"overrides,omitempty"`
+	Ignore       []Ignore                     `json:"ignore,omitempty"`
+}
+
+// VerificationLayer declares a named verification command and its timeout.
+// Layers run in declaration order when --depth=deep.
+type VerificationLayer struct {
+	Command  string `json:"command"`
+	TimeoutS int    `json:"timeout_s,omitempty"`
 }
 
 // Packs controls which rule packs are enabled or disabled.

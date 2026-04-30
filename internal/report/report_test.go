@@ -58,7 +58,7 @@ func TestRenderJSON_IsDeterministicAndSchemaShaped(t *testing.T) {
 			t.Errorf("missing field %q in JSON output", k)
 		}
 	}
-	if doc["schema_version"].(string) != "0.2.0" {
+	if doc["schema_version"].(string) != "1.0.0" {
 		t.Errorf("schema_version: %v", doc["schema_version"])
 	}
 }

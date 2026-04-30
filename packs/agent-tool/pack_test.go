@@ -77,6 +77,53 @@ func TestAgentToolPack_Fixtures(t *testing.T) {
 	}
 }
 
+// TestAgentToolPack_PairFixtures ensures every agent-tool rule has both a
+// positive and a negative fixture. CLAUDE.md §17 requires this.
+func TestAgentToolPack_PairFixtures(t *testing.T) {
+	rules := agenttool.Rules()
+	entries, err := os.ReadDir("fixtures")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fixtureNames := map[string]bool{}
+	for _, e := range entries {
+		if e.IsDir() {
+			fixtureNames[e.Name()] = true
+		}
+	}
+
+	seen := map[string]bool{}
+	for _, r := range rules {
+		if seen[r.ID] {
+			continue
+		}
+		seen[r.ID] = true
+
+		hasPositive := false
+		for name := range fixtureNames {
+			if name == r.ID || (strings.HasPrefix(name, r.ID+"-") && !strings.HasSuffix(name, "-negative")) {
+				hasPositive = true
+				break
+			}
+		}
+		if !hasPositive {
+			t.Errorf("rule %s: missing positive fixture (fixtures/%s/)", r.ID, r.ID)
+		}
+
+		hasNegative := false
+		for name := range fixtureNames {
+			if strings.HasPrefix(name, r.ID) && strings.HasSuffix(name, "-negative") {
+				hasNegative = true
+				break
+			}
+		}
+		if !hasNegative {
+			t.Errorf("rule %s: missing negative fixture (fixtures/%s-negative/)", r.ID, r.ID)
+		}
+	}
+}
+
 func filterByRule(fs []model.Finding, ruleID string) []model.Finding {
 	var out []model.Finding
 	for _, f := range fs {

@@ -271,6 +271,89 @@ type FactStore interface {
 	// DepGraph returns dependency graph facts, or (DepGraphFacts{}, false) when
 	// the source was not parseable or the collector was skipped. See ADR 0005.
 	DepGraph() (DepGraphFacts, bool)
+	// Languages returns the language file counts from the filesystem collector.
+	// Keys are lowercase language names (e.g. "go", "python", "java").
+	// Used by the rule engine to skip rules whose AppliesTo.Languages don't
+	// match the repo's detected ecosystem. See ADR 0010.
+	Languages() map[string]int
+	// Ecosystems returns typed ecosystem facts (CI platforms, deployment tools,
+	// frameworks). See ADR 0011. Resolvers should use this instead of maintaining
+	// private keyword tables for ecosystem detection.
+	Ecosystems() EcosystemFacts
+}
+
+// EcosystemEntry represents a detected framework, platform, or tool. See ADR 0011.
+type EcosystemEntry struct {
+	Name       string   `json:"name"`
+	Confidence float64  `json:"confidence"`
+	Markers    []string `json:"markers"`
+}
+
+// EcosystemFacts holds typed ecosystem detection results. Resolvers use
+// Has/HasCI/HasDeployment/CIFiles instead of private keyword tables.
+type EcosystemFacts struct {
+	Detected []EcosystemEntry `json:"detected"`
+}
+
+// Has returns true if the named ecosystem was detected.
+func (ef EcosystemFacts) Has(name string) bool {
+	for _, e := range ef.Detected {
+		if e.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+// HasCI returns true if any CI platform was detected.
+func (ef EcosystemFacts) HasCI() bool {
+	for _, e := range ef.Detected {
+		if isCIPlatform(e.Name) {
+			return true
+		}
+	}
+	return false
+}
+
+// CIFiles returns all detected CI configuration file paths.
+func (ef EcosystemFacts) CIFiles() []string {
+	var files []string
+	for _, e := range ef.Detected {
+		if isCIPlatform(e.Name) {
+			files = append(files, e.Markers...)
+		}
+	}
+	return files
+}
+
+// HasDeployment returns true if any deployment tool was detected.
+func (ef EcosystemFacts) HasDeployment() bool {
+	for _, e := range ef.Detected {
+		if isDeployPlatform(e.Name) {
+			return true
+		}
+	}
+	return false
+}
+
+func isCIPlatform(name string) bool {
+	switch name {
+	case "github-actions", "gitlab-ci", "circleci", "buildkite",
+		"jenkins", "travis", "azure-pipelines", "bitbucket-pipelines",
+		"woodpecker":
+		return true
+	}
+	return false
+}
+
+func isDeployPlatform(name string) bool {
+	switch name {
+	case "docker", "kubernetes", "helm", "terraform",
+		"aws-cdk", "serverless", "cloud-build", "skaffold",
+		"heroku", "render", "fly-io", "railway", "vercel", "netlify":
+		return true
+	}
+	return false
 }
 
 // SchemaFacts aggregates what the schema collector saw on the repository.
@@ -330,6 +413,7 @@ type CommandResult struct {
 	Command    string `json:"command"`
 	DurationMS int64  `json:"duration_ms"`
 	ExitCode   int    `json:"exit_code"`
+	Layer      string `json:"layer,omitempty"` // verification layer name (e.g. "lint", "unit")
 }
 
 // DepGraphFacts holds the dependency graph from source analysis.

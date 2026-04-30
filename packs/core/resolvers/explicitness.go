@@ -53,16 +53,19 @@ var tfvarsDocCandidates = []string{
 //   - Rails config/environments/*.rb without config documentation
 func ExpP3EXP001(_ context.Context, facts model.FactStore) ([]model.Finding, []model.Metric, error) {
 	repo := facts.Repo()
+	eco := facts.Ecosystems()
 	var findings []model.Finding
 
-	// Check 1: .env files without documentation.
+	// Check 1: .env files without documentation (universal).
 	if f := checkEnvFiles(repo); f != nil {
 		findings = append(findings, *f)
 	}
 
-	// Check 2: Spring Boot profile-specific config without documentation.
-	if f := checkSpringProfiles(repo); f != nil {
-		findings = append(findings, *f)
+	// Check 2: Spring Boot profiles — skip if ecosystem collector says no Spring.
+	if eco.Has("spring") {
+		if f := checkSpringProfiles(repo); f != nil {
+			findings = append(findings, *f)
+		}
 	}
 
 	// Check 3: Terraform tfvars without example.
@@ -70,9 +73,11 @@ func ExpP3EXP001(_ context.Context, facts model.FactStore) ([]model.Finding, []m
 		findings = append(findings, *f)
 	}
 
-	// Check 4: Rails config/environments without documentation.
-	if f := checkRailsEnvironments(repo); f != nil {
-		findings = append(findings, *f)
+	// Check 4: Rails environments — skip if ecosystem collector says no Rails.
+	if eco.Has("rails") {
+		if f := checkRailsEnvironments(repo); f != nil {
+			findings = append(findings, *f)
+		}
 	}
 
 	return findings, nil, nil

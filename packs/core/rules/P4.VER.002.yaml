@@ -4,7 +4,7 @@ dimension: VER
 title: Source directories have test coverage
 severity: info
 evidence_strength: medium
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   Agents need test coverage to verify their changes. Directories without test

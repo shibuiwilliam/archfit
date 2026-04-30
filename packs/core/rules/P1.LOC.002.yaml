@@ -4,7 +4,7 @@ dimension: LOC
 title: Declared vertical-slice directories carry their own AGENTS.md
 severity: warn
 evidence_strength: strong
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   When a repository organizes code into vertical slices (e.g. packs/,

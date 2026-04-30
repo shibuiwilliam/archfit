@@ -10,12 +10,12 @@ const MaxOutputBytes = 4 * 1024
 
 // TimedResult records the outcome of a timed command execution.
 type TimedResult struct {
-	Command  string   `json:"command"`
-	Args     []string `json:"args,omitempty"`
-	ExitCode int      `json:"exit_code"`
-	// DurationMS is the wall-clock time in milliseconds.
-	DurationMS int64  `json:"duration_ms"`
-	Stdout     string `json:"stdout,omitempty"` // truncated to MaxOutputBytes
-	Stderr     string `json:"stderr,omitempty"` // truncated to MaxOutputBytes
-	Error      string `json:"error,omitempty"`  // non-empty if command failed to start
+	Command    string   `json:"command"`
+	Args       []string `json:"args,omitempty"`
+	ExitCode   int      `json:"exit_code"`
+	DurationMS int64    `json:"duration_ms"`      // wall-clock ms
+	Layer      string   `json:"layer,omitempty"`  // verification layer name
+	Stdout     string   `json:"stdout,omitempty"` // truncated to MaxOutputBytes
+	Stderr     string   `json:"stderr,omitempty"` // truncated to MaxOutputBytes
+	Error      string   `json:"error,omitempty"`  // non-empty if command failed to start
 }

@@ -103,6 +103,81 @@ func TestCorePack_Fixtures(t *testing.T) {
 	}
 }
 
+// TestCorePack_PairFixtures ensures every registered core rule has both a
+// positive fixture (rule fires) and a negative fixture (rule does not fire).
+// CLAUDE.md §17 requires this. Without both, a rule cannot exit experimental.
+func TestCorePack_PairFixtures(t *testing.T) {
+	rules := corepack.Rules()
+	entries, err := os.ReadDir("fixtures")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fixtureNames := map[string]bool{}
+	for _, e := range entries {
+		if e.IsDir() {
+			fixtureNames[e.Name()] = true
+		}
+	}
+
+	// Rules that require runtime data (git history, depgraph) cannot produce
+	// findings in fixture mode because core.Scan runs without a runner.
+	// These are tested via metrics_test.go and CLI integration tests instead.
+	runtimeOnly := map[string]bool{
+		"P1.LOC.003": true, // requires DepGraph facts
+		"P1.LOC.004": true, // requires Git facts
+	}
+
+	seen := map[string]bool{}
+	for _, r := range rules {
+		if seen[r.ID] {
+			continue
+		}
+		seen[r.ID] = true
+
+		hasPositive := false
+		for name := range fixtureNames {
+			if extractRuleID(name) == r.ID && !strings.HasSuffix(name, "-negative") {
+				hasPositive = true
+				break
+			}
+		}
+		if !hasPositive && !runtimeOnly[r.ID] {
+			t.Errorf("rule %s: missing positive fixture (fixtures/%s/)", r.ID, r.ID)
+		}
+
+		hasNegative := false
+		for name := range fixtureNames {
+			if extractRuleID(name) == r.ID && strings.HasSuffix(name, "-negative") {
+				hasNegative = true
+				break
+			}
+		}
+		if !hasNegative {
+			t.Errorf("rule %s: missing negative fixture (fixtures/%s-negative/)", r.ID, r.ID)
+		}
+	}
+}
+
+// extractRuleID derives the rule ID from a fixture directory name.
+// "P3.EXP.001-spring" → "P3.EXP.001", "P3.EXP.001-negative" → "P3.EXP.001".
+func extractRuleID(fixtureName string) string {
+	id := fixtureName
+	for {
+		idx := strings.LastIndex(id, "-")
+		if idx <= 0 {
+			break
+		}
+		candidate := id[:idx]
+		if len(candidate) >= 10 && candidate[0] == 'P' {
+			id = candidate
+			continue
+		}
+		break
+	}
+	return id
+}
+
 func filterByRule(fs []model.Finding, ruleID string) []model.Finding {
 	var out []model.Finding
 	for _, f := range fs {

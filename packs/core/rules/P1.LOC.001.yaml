@@ -4,7 +4,7 @@ dimension: LOC
 title: Root of the repository has agent-facing documentation
 severity: warn
 evidence_strength: strong
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   Coding agents need a consistent entry point to orient themselves before

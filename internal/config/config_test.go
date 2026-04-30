@@ -101,6 +101,36 @@ ignore:
 	}
 }
 
+func TestParse_VerificationLayers(t *testing.T) {
+	yamlContent := `
+version: 1
+packs:
+  enabled: [core]
+verification:
+  lint:
+    command: make lint
+    timeout_s: 5
+  unit:
+    command: make test
+    timeout_s: 60
+`
+	cfg, err := config.Parse([]byte(yamlContent))
+	if err != nil {
+		t.Fatalf("YAML with verification should parse: %v", err)
+	}
+	if len(cfg.Verification) != 2 {
+		t.Fatalf("expected 2 layers, got %d", len(cfg.Verification))
+	}
+	lint := cfg.Verification["lint"]
+	if lint.Command != "make lint" || lint.TimeoutS != 5 {
+		t.Errorf("lint layer = %+v, want command='make lint', timeout_s=5", lint)
+	}
+	unit := cfg.Verification["unit"]
+	if unit.Command != "make test" || unit.TimeoutS != 60 {
+		t.Errorf("unit layer = %+v, want command='make test', timeout_s=60", unit)
+	}
+}
+
 func TestParse_YAML_UnquotedStrings(t *testing.T) {
 	yamlContent := `
 version: 1

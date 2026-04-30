@@ -17,6 +17,7 @@ This directory contains detailed technical documentation to support ongoing deve
 | [pack-development.md](./pack-development.md) | How to create, test, validate, and publish rule packs |
 | [ci-cd-integration.md](./ci-cd-integration.md) | GitHub Action, SARIF, PR gate workflows, trend tracking |
 | [cross-stack-improvements.md](./cross-stack-improvements.md) | Detection pattern expansion for Java, Ruby, PHP, Terraform, monorepos |
+| [perf.md](./perf.md) | Performance characteristics, parallel evaluation, benchmarks |
 
 ### Three Strategic Elements
 

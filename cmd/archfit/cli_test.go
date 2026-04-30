@@ -103,12 +103,20 @@ func TestCLI_Scan_JSON_CleanRepo(t *testing.T) {
 	if err := json.Unmarshal([]byte(stdout), &doc); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
 	}
-	if doc["schema_version"] != "0.2.0" {
-		t.Errorf("schema_version = %v, want 0.2.0", doc["schema_version"])
+	if doc["schema_version"] != "1.0.0" {
+		t.Errorf("schema_version = %v, want 1.0.0", doc["schema_version"])
 	}
 	summary := doc["summary"].(map[string]any)
 	if summary["findings_total"].(float64) != 0 {
-		t.Errorf("expected 0 findings in clean repo, got %v", summary["findings_total"])
+		// Dump findings so CI logs show exactly which rule fired.
+		if findings, ok := doc["findings"].([]any); ok {
+			for _, f := range findings {
+				fm := f.(map[string]any)
+				t.Errorf("unexpected finding: rule=%v severity=%v message=%v",
+					fm["rule_id"], fm["severity"], fm["message"])
+			}
+		}
+		t.Fatalf("expected 0 findings in clean repo, got %v", summary["findings_total"])
 	}
 }
 
@@ -613,7 +621,26 @@ func TestCLI_Compare_TooFewArgs(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// 14. Trend command
+// 14. PR check command
+// ---------------------------------------------------------------------------
+
+func TestCLI_PRCheck_NoGit(t *testing.T) {
+	// pr-check on a non-git directory should fail with runtime error.
+	tmp := t.TempDir()
+	mustMkdirAll(t, filepath.Join(tmp, "src"))
+	mustWriteFile(t, filepath.Join(tmp, "src", "main.go"), []byte("package main\n"))
+
+	code, _, stderr := runCLI("pr-check", "--base", "main", tmp)
+	if code != exitRuntimeError {
+		t.Fatalf("exit code = %d, want %d (no git repo)", code, exitRuntimeError)
+	}
+	if !strings.Contains(stderr, "pr-check") {
+		t.Error("stderr should mention pr-check context")
+	}
+}
+
+// ---------------------------------------------------------------------------
+// 15. Trend command
 // ---------------------------------------------------------------------------
 
 func TestCLI_Trend(t *testing.T) {

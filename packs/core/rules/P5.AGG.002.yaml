@@ -1,0 +1,19 @@
+id: P5.AGG.002
+principle: P5
+dimension: AGG
+title: Repository runs a secret scanner in CI
+severity: warn
+evidence_strength: strong
+stability: stable
+weight: 1
+rationale: >
+  Leaked secrets are the highest-impact aggregation failure. A secret scanner
+  in CI catches credentials before they reach the remote. Without one, every
+  commit is a potential breach that no amount of post-hoc rotation fully
+  undoes.
+remediation:
+  summary: >-
+    Add a secret-scanning step to CI (gitleaks, trufflehog, detect-secrets,
+    secretlint, or talisman). For GitHub Actions, `gitleaks/gitleaks-action`
+    is a one-line addition.
+  guide_ref: docs/rules/P5.AGG.002.md

@@ -4,8 +4,10 @@ dimension: EXP
 title: Environment and application configuration is documented explicitly
 severity: warn
 evidence_strength: strong
-stability: experimental
+stability: stable
 weight: 1
+applies_to:
+  languages: [python, javascript, typescript, ruby, java, kotlin, terraform]
 rationale: >
   Hidden configuration is the opposite of shallow explicitness. .env files,
   Spring Boot profiles, Terraform tfvars, and Rails environments must be

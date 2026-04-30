@@ -78,3 +78,40 @@ func TestCompute_WorstSeverityWinsPerRule(t *testing.T) {
 		t.Errorf("want 20.0 from error severity, got %v", s.Overall)
 	}
 }
+
+func TestCompute_SkippedRulesExcludedFromWeight(t *testing.T) {
+	rules := []model.Rule{
+		mkRule("P1.LOC.001", model.P1Locality, model.SeverityWarn, 1),
+		mkRule("P3.EXP.001", model.P3ShallowExplicitness, model.SeverityWarn, 1),
+	}
+	// P3.EXP.001 has a finding, but was skipped (applies_to mismatch).
+	// Its weight should not count, so the score stays 100 for P3.
+	findings := []model.Finding{
+		{RuleID: "P3.EXP.001", Severity: model.SeverityWarn},
+	}
+	s := score.Compute(rules, findings, "P3.EXP.001")
+
+	if s.Overall != 100 {
+		t.Errorf("overall = %v, want 100 (skipped rule's finding should not penalize)", s.Overall)
+	}
+	if _, hasP3 := s.ByPrinciple[model.P3ShallowExplicitness]; hasP3 {
+		t.Errorf("P3 should be absent from by_principle when its only rule is skipped")
+	}
+}
+
+func TestCompute_SkippedRuleDoesNotInflateScore(t *testing.T) {
+	rules := []model.Rule{
+		mkRule("P1.LOC.001", model.P1Locality, model.SeverityWarn, 1),
+		mkRule("P3.EXP.001", model.P3ShallowExplicitness, model.SeverityWarn, 1),
+	}
+	// P1.LOC.001 has a finding (warn → 40% penalty). P3.EXP.001 is skipped.
+	findings := []model.Finding{
+		{RuleID: "P1.LOC.001", Severity: model.SeverityWarn},
+	}
+	s := score.Compute(rules, findings, "P3.EXP.001")
+
+	// With P3 skipped, only P1's weight=1 counts. warn penalty → 60.0.
+	if s.Overall != 60 {
+		t.Errorf("overall = %v, want 60 (only P1's weight counts)", s.Overall)
+	}
+}

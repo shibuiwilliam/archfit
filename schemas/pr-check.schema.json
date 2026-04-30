@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://archfit.dev/schemas/pr-check.schema.json",
+  "title": "archfit pr-check output",
+  "description": "Structured result of `archfit pr-check --json`. Reports only the delta between base and head scans.",
+  "type": "object",
+  "required": ["base_ref", "head_ref", "base_score", "head_score", "score_delta", "summary", "new", "fixed"],
+  "additionalProperties": false,
+  "properties": {
+    "base_ref": {"type": "string"},
+    "head_ref": {"type": "string"},
+    "base_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "head_score": {"type": "number", "minimum": 0, "maximum": 100},
+    "score_delta": {"type": "number"},
+    "summary": {
+      "type": "object",
+      "required": ["new", "fixed", "unchanged"],
+      "additionalProperties": false,
+      "properties": {
+        "new": {"type": "integer", "minimum": 0},
+        "fixed": {"type": "integer", "minimum": 0},
+        "unchanged": {"type": "integer", "minimum": 0}
+      }
+    },
+    "new": {
+      "type": "array",
+      "items": {"$ref": "output.schema.json#/properties/findings/items"}
+    },
+    "fixed": {
+      "type": "array",
+      "items": {"$ref": "output.schema.json#/properties/findings/items"}
+    }
+  }
+}

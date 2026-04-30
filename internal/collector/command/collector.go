@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/shibuiwilliam/archfit/internal/adapter/exec"
@@ -45,6 +46,58 @@ func Collect(ctx context.Context, runner exec.Runner, root string, timeout time.
 	}
 
 	return results
+}
+
+// LayerSpec describes a user-declared verification layer from .archfit.yaml.
+type LayerSpec struct {
+	Name     string
+	Command  string
+	TimeoutS int // 0 → default 120s
+}
+
+// CollectLayers runs user-declared verification layers in order and returns
+// per-layer timing results. Stops at the first non-zero exit (fail-fast).
+// If layers is empty, falls back to Collect for backward compatibility.
+func CollectLayers(ctx context.Context, runner exec.Runner, root string, layers []LayerSpec) []TimedResult {
+	if len(layers) == 0 {
+		return Collect(ctx, runner, root, 120*time.Second)
+	}
+
+	var results []TimedResult
+	for _, layer := range layers {
+		timeout := time.Duration(layer.TimeoutS) * time.Second
+		if timeout <= 0 {
+			timeout = 120 * time.Second
+		}
+
+		// Parse the command string into name + args.
+		// Simple split on whitespace — no shell expansion.
+		parts := splitCommand(layer.Command)
+		if len(parts) == 0 {
+			continue
+		}
+
+		spec := commandSpec{
+			marker: "", // no marker check for declared layers
+			name:   parts[0],
+			args:   parts[1:],
+		}
+
+		tr := runCommand(ctx, runner, root, spec, timeout)
+		tr.Layer = layer.Name
+		results = append(results, tr)
+
+		// Stop at first failure — fail fast.
+		if tr.ExitCode != 0 || tr.Error != "" {
+			break
+		}
+	}
+	return results
+}
+
+// splitCommand splits a command string on whitespace. No shell expansion.
+func splitCommand(cmd string) []string {
+	return strings.Fields(cmd)
 }
 
 // runCommand executes a single command spec and returns the timed result.

@@ -31,7 +31,13 @@ type Scores struct {
 }
 
 // Compute returns scores in [0, 100], rounded to one decimal place per CLAUDE.md §9.
-func Compute(rules []model.Rule, findings []model.Finding) Scores {
+// Rules whose IDs appear in skippedRuleIDs are excluded from weight calculation —
+// they were never evaluated (e.g. applies_to mismatch) and should not affect the score.
+func Compute(rules []model.Rule, findings []model.Finding, skippedRuleIDs ...string) Scores {
+	skippedSet := make(map[string]bool, len(skippedRuleIDs))
+	for _, id := range skippedRuleIDs {
+		skippedSet[id] = true
+	}
 	type bucket struct {
 		totalWeight    float64
 		penaltyApplied float64
@@ -49,6 +55,9 @@ func Compute(rules []model.Rule, findings []model.Finding) Scores {
 	total := &bucket{}
 
 	for _, r := range rules {
+		if skippedSet[r.ID] {
+			continue // rule was not evaluated; don't count its weight
+		}
 		w := r.Weight
 		if w == 0 {
 			w = 1

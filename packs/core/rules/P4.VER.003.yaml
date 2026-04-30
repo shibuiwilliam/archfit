@@ -4,7 +4,7 @@ dimension: VER
 title: Repository has CI configuration
 severity: info
 evidence_strength: strong
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   A repo without CI is locally verifiable but not continuously verified.

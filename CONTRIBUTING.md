@@ -11,7 +11,7 @@ Before your first PR, read:
    the repository. Every section is load-bearing.
 2. [`PROJECT.md`](./PROJECT.md) — long-form rationale for why archfit exists
    and what it is not.
-3. [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md) — the phase boundaries. If
+3. [`PROJECT.md`](./PROJECT.md) §6 — the phase boundaries and roadmap. If
    a change feels outside the current phase, raise it in an issue first.
 
 ## The happy path for a change

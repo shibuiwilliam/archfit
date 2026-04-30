@@ -2,14 +2,12 @@
 
 ## Supported versions
 
-archfit is pre-1.0. The most recent minor release receives security
-patches; earlier pre-1.0 lines do not. Once 1.0 ships, the supported
-window will follow SemVer (the current major + one minor back).
+The most recent minor release receives security patches. Once 1.0 ships,
+the supported window will follow SemVer (the current major + one minor back).
 
 | Version | Supported |
 |---|---|
-| `0.2.x` | yes (current) |
-| `0.1.x` | no — upgrade to 0.2 |
+| `0.1.x` | yes (current) |
 
 ## Reporting a vulnerability
 
@@ -17,8 +15,8 @@ Please report privately. Do **not** open a public issue.
 
 - Preferred: GitHub's private vulnerability reporting for this repository
   (Security → Report a vulnerability).
-- Alternative: email the maintainers at `security@example.invalid` (placeholder;
-  replace with the real address before a public release).
+- Alternative: open a GitHub issue on this repository with the `security` label
+  if private reporting is unavailable.
 
 Include, if possible:
 
@@ -39,8 +37,8 @@ repository you point it at. Some modes can invoke build tooling. Treat
 archfit like any other program that executes code from a target:
 
 - **Scan only repositories you trust**, or run archfit inside a sandbox.
-- The `--depth=shallow` mode (planned for Phase 3) will guarantee no
-  command execution and is the safe choice for untrusted input.
+- The `--depth=shallow` mode avoids command execution and is the safe choice
+  for untrusted input.
 - The `internal/adapter/exec` boundary is the only place archfit launches
   subprocesses. Every call site is auditable from one file.
 

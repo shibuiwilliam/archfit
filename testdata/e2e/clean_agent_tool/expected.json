@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "1.0.0",
   "tool": {
     "name": "archfit",
     "version": "e2e-golden"
@@ -9,7 +9,7 @@
     "profile": "standard"
   },
   "summary": {
-    "rules_evaluated": 14,
+    "rules_evaluated": 16,
     "rules_with_findings": 0,
     "findings_total": 0,
     "by_severity": {
@@ -24,7 +24,6 @@
     "by_principle": {
       "P1": 100,
       "P2": 100,
-      "P3": 100,
       "P4": 100,
       "P5": 100,
       "P6": 100,

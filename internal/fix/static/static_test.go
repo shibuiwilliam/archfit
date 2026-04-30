@@ -19,6 +19,8 @@ func (f *fakeFactStore) Git() (model.GitFacts, bool)           { return model.Gi
 func (f *fakeFactStore) Schemas() model.SchemaFacts            { return model.SchemaFacts{} }
 func (f *fakeFactStore) Commands() (model.CommandFacts, bool)  { return model.CommandFacts{}, false }
 func (f *fakeFactStore) DepGraph() (model.DepGraphFacts, bool) { return model.DepGraphFacts{}, false }
+func (f *fakeFactStore) Languages() map[string]int             { return nil }
+func (f *fakeFactStore) Ecosystems() model.EcosystemFacts      { return model.EcosystemFacts{} }
 
 func TestLocP1LOC001Fixer(t *testing.T) {
 	fixer := static.NewLocP1LOC001()

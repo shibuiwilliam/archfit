@@ -16,7 +16,7 @@ ARG TARGETARCH=amd64
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     go build -trimpath \
-    -ldflags "-s -w -X github.com/shibuiwilliam/archfit/internal/version.Version=${VERSION}" \
+    -ldflags "-s -w -X github.com/shibuiwilliam/archfit/internal/version.linkerVersion=${VERSION}" \
     -o /archfit ./cmd/archfit
 
 # ---

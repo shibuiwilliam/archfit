@@ -48,6 +48,7 @@ nav:
           - P1.LOC.003 - Coupling Score: rules/P1.LOC.003.md
           - P1.LOC.004 - Change Isolation: rules/P1.LOC.004.md
       - "P2 — Spec-first":
+          - P2.SPC.001 - API Contract: rules/P2.SPC.001.md
           - P2.SPC.010 - Versioned Schema: rules/P2.SPC.010.md
       - "P3 — Explicitness":
           - P3.EXP.001 - Config Documentation: rules/P3.EXP.001.md
@@ -57,8 +58,10 @@ nav:
           - P4.VER.003 - CI Configuration: rules/P4.VER.003.md
       - "P5 — Aggregation":
           - P5.AGG.001 - Security Concentration: rules/P5.AGG.001.md
+          - P5.AGG.002 - Secret Scanner: rules/P5.AGG.002.md
       - "P6 — Reversibility":
           - P6.REV.001 - Rollback Documentation: rules/P6.REV.001.md
+          - P6.REV.002 - Feature Flags: rules/P6.REV.002.md
       - "P7 — Machine-readability":
           - P7.MRD.001 - Exit Code Docs: rules/P7.MRD.001.md
           - P7.MRD.002 - Changelog: rules/P7.MRD.002.md
@@ -83,6 +86,7 @@ nav:
       - Fitness Contract: development/fitness-contract.md
       - Agent Observatory: development/agent-observatory.md
       - Adaptive Engine: development/adaptive-engine.md
+      - Performance: development/perf.md
       - Dependencies: dependencies.md
   - ADRs:
       - "0001 - Architecture Overview": adr/0001-architecture-overview.md
@@ -92,6 +96,11 @@ nav:
       - "0005 - FactStore Extension": adr/0005-factstore-extension.md
       - "0006 - External Packs": adr/0006-external-packs.md
       - "0008 - Contract Exit Codes": adr/0008-contract-exit-codes.md
+      - "0009 - Output Schema Rules With Findings": adr/0009-output-schema-rules-with-findings.md
+      - "0010 - FactStore Languages": adr/0010-factstore-languages.md
+      - "0011 - Ecosystem Collector": adr/0011-ecosystem-collector.md
+      - "0012 - 1.0 Stability": adr/0012-1.0-stability.md
+      - "0013 - Exit Code 5 Revisited": adr/0013-exit-code-5-revisited.md
 
 markdown_extensions:
   - admonition

@@ -23,12 +23,15 @@ var resolverMap = map[string]model.ResolverFunc{
 	"P1.LOC.002": resolvers.LocP1LOC002,
 	"P1.LOC.003": resolvers.LocP1LOC003,
 	"P1.LOC.004": resolvers.LocP1LOC004,
+	"P2.SPC.001": resolvers.SpcP2SPC001,
 	"P3.EXP.001": resolvers.ExpP3EXP001,
 	"P4.VER.001": resolvers.VerP4VER001,
 	"P4.VER.002": resolvers.VerP4VER002,
 	"P4.VER.003": resolvers.VerP4VER003,
 	"P5.AGG.001": resolvers.AggP5AGG001,
+	"P5.AGG.002": resolvers.AggP5AGG002,
 	"P6.REV.001": resolvers.RevP6REV001,
+	"P6.REV.002": resolvers.RevP6REV002,
 	"P7.MRD.001": resolvers.MrdP7MRD001,
 }
 

@@ -12,6 +12,28 @@ are called out explicitly below with migration notes.
 
 ### Changed
 
+- **Output schema bumped to `1.0.0`**: field set is now frozen. No fields
+  removed or renamed since 0.1.0. See `docs/migration/0.x-to-1.0.md`.
+- **All 17 rules promoted to `stability: stable`**: rule IDs in `core` and
+  `agent-tool` packs are frozen. See ADR 0012.
+
+### Added
+
+- **`archfit pr-check`**: New subcommand — scans base ref in a git worktree,
+  scans head in working dir, reports only new findings. Exits 0/1. Ships with
+  a reusable GitHub Action at `.github/actions/archfit-pr-check/`.
+- **Rule P2.SPC.001**: API boundary has a machine-readable contract. Fires when
+  a repo looks like an HTTP/gRPC/GraphQL service but has no OpenAPI, Protobuf,
+  or GraphQL schema. Core pack, warn severity, strong evidence, experimental.
+- **Rule P5.AGG.002**: Repository runs a secret scanner in CI. Fires when CI
+  is configured but no secret scanner (gitleaks, trufflehog, etc.) is detected.
+  Core pack, warn severity, strong evidence, experimental.
+- **Rule P6.REV.002**: Deploying repository uses a feature-flag mechanism.
+  Fires when the repo deploys but has no feature-flag library or local toggle.
+  Core pack, info severity, strong evidence, experimental.
+
+### Changed
+
 - **Output schema bumped to `0.2.0`**: added `summary.rules_with_findings`
   (integer) to `schemas/output.schema.json`. This field was already emitted
   by the renderer but was not declared in the schema, causing strict validation

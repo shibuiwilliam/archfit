@@ -39,6 +39,9 @@ func (f *fakeFactStore) DepGraph() (model.DepGraphFacts, bool) {
 	return model.DepGraphFacts{}, false
 }
 
+func (f *fakeFactStore) Languages() map[string]int        { return nil }
+func (f *fakeFactStore) Ecosystems() model.EcosystemFacts { return model.EcosystemFacts{} }
+
 // fakeFixer implements fix.Fixer for testing.
 type fakeFixer struct {
 	ruleID   string

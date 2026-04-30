@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "1.0.0",
   "tool": {
     "name": "archfit",
     "version": "e2e-golden"
@@ -9,7 +9,7 @@
     "profile": "standard"
   },
   "summary": {
-    "rules_evaluated": 14,
+    "rules_evaluated": 16,
     "rules_with_findings": 3,
     "findings_total": 3,
     "by_severity": {
@@ -20,11 +20,10 @@
     }
   },
   "scores": {
-    "overall": 93.6,
+    "overall": 94.4,
     "by_principle": {
       "P1": 100,
-      "P2": 60,
-      "P3": 100,
+      "P2": 80,
       "P4": 96.7,
       "P5": 100,
       "P6": 100,
@@ -58,7 +57,7 @@
         "looked_for_pattern": "schemas/*.schema.json"
       },
       "remediation": {
-        "summary": "Place a JSON Schema at schemas/output.schema.json with a $id, and emit a schema_version in the tool's output.",
+        "summary": "Place a JSON Schema at schemas/output.schema.json (or similar) with a top-level $id identifying it unambiguously, and emit a schema_version field in your tool's JSON output that matches.",
         "guide_ref": "docs/rules/P2.SPC.010.md"
       }
     },
@@ -79,7 +78,7 @@
         ]
       },
       "remediation": {
-        "summary": "Add CHANGELOG.md at the repository root following the Keep a Changelog format.",
+        "summary": "Add CHANGELOG.md at the repository root following the Keep a Changelog format. Minimum sections: Unreleased, then versioned releases with Added / Changed / Removed subsections.",
         "guide_ref": "docs/rules/P7.MRD.002.md"
       }
     },
@@ -92,20 +91,7 @@
       "path": "",
       "message": "no CI configuration detected — the repository is locally verifiable but not continuously verified",
       "evidence": {
-        "checked_dir_prefixes": [
-          ".github/workflows/",
-          ".circleci/",
-          ".buildkite/"
-        ],
-        "checked_files": [
-          ".gitlab-ci.yml",
-          ".gitlab-ci.yaml",
-          "Jenkinsfile",
-          ".travis.yml",
-          "azure-pipelines.yml",
-          "bitbucket-pipelines.yml",
-          ".woodpecker.yml"
-        ]
+        "checked_for": "CI platforms (GitHub Actions, GitLab CI, CircleCI, etc.)"
       },
       "remediation": {
         "summary": "Add a CI configuration (.github/workflows/, .gitlab-ci.yml, Jenkinsfile, or similar).",

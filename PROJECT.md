@@ -50,22 +50,25 @@ archfit is **pre-1.0, active development**, currently `v0.3.x`.
 
 | ID | Principle | Severity | Evidence | Stability |
 |---|---|---|---|---|
-| P1.LOC.001 | Locality | warn | strong | experimental |
-| P1.LOC.002 | Locality | warn | strong | experimental |
-| P1.LOC.003 | Locality | info | medium | experimental |
-| P1.LOC.004 | Locality | info | sampled | experimental |
-| P2.SPC.010 | Spec-first | warn | strong | experimental |
-| P3.EXP.001 | Shallow explicitness | warn | strong | experimental |
-| P4.VER.001 | Verifiability | warn | strong | experimental |
-| P4.VER.002 | Verifiability | info | medium | experimental |
-| P4.VER.003 | Verifiability | info | strong | experimental |
-| P5.AGG.001 | Aggregation | warn | strong | experimental |
-| P6.REV.001 | Reversibility | warn | strong | experimental |
-| P7.MRD.001 | Machine-readability | warn | strong | experimental |
-| P7.MRD.002 | Machine-readability | warn | strong | experimental |
-| P7.MRD.003 | Machine-readability | warn | strong | experimental |
+| P1.LOC.001 | Locality | warn | strong | stable |
+| P1.LOC.002 | Locality | warn | strong | stable |
+| P1.LOC.003 | Locality | info | medium | stable |
+| P1.LOC.004 | Locality | info | sampled | stable |
+| P2.SPC.001 | Spec-first | warn | strong | stable |
+| P2.SPC.010 | Spec-first | warn | strong | stable |
+| P3.EXP.001 | Shallow explicitness | warn | strong | stable |
+| P4.VER.001 | Verifiability | warn | strong | stable |
+| P4.VER.002 | Verifiability | info | medium | stable |
+| P4.VER.003 | Verifiability | info | strong | stable |
+| P5.AGG.001 | Aggregation | warn | strong | stable |
+| P5.AGG.002 | Aggregation | warn | strong | stable |
+| P6.REV.001 | Reversibility | warn | strong | stable |
+| P6.REV.002 | Reversibility | info | strong | stable |
+| P7.MRD.001 | Machine-readability | warn | strong | stable |
+| P7.MRD.002 | Machine-readability | warn | strong | stable |
+| P7.MRD.003 | Machine-readability | warn | strong | stable |
 
-The distribution is intentionally uneven and reflects where the cheap-but-strong evidence lives. P2 (spec-first), P5 (aggregation), and P6 (reversibility) are the principles most underserved at this point.
+17 rules across 7 principles, all `stability: stable` (frozen per ADR 0012). Rule IDs are immutable from 1.0 onward.
 
 ### 2.3 What is *not* shipping but has been claimed elsewhere
 
@@ -227,30 +230,30 @@ The roadmap is organized by gate, not by version. Phases 1 and 2 only begin once
 
 **Goal: raise rule coverage where it is most lopsided, without increasing false-positive rates.**
 
-- [ ] **Pair fixtures.** Every rule grows a `negative/` fixture alongside its `positive/` fixture. A rule without a negative fixture cannot exit `experimental`.
+- [x] **Pair fixtures.** Every rule has a `*-negative/` fixture alongside its positive fixture. `TestCorePack_PairFixtures` and `TestAgentToolPack_PairFixtures` fail CI if either is missing. Rules requiring runtime data (P1.LOC.003, P1.LOC.004) are documented exceptions. Known false positive: P5.AGG.001 counts fixture/testdata paths as real deploy artifacts — resolver fix deferred.
 - [ ] **Calibration corpus.** Curate a small set (10–30) of permissively-licensed open-source repositories. A nightly job runs every rule and tracks precision/recall per rule across the corpus. Findings drive rule tuning.
 - [ ] **New rules — P2 (spec-first).** Candidates: API-boundary contract presence (OpenAPI / GraphQL / protobuf), bidirectional DB migrations, ADR with YAML frontmatter, JSON Schema for tool outputs.
 - [ ] **New rules — P5 (aggregation).** Candidates: secret-scanner CI presence (gitleaks, trufflehog), policy-as-code presence for IaC (Conftest, Checkov), Idempotency-Key handling on write APIs.
 - [ ] **New rules — P6 (reversibility).** Candidates: feature-flag library dependency, expand/contract migration pattern, canary/blue-green configuration in deploy manifests.
-- [ ] **`Applies_to` activation.** The schema already declares `applies_to.languages`. Make it function: rules that don't apply to a repo's detected ecosystem are skipped, not failed.
-- [ ] **Ecosystem collector.** Promote ad-hoc language detection (currently scattered across resolvers) into `internal/collector/ecosystem`. Provide a typed `EcosystemFacts` to resolvers.
+- [x] **`Applies_to` activation.** `Languages()` added to `FactStore` (ADR 0010). Rule engine skips rules whose `applies_to.languages` don't match the repo. Skipped rules excluded from scoring weight. P3.EXP.001 tagged with supported languages. `genrules` emits `AppliesTo`.
+- [x] **Ecosystem collector.** `internal/collector/ecosystem` centralizes CI, deployment, and framework detection. `Ecosystems()` added to `FactStore` (ADR 0011). Resolvers `verifiability_ci`, `aggregation_secrets`, and `explicitness` migrated to use it. Single-pass detection replaces duplicate file walks.
 
 ### Phase 2 — Reach (P2, 10–24 weeks)
 
 **Goal: scale evaluation to monorepos, PR workflows, and depth-stratified verification.**
 
 - [ ] **Monorepo / workspace mode.** `archfit scan --workspace` understands pnpm/yarn workspaces, Cargo workspaces, Go workspaces, Nx/Turborepo. Per-package scores aggregate to a workspace score.
-- [ ] **PR mode.** `archfit pr-check --base <ref>` compares against a baseline branch and reports only *new* findings. Provided as a GitHub Action.
-- [ ] **Stratified verification.** `.archfit.yaml` lets users map commands to layers (`lint`, `typecheck`, `unit`, `integration`). Each layer gets its own metric and its own threshold rule.
+- [x] **PR mode.** `archfit pr-check --base <ref>` scans base in a git worktree, scans head in working dir, diffs, reports only new findings. Ships with `.github/actions/archfit-pr-check/action.yml`. Schema at `schemas/pr-check.schema.json`.
+- [x] **Stratified verification (PR A).** `.archfit.yaml` `verification:` block declares named layers with commands and timeouts. `CollectLayers` runs them in order (fail-fast). Per-layer `verification_latency_s.<layer>` metrics emitted. Rules P4.VER.005/006 deferred to PR B.
 - [ ] **First external pack.** Ship one of `web-saas`, `iac`, or `data-event` as a separately-versioned pack. Document the pack-publishing workflow end to end.
-- [ ] **Parallel resolver execution.** `errgroup`-based parallelism gated on rule count; determinism preserved by post-sort.
+- [x] **Parallel resolver execution.** Bounded goroutine pool (semaphore = NumCPU) when len(rules) >= 8. Per-rule slots merged in order for deterministic output. 100-iteration race test enforces. Documented in `development/perf.md`.
 
 ### Phase 3 — Toward 1.0 (P3, ongoing)
 
-- [ ] **Rule ID freeze.** No more renumbering in `core` and `agent-tool`.
-- [ ] **JSON output schema v1.** Frozen field set, frozen ordering rules.
-- [ ] **Contract check exit-code revisit.** ADR-driven decision on exit code 5.
-- [ ] **Public API statement.** What is stable, what is internal, what is experimental.
+- [x] **Rule ID freeze.** All 17 rules promoted to `stability: stable`. `TestStability_AllRulesAreStable` CI gate prevents regression. No renumbering without 2.0.
+- [x] **JSON output schema v1.** `schema_version: "1.0.0"`. Field set frozen. Migration guide at `docs/migration/0.x-to-1.0.md`.
+- [x] **Contract check exit-code revisit.** Exit code 5 documented in `docs/exit-codes.md`. ADR 0012 freezes codes 0–5.
+- [x] **Public API statement.** ADR 0012 (`docs/adr/0012-1.0-stability.md`) documents the frozen surface: rule IDs, schema fields, exit codes, CLI commands/flags, config schema.
 - [ ] **Cross-stack improvements.** Java, Ruby, PHP, Terraform — track in `development/cross-stack-improvements.md`.
 
 The two strategic ideas previously listed under "Next: Three Strategic Elements" are kept as **research tracks**, not roadmap items, until Phase 0 closes:

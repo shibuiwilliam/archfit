@@ -1,5 +1,5 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "1.0.0",
   "tool": {
     "name": "archfit",
     "version": "e2e-golden"
@@ -9,18 +9,18 @@
     "profile": "standard"
   },
   "summary": {
-    "rules_evaluated": 14,
-    "rules_with_findings": 4,
-    "findings_total": 4,
+    "rules_evaluated": 17,
+    "rules_with_findings": 5,
+    "findings_total": 5,
     "by_severity": {
       "info": 1,
-      "warn": 3,
+      "warn": 4,
       "error": 0,
       "critical": 0
     }
   },
   "scores": {
-    "overall": 90.7,
+    "overall": 90,
     "by_principle": {
       "P1": 100,
       "P2": 60,
@@ -32,6 +32,37 @@
     }
   },
   "findings": [
+    {
+      "rule_id": "P2.SPC.001",
+      "principle": "P2",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.85,
+      "path": "",
+      "message": "repository appears to serve an API but has no machine-readable contract (OpenAPI, Protobuf, or GraphQL schema)",
+      "evidence": {
+        "looked_for_contracts": [
+          "openapi.yaml",
+          "openapi.yml",
+          "openapi.json",
+          "swagger.yaml",
+          "swagger.yml",
+          "swagger.json",
+          "schema.graphql",
+          "proto/*.proto",
+          "api/*.proto",
+          "api/*.yaml",
+          "graphql/*.graphql"
+        ],
+        "service_indicators": [
+          "src/app.py"
+        ]
+      },
+      "remediation": {
+        "summary": "Add an API contract file: openapi.yaml (OpenAPI 3.x), *.proto (gRPC), or schema.graphql (GraphQL) at a conventional path (api/, proto/, graphql/).",
+        "guide_ref": "docs/rules/P2.SPC.001.md"
+      }
+    },
     {
       "rule_id": "P2.SPC.010",
       "principle": "P2",
@@ -58,7 +89,7 @@
         "looked_for_pattern": "schemas/*.schema.json"
       },
       "remediation": {
-        "summary": "Place a JSON Schema at schemas/output.schema.json with a $id, and emit a schema_version in the tool's output.",
+        "summary": "Place a JSON Schema at schemas/output.schema.json (or similar) with a top-level $id identifying it unambiguously, and emit a schema_version field in your tool's JSON output that matches.",
         "guide_ref": "docs/rules/P2.SPC.010.md"
       }
     },
@@ -105,7 +136,7 @@
         ]
       },
       "remediation": {
-        "summary": "Add CHANGELOG.md at the repository root following the Keep a Changelog format.",
+        "summary": "Add CHANGELOG.md at the repository root following the Keep a Changelog format. Minimum sections: Unreleased, then versioned releases with Added / Changed / Removed subsections.",
         "guide_ref": "docs/rules/P7.MRD.002.md"
       }
     },
@@ -118,20 +149,7 @@
       "path": "",
       "message": "no CI configuration detected — the repository is locally verifiable but not continuously verified",
       "evidence": {
-        "checked_dir_prefixes": [
-          ".github/workflows/",
-          ".circleci/",
-          ".buildkite/"
-        ],
-        "checked_files": [
-          ".gitlab-ci.yml",
-          ".gitlab-ci.yaml",
-          "Jenkinsfile",
-          ".travis.yml",
-          "azure-pipelines.yml",
-          "bitbucket-pipelines.yml",
-          ".woodpecker.yml"
-        ]
+        "checked_for": "CI platforms (GitHub Actions, GitLab CI, CircleCI, etc.)"
       },
       "remediation": {
         "summary": "Add a CI configuration (.github/workflows/, .gitlab-ci.yml, Jenkinsfile, or similar).",

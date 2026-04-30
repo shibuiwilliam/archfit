@@ -32,6 +32,19 @@
         "disabled": {"type": "array", "items": {"type": "string"}}
       }
     },
+    "verification": {
+      "type": "object",
+      "description": "Named verification layers, run in order when --depth=deep.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["command"],
+        "additionalProperties": false,
+        "properties": {
+          "command": {"type": "string", "minLength": 1},
+          "timeout_s": {"type": "integer", "minimum": 1, "default": 120}
+        }
+      }
+    },
     "overrides": {
       "type": "object",
       "additionalProperties": {"type": "object"}

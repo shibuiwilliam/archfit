@@ -1,0 +1,19 @@
+id: P6.REV.002
+principle: P6
+dimension: REV
+title: Deploying repository uses a feature-flag mechanism
+severity: info
+evidence_strength: strong
+stability: stable
+weight: 1
+rationale: >
+  Feature flags decouple deployment from release, making every change
+  reversible without a rollback. Repos that deploy but lack a flag
+  mechanism force an all-or-nothing release strategy where the only
+  reversal option is a full redeploy.
+remediation:
+  summary: >-
+    Add a feature-flag library (LaunchDarkly, Unleash, OpenFeature,
+    ConfigCat, GrowthBook, Optimizely, GoFeatureFlag) or implement a
+    local flag system with a config-driven toggle.
+  guide_ref: docs/rules/P6.REV.002.md

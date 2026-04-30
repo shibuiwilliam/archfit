@@ -13,6 +13,9 @@ LDFLAGS     := -s -w -X github.com/shibuiwilliam/archfit/internal/version.linker
 .PHONY: all
 all: lint test build
 
+.PHONY: dev
+dev: generate build ## Bootstrap: deps, generate, build
+
 .PHONY: build
 build: ## Build the archfit CLI
 	@mkdir -p $(BIN_DIR)

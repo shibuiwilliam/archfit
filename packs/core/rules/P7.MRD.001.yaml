@@ -4,7 +4,7 @@ dimension: MRD
 title: Exit codes are documented when the repository ships a CLI
 severity: warn
 evidence_strength: strong
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   For a CLI to be machine-usable, its exit codes must be an explicit

@@ -47,6 +47,25 @@ func VerificationLatency(cmds model.CommandFacts) model.Metric {
 	return model.Metric{Name: "verification_latency_s", Value: secs, Unit: "seconds", Principle: "P4"}
 }
 
+// VerificationLayerMetrics emits one metric per declared verification layer.
+// Returns nil if no results have a Layer field set.
+func VerificationLayerMetrics(cmds model.CommandFacts) []model.Metric {
+	var metrics []model.Metric
+	for _, r := range cmds.Results {
+		if r.Layer == "" {
+			continue
+		}
+		secs := math.Round(float64(r.DurationMS)/100) / 10
+		metrics = append(metrics, model.Metric{
+			Name:      "verification_latency_s." + r.Layer,
+			Value:     secs,
+			Unit:      "seconds",
+			Principle: "P4",
+		})
+	}
+	return metrics
+}
+
 // InvariantCoverage estimates the fraction of stated invariants that are
 // machine-enforced. Approximated as 1 - (rules with error+ findings) / (total rules).
 func InvariantCoverage(findings []model.Finding, rules []model.Rule) model.Metric {

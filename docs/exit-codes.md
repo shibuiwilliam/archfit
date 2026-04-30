@@ -10,12 +10,14 @@ renumbering or repurposing any code requires an ADR and a major-version bump.
 | `2` | Usage error — unknown subcommand, bad flag, missing required argument. |
 | `3` | Runtime error — an unexpected failure while scanning (e.g., unreadable target path, resolver panic that escaped recovery). |
 | `4` | Configuration error — `.archfit.yaml` failed to parse or validate. |
+| `5` | Contract soft target missed — all hard constraints passed, but at least one soft target was not met. Advisory, not blocking. |
 
 ## Notes for agents
 
 - Treat `1` as a **contract**, not a crash. Re-reading the JSON output is the correct response.
 - Never interpret `2`–`4` as "the repo has problems." They mean the run itself did not complete.
-- Exit codes above `4` are reserved. If you see one, treat it as `3` and open an issue.
+- Exit code `5` is advisory — it means soft targets are missed but no hard constraint was violated.
+- Exit codes above `5` are reserved. If you see one, treat it as `3` and open an issue.
 
 ## Scope of this document
 

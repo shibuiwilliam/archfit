@@ -4,7 +4,7 @@ dimension: REV
 title: Deployment has rollback documentation
 severity: warn
 evidence_strength: strong
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   If a repo deploys, it must document how to roll back. Reversibility

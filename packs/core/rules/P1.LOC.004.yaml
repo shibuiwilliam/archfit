@@ -4,7 +4,7 @@ dimension: LOC
 title: Commits touch a bounded number of files
 severity: info
 evidence_strength: sampled
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   Repos where typical commits touch many files have poor locality — agents

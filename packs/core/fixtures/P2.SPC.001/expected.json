@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P2.SPC.001",
+      "severity": "warn",
+      "path": "",
+      "message_contains": "no machine-readable contract"
+    }
+  ]
+}

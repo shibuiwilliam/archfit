@@ -1,0 +1,18 @@
+id: P2.SPC.001
+principle: P2
+dimension: SPC
+title: API boundary has a machine-readable contract
+severity: warn
+evidence_strength: strong
+stability: stable
+weight: 1
+rationale: >
+  When a repository exposes an HTTP/gRPC/GraphQL API, the contract must be
+  machine-readable so agents and CI can validate breaking changes. Without
+  an OpenAPI, Protobuf, or GraphQL schema, API correctness depends on manual
+  review — exactly the bottleneck coding agents are meant to remove.
+remediation:
+  summary: >-
+    Add an API contract file: openapi.yaml (OpenAPI 3.x), *.proto (gRPC),
+    or schema.graphql (GraphQL) at a conventional path (api/, proto/, graphql/).
+  guide_ref: docs/rules/P2.SPC.001.md

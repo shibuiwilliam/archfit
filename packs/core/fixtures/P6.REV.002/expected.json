@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P6.REV.002",
+      "severity": "info",
+      "path": "",
+      "message_contains": "no feature-flag mechanism"
+    }
+  ]
+}

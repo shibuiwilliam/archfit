@@ -19,7 +19,7 @@ import (
 
 // OutputSchemaVersion is the version of the JSON output schema we emit.
 // Bump per the rules in CLAUDE.md §9.
-const OutputSchemaVersion = "0.2.0"
+const OutputSchemaVersion = "1.0.0"
 
 // Format enumerates the supported renderers. Add entries here, not elsewhere.
 type Format string

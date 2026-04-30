@@ -1,0 +1,135 @@
+name: archfit PR check
+description: >
+  Scan the base and head refs with archfit, report only new findings.
+  Posts a PR comment with the score delta and any regressions.
+
+inputs:
+  base:
+    description: >
+      Base git ref to compare against. Default: auto-detected from
+      origin/HEAD (typically origin/main).
+    required: false
+    default: ''
+  go-version-file:
+    description: Path to go.mod for setup-go (default: go.mod)
+    required: false
+    default: go.mod
+  working-directory:
+    description: Repository root path (default: .)
+    required: false
+    default: .
+
+outputs:
+  score-delta:
+    description: Score change (head - base), e.g. "-2.5"
+    value: ${{ steps.check.outputs.delta }}
+  new-findings:
+    description: Number of new findings
+    value: ${{ steps.check.outputs.new_count }}
+  exit-code:
+    description: archfit exit code (0 = clean, 1 = regressions)
+    value: ${{ steps.check.outputs.exit_code }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: ${{ inputs.go-version-file }}
+        cache: true
+
+    - name: Build archfit
+      shell: bash
+      run: go build -trimpath -o /tmp/archfit ./cmd/archfit
+
+    - name: Run pr-check
+      id: check
+      shell: bash
+      env:
+        BASE_REF: ${{ inputs.base }}
+      run: |
+        set +e
+        ARGS="--json"
+        if [ -n "$BASE_REF" ]; then
+          ARGS="$ARGS --base $BASE_REF"
+        fi
+
+        /tmp/archfit pr-check $ARGS ${{ inputs.working-directory }} > /tmp/pr-check.json 2>/tmp/pr-check-stderr.txt
+        EXIT_CODE=$?
+
+        echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+
+        if [ -f /tmp/pr-check.json ] && [ -s /tmp/pr-check.json ]; then
+          DELTA=$(python3 -c "import json; print(json.load(open('/tmp/pr-check.json'))['score_delta'])")
+          NEW_COUNT=$(python3 -c "import json; print(json.load(open('/tmp/pr-check.json'))['summary']['new'])")
+          echo "delta=$DELTA" >> "$GITHUB_OUTPUT"
+          echo "new_count=$NEW_COUNT" >> "$GITHUB_OUTPUT"
+        else
+          echo "delta=0" >> "$GITHUB_OUTPUT"
+          echo "new_count=0" >> "$GITHUB_OUTPUT"
+          cat /tmp/pr-check-stderr.txt >&2
+        fi
+
+        exit $EXIT_CODE
+
+    - name: Post PR comment
+      if: always() && github.event_name == 'pull_request'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        if [ ! -f /tmp/pr-check.json ] || [ ! -s /tmp/pr-check.json ]; then
+          echo "No pr-check output to post"
+          exit 0
+        fi
+
+        BASE_SCORE=$(python3 -c "import json; print(json.load(open('/tmp/pr-check.json'))['base_score'])")
+        HEAD_SCORE=$(python3 -c "import json; print(json.load(open('/tmp/pr-check.json'))['head_score'])")
+        DELTA=${{ steps.check.outputs.delta }}
+        NEW=${{ steps.check.outputs.new_count }}
+        FIXED=$(python3 -c "import json; print(json.load(open('/tmp/pr-check.json'))['summary']['fixed'])")
+
+        STATUS="passed"
+        if [ "${{ steps.check.outputs.exit_code }}" = "1" ]; then
+          STATUS="**FAILED** — new findings detected"
+        fi
+
+        BODY="### archfit pr-check — ${STATUS}
+
+        | | Score |
+        |---|---|
+        | Base | ${BASE_SCORE} |
+        | Head | ${HEAD_SCORE} |
+        | Delta | ${DELTA} |
+        | New findings | ${NEW} |
+        | Fixed | ${FIXED} |"
+
+        if [ "$NEW" != "0" ]; then
+          FINDINGS=$(python3 -c "
+        import json
+        d = json.load(open('/tmp/pr-check.json'))
+        for f in d.get('new', []):
+            p = f.get('path', '(repo)') or '(repo)'
+            print(f\"- [{f['severity']}] {f['rule_id']} {p} — {f['message']}\")
+        ")
+          BODY="${BODY}
+
+        <details><summary>New findings</summary>
+
+        ${FINDINGS}
+
+        </details>"
+        fi
+
+        PR_NUMBER="${{ github.event.pull_request.number }}"
+
+        # Update existing comment or create new.
+        EXISTING=$(gh api "repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+          --jq '.[] | select(.body | contains("archfit pr-check")) | .id' | head -1)
+
+        if [ -n "$EXISTING" ]; then
+          gh api "repos/${{ github.repository }}/issues/comments/${EXISTING}" \
+            -X PATCH -f body="$BODY" >/dev/null
+        else
+          gh pr comment "$PR_NUMBER" --body "$BODY"
+        fi

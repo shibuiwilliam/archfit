@@ -4,7 +4,7 @@ dimension: SPC
 title: Tool ships a versioned JSON output schema
 severity: warn
 evidence_strength: strong
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   An agent-driven tool's machine-readable output is a contract. Without a

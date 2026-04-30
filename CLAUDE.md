@@ -31,11 +31,11 @@ Claude Code: read this before starting any task. The numbers below should match 
 |---|---|
 | Module path | `github.com/shibuiwilliam/archfit` |
 | Go version | **1.24+** (pinned in `go.mod`) |
-| Packs implemented | `core` (11 rules), `agent-tool` (3 rules) |
-| Total rules | **14**, all `stability: experimental` |
+| Packs implemented | `core` (14 rules), `agent-tool` (3 rules) |
+| Total rules | **17**, all `stability: stable` (frozen per ADR 0012) |
 | Output formats | `terminal`, `json`, `md`, `sarif` |
 | Scan depths | `shallow`, `standard`, `deep` |
-| Output schema version | `0.1.0` (see §11) |
+| Output schema version | `1.0.0` (frozen per ADR 0012; see §12) |
 | LLM enrichment | opt-in via `--with-llm`; Claude / OpenAI / Gemini |
 | Self-scan score floor | **must not drop on any PR** (§19) |
 
@@ -110,7 +110,7 @@ archfit/
 │   ├── score/                   # Scoring and metric aggregation.
 │   └── version/                 # Embedded build version.
 ├── packs/                       # Rule packs. Each pack = one vertical slice.
-│   ├── core/                    # 11 rules (P1, P3, P4, P5, P6, P7).
+│   ├── core/                    # 14 rules (P1, P2, P3, P4, P5, P6, P7).
 │   └── agent-tool/              # 3 rules (P2, P7).
 ├── schemas/                     # rule, output, config, contract.
 ├── .claude/
@@ -209,7 +209,7 @@ These are accepted, tracked violations of §3. They appear in `PROJECT.md` Phase
 
 ## 8. How to add or change a rule (the happy path)
 
-Until §7.1 lands, the path is duplicate-but-explicit:
+YAML is the source of truth (§7.1 closed). `make generate` produces Go from YAML.
 
 1. Pick the next ID `P<n>.<DIM>.<nnn>`. Check `make list-rules` for collisions.
 2. Create `packs/<pack>/rules/P<n>.<DIM>.<nnn>.yaml`. Validate against `schemas/rule.schema.json`. Use `stability: experimental`.
@@ -389,10 +389,10 @@ When unsure whether a change is in scope, the default is to ask. A concise quest
 - [ ] Positive fixture + `expected.json`.
 - [ ] Negative fixture + `expected.json`.
 - [ ] Table test passing in `pack_test.go`.
-- [ ] Go rule declaration in `packs/<pack>/pack.go` (until §7.1 lands).
+- [ ] Resolver wired in `packs/<pack>/pack.go` resolver map + `make generate`.
 - [ ] `docs/rules/<id>.md`.
 - [ ] `.claude/skills/archfit/reference/remediation/<id>.md`.
-- [ ] `stability: experimental`.
+- [ ] `stability: experimental` (promote to `stable` after one release cycle).
 - [ ] `make lint test self-scan` clean.
 - [ ] `CHANGELOG.md` entry.
 

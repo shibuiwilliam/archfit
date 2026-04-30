@@ -100,6 +100,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return cmdTestPack(rest, stdout, stderr)
 	case "contract":
 		return cmdContract(rest, stdout, stderr)
+	case "pr-check":
+		return cmdPRCheck(rest, stdout, stderr)
 	case "version", "--version", "-v":
 		fmt.Fprintf(stdout, "archfit %s\n", version.Version)
 		return exitOK
@@ -123,6 +125,8 @@ usage:
   archfit report [path]                Markdown report (shorthand for scan --format=md)
   archfit diff <baseline.json> [current.json]
                                        compare findings between two scans
+  archfit pr-check [--base <ref>] [path]
+                                       scan base vs head, report only new findings
   archfit fix [rule-id] [path]         auto-fix findings (strong-evidence rules)
   archfit trend                        show score trends from archived scans
   archfit compare <f1.json> <f2.json> [...]
@@ -276,10 +280,11 @@ func cmdScan(args []string, stdout, stderr io.Writer) int {
 	defer cancel()
 
 	res, err := core.Scan(ctx, core.ScanInput{
-		Root:   flags.path,
-		Rules:  rules,
-		Runner: exec.NewReal(),
-		Depth:  flags.depth,
+		Root:               flags.path,
+		Rules:              rules,
+		Runner:             exec.NewReal(),
+		Depth:              flags.depth,
+		VerificationLayers: configToLayers(cfg),
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "scan: %v\n", err)
@@ -585,6 +590,35 @@ func cmdValidateConfig(args []string, stdout, stderr io.Writer) int {
 
 // filterRules applies config ignores and pack enable/disable lists. Phase 1
 // supports pack-level enable plus per-rule ignore (no path-scoped ignore yet).
+// configToLayers converts the config's Verification block into core.VerificationLayer.
+// Returns nil when no layers are declared (the collector falls back to auto-detection).
+func configToLayers(cfg config.Config) []core.VerificationLayer {
+	if len(cfg.Verification) == 0 {
+		return nil
+	}
+	// Maintain a stable order: lint < typecheck < unit < integration < anything else.
+	order := []string{"lint", "typecheck", "unit", "integration"}
+	seen := map[string]bool{}
+	var layers []core.VerificationLayer
+	for _, name := range order {
+		if vl, ok := cfg.Verification[name]; ok {
+			layers = append(layers, core.VerificationLayer{
+				Name: name, Command: vl.Command, TimeoutS: vl.TimeoutS,
+			})
+			seen[name] = true
+		}
+	}
+	// Append any custom layers not in the standard order.
+	for name, vl := range cfg.Verification {
+		if !seen[name] {
+			layers = append(layers, core.VerificationLayer{
+				Name: name, Command: vl.Command, TimeoutS: vl.TimeoutS,
+			})
+		}
+	}
+	return layers
+}
+
 func filterRules(reg *rule.Registry, cfg config.Config) []model.Rule {
 	enabled := map[string]bool{}
 	for _, p := range cfg.Packs.Enabled {
@@ -970,6 +1004,172 @@ func cmdDiff(args []string, stdout, stderr io.Writer) int {
 	return exitOK
 }
 
+// ----- PR check -----
+
+func cmdPRCheck(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("pr-check", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	baseRef := fs.String("base", "", "base git ref to compare against (default: auto-detect from origin/HEAD)")
+	headRef := fs.String("head", "HEAD", "head git ref to scan")
+	jsonOut := fs.Bool("json", false, "emit JSON output")
+	workDir := fs.String("C", "", "change to directory before running")
+	configPath := fs.String("config", "", "path to config file")
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprintf(stderr, "pr-check: %v\n", err)
+		return exitUsage
+	}
+
+	path := "."
+	if rest := fs.Args(); len(rest) > 0 {
+		path = rest[0]
+	}
+	if *workDir != "" {
+		path = *workDir
+	}
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+
+	runner := exec.NewReal()
+
+	// Auto-detect base ref if not provided.
+	base := *baseRef
+	if base == "" {
+		r, err := runner.Run(ctx, path, "git", "symbolic-ref", "refs/remotes/origin/HEAD")
+		if err == nil && r.ExitCode == 0 {
+			base = strings.TrimSpace(string(r.Stdout))
+		} else {
+			base = "origin/main"
+		}
+	}
+
+	// Resolve head ref.
+	head := *headRef
+
+	reg, err := buildRegistry()
+	if err != nil {
+		fmt.Fprintf(stderr, "pr-check: %v\n", err)
+		return exitRuntimeError
+	}
+	cfg, err := loadConfig(*configPath, path)
+	if err != nil {
+		fmt.Fprintf(stderr, "pr-check: %v\n", err)
+		return exitConfigError
+	}
+	rules := filterRules(reg, cfg)
+
+	// 1. Create a temp worktree for the base ref.
+	tmpDir, terr := os.MkdirTemp("", "archfit-pr-check-*")
+	if terr != nil {
+		fmt.Fprintf(stderr, "pr-check: create temp dir: %v\n", terr)
+		return exitRuntimeError
+	}
+	defer func() { _ = os.RemoveAll(tmpDir) }()
+
+	worktreePath := filepath.Join(tmpDir, "base")
+	r, err := runner.Run(ctx, path, "git", "worktree", "add", "--detach", worktreePath, base)
+	if err != nil || r.ExitCode != 0 {
+		errMsg := string(r.Stderr)
+		if err != nil {
+			errMsg = err.Error()
+		}
+		fmt.Fprintf(stderr, "pr-check: git worktree add failed: %s\n", strings.TrimSpace(errMsg))
+		return exitRuntimeError
+	}
+	defer func() {
+		_, _ = runner.Run(ctx, path, "git", "worktree", "remove", "--force", worktreePath)
+	}()
+
+	// 2. Scan the base worktree.
+	baseResult, err := core.Scan(ctx, core.ScanInput{
+		Root:   worktreePath,
+		Rules:  rules,
+		Runner: runner,
+	})
+	if err != nil {
+		fmt.Fprintf(stderr, "pr-check: base scan: %v\n", err)
+		return exitRuntimeError
+	}
+
+	// 3. Scan the head (working directory).
+	headResult, err := core.Scan(ctx, core.ScanInput{
+		Root:   path,
+		Rules:  rules,
+		Runner: runner,
+	})
+	if err != nil {
+		fmt.Fprintf(stderr, "pr-check: head scan: %v\n", err)
+		return exitRuntimeError
+	}
+
+	// 4. Diff.
+	d := report.Diff(baseResult.Findings, headResult.Findings)
+
+	// 5. Render.
+	if *jsonOut {
+		doc := map[string]any{
+			"base_ref":    base,
+			"head_ref":    head,
+			"base_score":  baseResult.Scores.Overall,
+			"head_score":  headResult.Scores.Overall,
+			"score_delta": math.Round((headResult.Scores.Overall-baseResult.Scores.Overall)*10) / 10,
+			"summary": map[string]int{
+				"new":       len(d.New),
+				"fixed":     len(d.Fixed),
+				"unchanged": len(d.Unchanged),
+			},
+			"new":   d.New,
+			"fixed": d.Fixed,
+		}
+		if doc["new"] == nil {
+			doc["new"] = []model.Finding{}
+		}
+		if doc["fixed"] == nil {
+			doc["fixed"] = []model.Finding{}
+		}
+		enc := json.NewEncoder(stdout)
+		enc.SetEscapeHTML(false)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(doc); err != nil {
+			fmt.Fprintf(stderr, "pr-check: %v\n", err)
+			return exitRuntimeError
+		}
+	} else {
+		delta := headResult.Scores.Overall - baseResult.Scores.Overall
+		fmt.Fprintf(stdout, "archfit pr-check: %s → %s\n", base, head)
+		fmt.Fprintf(stdout, "base score: %.1f → head score: %.1f (delta: %+.1f)\n\n",
+			baseResult.Scores.Overall, headResult.Scores.Overall, delta)
+		fmt.Fprintf(stdout, "new: %d   fixed: %d   unchanged: %d\n\n",
+			len(d.New), len(d.Fixed), len(d.Unchanged))
+		if len(d.New) > 0 {
+			fmt.Fprintln(stdout, "NEW findings (regressions):")
+			for _, f := range d.New {
+				p := f.Path
+				if p == "" {
+					p = "(repo)"
+				}
+				fmt.Fprintf(stdout, "  [%s] %s %s — %s\n", f.Severity, f.RuleID, p, f.Message)
+			}
+			fmt.Fprintln(stdout)
+		}
+		if len(d.Fixed) > 0 {
+			fmt.Fprintln(stdout, "FIXED findings:")
+			for _, f := range d.Fixed {
+				p := f.Path
+				if p == "" {
+					p = "(repo)"
+				}
+				fmt.Fprintf(stdout, "  [%s] %s %s — %s\n", f.Severity, f.RuleID, p, f.Message)
+			}
+		}
+	}
+
+	if len(d.New) > 0 {
+		return exitFindingsAtLevel
+	}
+	return exitOK
+}
+
 // ----- Fix engine (Pillar 1) -----
 
 // buildFixEngine registers all static fixers explicitly. Same pattern as
@@ -1156,6 +1356,10 @@ func (f *cliFactStore) Commands() (model.CommandFacts, bool) {
 func (f *cliFactStore) DepGraph() (model.DepGraphFacts, bool) {
 	return model.DepGraphFacts{}, false
 }
+
+func (f *cliFactStore) Languages() map[string]int { return f.Repo().Languages }
+
+func (f *cliFactStore) Ecosystems() model.EcosystemFacts { return model.EcosystemFacts{} }
 
 // collectForFix does a lightweight filesystem collect for the fix engine.
 func collectForFix(root string) (model.RepoFacts, error) {

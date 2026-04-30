@@ -16,7 +16,7 @@ func GeneratedRules() []model.Rule {
 			Title:            "Tool ships a versioned JSON output schema",
 			Severity:         model.SeverityWarn,
 			EvidenceStrength: model.EvidenceStrong,
-			Stability:        model.StabilityExperimental,
+			Stability:        model.StabilityStable,
 			Weight:           1,
 			Rationale:        "An agent-driven tool's machine-readable output is a contract. Without a versioned, discoverable schema, downstream agents cannot tell additive changes from breaking ones. This rule looks for a JSON Schema file under schemas/ whose content declares a top-level $id and is referenced from a schema_version field in documentation or in the schema itself.",
 			Remediation: model.Remediation{
@@ -32,7 +32,7 @@ func GeneratedRules() []model.Rule {
 			Title:            "Agent-tool repository has a CHANGELOG.md at the root",
 			Severity:         model.SeverityWarn,
 			EvidenceStrength: model.EvidenceStrong,
-			Stability:        model.StabilityExperimental,
+			Stability:        model.StabilityStable,
 			Weight:           1,
 			Rationale:        "Agents driving a tool need a machine-readable record of what changed between versions. CHANGELOG.md is the lightest, most widely recognized signal. Keep-a-changelog.com and SemVer co-evolve; a tool that ships without one forces agents to diff the repository or infer changes from commit titles.",
 			Remediation: model.Remediation{
@@ -48,7 +48,7 @@ func GeneratedRules() []model.Rule {
 			Title:            "Agent-tool repository records ADRs under docs/adr/",
 			Severity:         model.SeverityWarn,
 			EvidenceStrength: model.EvidenceStrong,
-			Stability:        model.StabilityExperimental,
+			Stability:        model.StabilityStable,
 			Weight:           1,
 			Rationale:        "Architecture Decision Records are the canonical way to surface irreversible design choices to agents. When an agent is asked to refactor an agent-tool, the ADR log tells it which decisions are load-bearing (and why) versus which are accidents of history. This rule fires when the repo ships a CLI (has cmd/) but no docs/adr/ directory exists.",
 			Remediation: model.Remediation{

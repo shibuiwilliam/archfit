@@ -4,7 +4,7 @@ dimension: MRD
 title: Agent-tool repository records ADRs under docs/adr/
 severity: warn
 evidence_strength: strong
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   Architecture Decision Records are the canonical way to surface irreversible

@@ -5,11 +5,11 @@ package core
 
 import (
 	"context"
-	"time"
 
 	"github.com/shibuiwilliam/archfit/internal/adapter/exec"
 	collectcmd "github.com/shibuiwilliam/archfit/internal/collector/command"
 	collectdep "github.com/shibuiwilliam/archfit/internal/collector/depgraph"
+	collecteco "github.com/shibuiwilliam/archfit/internal/collector/ecosystem"
 	collectfs "github.com/shibuiwilliam/archfit/internal/collector/fs"
 	collectgit "github.com/shibuiwilliam/archfit/internal/collector/git"
 	collectschema "github.com/shibuiwilliam/archfit/internal/collector/schema"
@@ -18,12 +18,20 @@ import (
 	"github.com/shibuiwilliam/archfit/internal/score"
 )
 
+// VerificationLayer mirrors config.VerificationLayer for the scheduler.
+type VerificationLayer struct {
+	Name     string
+	Command  string
+	TimeoutS int
+}
+
 // ScanInput is what a caller (typically the CLI) provides.
 type ScanInput struct {
-	Root   string
-	Rules  []model.Rule
-	Runner exec.Runner // if nil, git facts are silently unavailable (shallow mode).
-	Depth  string      // "shallow", "standard", "deep"; default "standard"
+	Root               string
+	Rules              []model.Rule
+	Runner             exec.Runner         // if nil, git facts are silently unavailable (shallow mode).
+	Depth              string              // "shallow", "standard", "deep"; default "standard"
+	VerificationLayers []VerificationLayer // from .archfit.yaml verification block; nil = use defaults
 }
 
 // ScanResult is what the CLI formats into the chosen renderer.
@@ -56,6 +64,7 @@ func Scan(ctx context.Context, in ScanInput) (ScanResult, error) {
 	}
 
 	schemas := collectschema.Collect(repo)
+	ecoFacts := collecteco.Collect(repo)
 
 	// Dependency graph: lightweight, always runs for parseable source.
 	var depFacts model.DepGraphFacts
@@ -75,20 +84,30 @@ func Scan(ctx context.Context, in ScanInput) (ScanResult, error) {
 	var cmdFacts model.CommandFacts
 	cmdOK := false
 	if in.Depth == "deep" && in.Runner != nil {
-		results := collectcmd.Collect(ctx, in.Runner, in.Root, 120*time.Second)
+		// Use declared layers if available, otherwise fall back to auto-detection.
+		var layerSpecs []collectcmd.LayerSpec
+		for _, vl := range in.VerificationLayers {
+			layerSpecs = append(layerSpecs, collectcmd.LayerSpec{
+				Name:     vl.Name,
+				Command:  vl.Command,
+				TimeoutS: vl.TimeoutS,
+			})
+		}
+		results := collectcmd.CollectLayers(ctx, in.Runner, in.Root, layerSpecs)
 		if len(results) > 0 {
 			for _, r := range results {
 				cmdFacts.Results = append(cmdFacts.Results, model.CommandResult{
 					Command:    r.Command,
 					DurationMS: r.DurationMS,
 					ExitCode:   r.ExitCode,
+					Layer:      r.Layer,
 				})
 			}
 			cmdOK = true
 		}
 	}
 
-	facts := newFactStore(repo, gitFacts, gitOK, schemas, cmdFacts, cmdOK, depFacts, depOK)
+	facts := newFactStore(repo, gitFacts, gitOK, schemas, cmdFacts, cmdOK, depFacts, depOK, ecoFacts)
 	ev := rule.NewEngine().Evaluate(ctx, in.Rules, facts)
 
 	// Compute metrics from collected facts.
@@ -103,13 +122,14 @@ func Scan(ctx context.Context, in ScanInput) (ScanResult, error) {
 	}
 	if cmdOK {
 		metrics = append(metrics, score.VerificationLatency(cmdFacts))
+		metrics = append(metrics, score.VerificationLayerMetrics(cmdFacts)...)
 	}
 	if depOK {
 		metrics = append(metrics, score.BlastRadius(depFacts))
 	}
 	metrics = append(metrics, score.InvariantCoverage(ev.Findings, in.Rules))
 
-	sc := score.Compute(in.Rules, ev.Findings)
+	sc := score.Compute(in.Rules, ev.Findings, ev.SkippedRuleIDs...)
 
 	return ScanResult{
 		Root:              in.Root,
@@ -134,10 +154,11 @@ type factStore struct {
 	cmdsOK  bool
 	dep     model.DepGraphFacts
 	depOK   bool
+	eco     model.EcosystemFacts
 }
 
-func newFactStore(repo model.RepoFacts, git model.GitFacts, gitOK bool, schemas model.SchemaFacts, cmds model.CommandFacts, cmdsOK bool, dep model.DepGraphFacts, depOK bool) model.FactStore {
-	return &factStore{repo: repo, git: git, gitOK: gitOK, schemas: schemas, cmds: cmds, cmdsOK: cmdsOK, dep: dep, depOK: depOK}
+func newFactStore(repo model.RepoFacts, git model.GitFacts, gitOK bool, schemas model.SchemaFacts, cmds model.CommandFacts, cmdsOK bool, dep model.DepGraphFacts, depOK bool, eco model.EcosystemFacts) model.FactStore {
+	return &factStore{repo: repo, git: git, gitOK: gitOK, schemas: schemas, cmds: cmds, cmdsOK: cmdsOK, dep: dep, depOK: depOK, eco: eco}
 }
 
 // Repo returns the collected repo-wide facts.
@@ -152,5 +173,11 @@ func (f *factStore) Schemas() model.SchemaFacts { return f.schemas }
 // Commands returns command timing facts and whether they are available.
 func (f *factStore) Commands() (model.CommandFacts, bool) { return f.cmds, f.cmdsOK }
 
+// Languages returns the language file counts from the filesystem collector.
+func (f *factStore) Languages() map[string]int { return f.repo.Languages }
+
 // DepGraph returns dependency graph facts and whether they are available.
 func (f *factStore) DepGraph() (model.DepGraphFacts, bool) { return f.dep, f.depOK }
+
+// Ecosystems returns typed ecosystem detection results.
+func (f *factStore) Ecosystems() model.EcosystemFacts { return f.eco }

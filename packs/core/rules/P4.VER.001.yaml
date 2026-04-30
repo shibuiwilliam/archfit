@@ -4,7 +4,7 @@ dimension: VER
 title: Repository declares a fast verification entrypoint
 severity: warn
 evidence_strength: strong
-stability: experimental
+stability: stable
 weight: 1
 rationale: >
   Agents need a single, declared way to verify a change: "did this break
