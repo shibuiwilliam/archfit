@@ -1,0 +1,77 @@
+{
+  "schema_version": "0.2.0",
+  "tool": {
+    "name": "archfit",
+    "version": "0.1.9-dirty"
+  },
+  "target": {
+    "path": ".",
+    "git": {
+      "commit": "00497f863b6a82f1eb35c0c3432bcd3462ab0f08",
+      "branch": "main"
+    },
+    "profile": "standard"
+  },
+  "summary": {
+    "rules_evaluated": 14,
+    "rules_with_findings": 0,
+    "findings_total": 0,
+    "by_severity": {
+      "info": 0,
+      "warn": 0,
+      "error": 0,
+      "critical": 0
+    }
+  },
+  "scores": {
+    "overall": 100,
+    "by_principle": {
+      "P1": 100,
+      "P2": 100,
+      "P3": 100,
+      "P4": 100,
+      "P5": 100,
+      "P6": 100,
+      "P7": 100
+    }
+  },
+  "findings": [],
+  "metrics": [
+    {
+      "name": "coupling_max_reach",
+      "value": 24,
+      "unit": "packages",
+      "principle": "P1"
+    },
+    {
+      "name": "context_span_p50",
+      "value": 3,
+      "unit": "files",
+      "principle": "P1"
+    },
+    {
+      "name": "parallel_conflict_rate",
+      "value": 0,
+      "unit": "ratio",
+      "principle": "P1"
+    },
+    {
+      "name": "rollback_signal",
+      "value": 0,
+      "unit": "ratio",
+      "principle": "P6"
+    },
+    {
+      "name": "blast_radius_score",
+      "value": 0.571,
+      "unit": "ratio",
+      "principle": "P5"
+    },
+    {
+      "name": "invariant_coverage",
+      "value": 1,
+      "unit": "ratio",
+      "principle": "P4"
+    }
+  ]
+}
