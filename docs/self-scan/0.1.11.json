@@ -1,0 +1,135 @@
+{
+  "schema_version": "1.0.0",
+  "tool": {
+    "name": "archfit",
+    "version": "0.1.11-dirty"
+  },
+  "target": {
+    "path": ".",
+    "git": {
+      "commit": "6536c9eb8fd7a2c79af0913ff8876f9e0c5f508a",
+      "branch": "main"
+    },
+    "profile": "standard"
+  },
+  "summary": {
+    "rules_evaluated": 17,
+    "rules_with_findings": 2,
+    "findings_total": 2,
+    "by_severity": {
+      "info": 1,
+      "warn": 1,
+      "error": 0,
+      "critical": 0
+    }
+  },
+  "scores": {
+    "overall": 97.1,
+    "by_principle": {
+      "P1": 100,
+      "P2": 100,
+      "P3": 100,
+      "P4": 100,
+      "P5": 80,
+      "P6": 95,
+      "P7": 100
+    }
+  },
+  "findings": [
+    {
+      "rule_id": "P5.AGG.001",
+      "principle": "P5",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.9,
+      "path": "",
+      "message": "deploy-related files are scattered across 3 top-level directories (docs, packs, testdata) — dangerous capabilities should be concentrated",
+      "evidence": {
+        "category": "deploy",
+        "example_files": [
+          "docs/deployment.md",
+          "packs/core/fixtures/P3.EXP.001-terraform/expected.json",
+          "packs/core/fixtures/P3.EXP.001-terraform/input/CLAUDE.md",
+          "packs/core/fixtures/P3.EXP.001-terraform/input/Makefile",
+          "packs/core/fixtures/P3.EXP.001-terraform/input/main.tf",
+          "packs/core/fixtures/P3.EXP.001-terraform/input/terraform.tfvars",
+          "packs/core/fixtures/P6.REV.002-negative/input/docs/deployment.md",
+          "packs/core/fixtures/P6.REV.002/input/docs/deployment.md",
+          "testdata/e2e/clean_agent_tool/input/docs/deployment.md"
+        ],
+        "threshold": 2,
+        "top_level_dirs": [
+          "docs",
+          "packs",
+          "testdata"
+        ]
+      },
+      "remediation": {
+        "summary": "Consolidate security-sensitive files under at most 2 top-level directories per category.",
+        "guide_ref": "docs/rules/P5.AGG.001.md"
+      }
+    },
+    {
+      "rule_id": "P6.REV.002",
+      "principle": "P6",
+      "severity": "info",
+      "evidence_strength": "strong",
+      "confidence": 0.75,
+      "path": "",
+      "message": "repository deploys but shows no feature-flag mechanism — changes cannot be toggled off without a full rollback",
+      "evidence": {
+        "looked_for": [
+          "launchdarkly",
+          "unleash",
+          "openfeature",
+          "configcat",
+          "growthbook",
+          "optimizely",
+          "gofeatureflag"
+        ]
+      },
+      "remediation": {
+        "summary": "Add a feature-flag library (LaunchDarkly, Unleash, OpenFeature, ConfigCat, GrowthBook, Optimizely, GoFeatureFlag) or implement a local flag system with a config-driven toggle.",
+        "guide_ref": "docs/rules/P6.REV.002.md"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "name": "coupling_max_reach",
+      "value": 25,
+      "unit": "packages",
+      "principle": "P1"
+    },
+    {
+      "name": "context_span_p50",
+      "value": 3,
+      "unit": "files",
+      "principle": "P1"
+    },
+    {
+      "name": "parallel_conflict_rate",
+      "value": 0,
+      "unit": "ratio",
+      "principle": "P1"
+    },
+    {
+      "name": "rollback_signal",
+      "value": 0,
+      "unit": "ratio",
+      "principle": "P6"
+    },
+    {
+      "name": "blast_radius_score",
+      "value": 0.391,
+      "unit": "ratio",
+      "principle": "P5"
+    },
+    {
+      "name": "invariant_coverage",
+      "value": 1,
+      "unit": "ratio",
+      "principle": "P4"
+    }
+  ]
+}
