@@ -81,6 +81,22 @@
          <lastmod>2026-04-30</lastmod>
     </url>
     <url>
+         <loc>https://shibuiwilliam.github.io/archfit/adr/0010-factstore-languages/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
+         <loc>https://shibuiwilliam.github.io/archfit/adr/0011-ecosystem-collector/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
+         <loc>https://shibuiwilliam.github.io/archfit/adr/0012-1.0-stability/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
+         <loc>https://shibuiwilliam.github.io/archfit/adr/0013-exit-code-5-revisited/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
          <loc>https://shibuiwilliam.github.io/archfit/development/</loc>
          <lastmod>2026-04-30</lastmod>
     </url>
@@ -117,6 +133,10 @@
          <lastmod>2026-04-30</lastmod>
     </url>
     <url>
+         <loc>https://shibuiwilliam.github.io/archfit/development/gap-closure-plan/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
          <loc>https://shibuiwilliam.github.io/archfit/development/implementation-plan/</loc>
          <lastmod>2026-04-30</lastmod>
     </url>
@@ -133,7 +153,15 @@
          <lastmod>2026-04-30</lastmod>
     </url>
     <url>
+         <loc>https://shibuiwilliam.github.io/archfit/development/perf/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
          <loc>https://shibuiwilliam.github.io/archfit/development/testing-strategy/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
+         <loc>https://shibuiwilliam.github.io/archfit/migration/0.x-to-1.0/</loc>
          <lastmod>2026-04-30</lastmod>
     </url>
     <url>
@@ -154,6 +182,10 @@
     </url>
     <url>
          <loc>https://shibuiwilliam.github.io/archfit/rules/P1.LOC.004/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
+         <loc>https://shibuiwilliam.github.io/archfit/rules/P2.SPC.001/</loc>
          <lastmod>2026-04-30</lastmod>
     </url>
     <url>
@@ -181,7 +213,15 @@
          <lastmod>2026-04-30</lastmod>
     </url>
     <url>
+         <loc>https://shibuiwilliam.github.io/archfit/rules/P5.AGG.002/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
          <loc>https://shibuiwilliam.github.io/archfit/rules/P6.REV.001/</loc>
+         <lastmod>2026-04-30</lastmod>
+    </url>
+    <url>
+         <loc>https://shibuiwilliam.github.io/archfit/rules/P6.REV.002/</loc>
          <lastmod>2026-04-30</lastmod>
     </url>
     <url>
