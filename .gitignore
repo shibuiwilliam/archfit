@@ -73,4 +73,5 @@ Thumbs.db
 # mkdocs build output
 /site/
 
-archfit
+# Built binary at repo root (must not match .claude/skills/archfit/ or other paths)
+/archfit
