@@ -1,0 +1,24 @@
+# Baseline rule IDs — rules present on main at the start of Phase 1.
+# Used by scripts/self-scan-gate.sh to distinguish new rules from existing ones.
+# New rules may produce findings without failing the gate; existing rules may not
+# introduce new error+ findings.
+#
+# Updated: 2026-05-02 (pre-Phase 1, 17 rules)
+# Baseline score: 100.0
+P1.LOC.001
+P1.LOC.002
+P1.LOC.003
+P1.LOC.004
+P2.SPC.001
+P2.SPC.010
+P3.EXP.001
+P4.VER.001
+P4.VER.002
+P4.VER.003
+P5.AGG.001
+P5.AGG.002
+P6.REV.001
+P6.REV.002
+P7.MRD.001
+P7.MRD.002
+P7.MRD.003

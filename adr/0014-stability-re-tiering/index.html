@@ -10,29 +10,27 @@
       
       
       
-        <link rel="canonical" href="https://shibuiwilliam.github.io/archfit/">
+        <link rel="canonical" href="https://shibuiwilliam.github.io/archfit/adr/0014-stability-re-tiering/">
       
       
-      
-        <link rel="next" href="installation/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>archfit</title>
+        <title>Stability re-tiering — walk back blanket-stable freeze for uncalibrated rules - archfit</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,7 +49,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -76,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#archfit" class="md-skip">
+        <a href="#context" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +90,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="archfit" class="md-header__button md-logo" aria-label="archfit" data-md-component="logo">
+    <a href="../.." title="archfit" class="md-header__button md-logo" aria-label="archfit" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              Stability re-tiering — walk back blanket-stable freeze for uncalibrated rules
             
           </span>
         </div>
@@ -230,7 +228,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="archfit" class="md-nav__button md-logo" aria-label="archfit" data-md-component="logo">
+    <a href="../.." title="archfit" class="md-nav__button md-logo" aria-label="archfit" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -257,37 +255,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Home
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -303,92 +274,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-seven-principles" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Seven Principles
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quick Start
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-archfit-produces" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What archfit produces
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#current-rule-set" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Rule Set
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Features
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Documentation
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -466,7 +351,7 @@
   
   
     <li class="md-nav__item">
-      <a href="installation/" class="md-nav__link">
+      <a href="../../installation/" class="md-nav__link">
         
   
   
@@ -494,7 +379,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -522,7 +407,7 @@
   
   
     <li class="md-nav__item">
-      <a href="configuration/" class="md-nav__link">
+      <a href="../../configuration/" class="md-nav__link">
         
   
   
@@ -550,7 +435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="contract/" class="md-nav__link">
+      <a href="../../contract/" class="md-nav__link">
         
   
   
@@ -578,7 +463,7 @@
   
   
     <li class="md-nav__item">
-      <a href="exit-codes/" class="md-nav__link">
+      <a href="../../exit-codes/" class="md-nav__link">
         
   
   
@@ -652,7 +537,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="rules/" class="md-nav__link ">
+            <a href="../../rules/" class="md-nav__link ">
               
   
   
@@ -757,7 +642,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P1.LOC.001/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.001/" class="md-nav__link">
         
   
   
@@ -785,7 +670,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P1.LOC.002/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.002/" class="md-nav__link">
         
   
   
@@ -813,7 +698,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P1.LOC.003/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.003/" class="md-nav__link">
         
   
   
@@ -841,7 +726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P1.LOC.004/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.004/" class="md-nav__link">
         
   
   
@@ -934,7 +819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P2.SPC.001/" class="md-nav__link">
+      <a href="../../rules/P2.SPC.001/" class="md-nav__link">
         
   
   
@@ -962,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P2.SPC.010/" class="md-nav__link">
+      <a href="../../rules/P2.SPC.010/" class="md-nav__link">
         
   
   
@@ -1053,7 +938,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P3.EXP.001/" class="md-nav__link">
+      <a href="../../rules/P3.EXP.001/" class="md-nav__link">
         
   
   
@@ -1148,7 +1033,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P4.VER.001/" class="md-nav__link">
+      <a href="../../rules/P4.VER.001/" class="md-nav__link">
         
   
   
@@ -1176,7 +1061,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P4.VER.002/" class="md-nav__link">
+      <a href="../../rules/P4.VER.002/" class="md-nav__link">
         
   
   
@@ -1204,7 +1089,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P4.VER.003/" class="md-nav__link">
+      <a href="../../rules/P4.VER.003/" class="md-nav__link">
         
   
   
@@ -1297,7 +1182,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P5.AGG.001/" class="md-nav__link">
+      <a href="../../rules/P5.AGG.001/" class="md-nav__link">
         
   
   
@@ -1325,7 +1210,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P5.AGG.002/" class="md-nav__link">
+      <a href="../../rules/P5.AGG.002/" class="md-nav__link">
         
   
   
@@ -1418,7 +1303,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P6.REV.001/" class="md-nav__link">
+      <a href="../../rules/P6.REV.001/" class="md-nav__link">
         
   
   
@@ -1446,7 +1331,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P6.REV.002/" class="md-nav__link">
+      <a href="../../rules/P6.REV.002/" class="md-nav__link">
         
   
   
@@ -1541,7 +1426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P7.MRD.001/" class="md-nav__link">
+      <a href="../../rules/P7.MRD.001/" class="md-nav__link">
         
   
   
@@ -1569,7 +1454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P7.MRD.002/" class="md-nav__link">
+      <a href="../../rules/P7.MRD.002/" class="md-nav__link">
         
   
   
@@ -1597,7 +1482,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P7.MRD.003/" class="md-nav__link">
+      <a href="../../rules/P7.MRD.003/" class="md-nav__link">
         
   
   
@@ -1706,7 +1591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="agent-skill/" class="md-nav__link">
+      <a href="../../agent-skill/" class="md-nav__link">
         
   
   
@@ -1734,7 +1619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="llm/" class="md-nav__link">
+      <a href="../../llm/" class="md-nav__link">
         
   
   
@@ -1762,7 +1647,7 @@
   
   
     <li class="md-nav__item">
-      <a href="fix/" class="md-nav__link">
+      <a href="../../fix/" class="md-nav__link">
         
   
   
@@ -1790,7 +1675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="ci-cd/" class="md-nav__link">
+      <a href="../../ci-cd/" class="md-nav__link">
         
   
   
@@ -1818,7 +1703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="deployment/" class="md-nav__link">
+      <a href="../../deployment/" class="md-nav__link">
         
   
   
@@ -1939,7 +1824,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/architecture/" class="md-nav__link">
+      <a href="../../development/architecture/" class="md-nav__link">
         
   
   
@@ -1967,7 +1852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/implementation-plan/" class="md-nav__link">
+      <a href="../../development/implementation-plan/" class="md-nav__link">
         
   
   
@@ -1995,7 +1880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/testing-strategy/" class="md-nav__link">
+      <a href="../../development/testing-strategy/" class="md-nav__link">
         
   
   
@@ -2023,7 +1908,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/metrics-and-scoring/" class="md-nav__link">
+      <a href="../../development/metrics-and-scoring/" class="md-nav__link">
         
   
   
@@ -2051,7 +1936,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/pack-development/" class="md-nav__link">
+      <a href="../../development/pack-development/" class="md-nav__link">
         
   
   
@@ -2079,7 +1964,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/api-reference/" class="md-nav__link">
+      <a href="../../development/api-reference/" class="md-nav__link">
         
   
   
@@ -2107,7 +1992,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/fix-engine/" class="md-nav__link">
+      <a href="../../development/fix-engine/" class="md-nav__link">
         
   
   
@@ -2135,7 +2020,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/llm-integration/" class="md-nav__link">
+      <a href="../../development/llm-integration/" class="md-nav__link">
         
   
   
@@ -2163,7 +2048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/ci-cd-integration/" class="md-nav__link">
+      <a href="../../development/ci-cd-integration/" class="md-nav__link">
         
   
   
@@ -2191,7 +2076,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/cross-stack-improvements/" class="md-nav__link">
+      <a href="../../development/cross-stack-improvements/" class="md-nav__link">
         
   
   
@@ -2219,7 +2104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/fitness-contract/" class="md-nav__link">
+      <a href="../../development/fitness-contract/" class="md-nav__link">
         
   
   
@@ -2247,7 +2132,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/agent-observatory/" class="md-nav__link">
+      <a href="../../development/agent-observatory/" class="md-nav__link">
         
   
   
@@ -2275,7 +2160,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/adaptive-engine/" class="md-nav__link">
+      <a href="../../development/adaptive-engine/" class="md-nav__link">
         
   
   
@@ -2303,7 +2188,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/perf/" class="md-nav__link">
+      <a href="../../development/perf/" class="md-nav__link">
         
   
   
@@ -2331,7 +2216,7 @@
   
   
     <li class="md-nav__item">
-      <a href="dependencies/" class="md-nav__link">
+      <a href="../../dependencies/" class="md-nav__link">
         
   
   
@@ -2446,7 +2331,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0001-architecture-overview/" class="md-nav__link">
+      <a href="../0001-architecture-overview/" class="md-nav__link">
         
   
   
@@ -2481,7 +2366,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0002-phase2-dogfood-and-sarif/" class="md-nav__link">
+      <a href="../0002-phase2-dogfood-and-sarif/" class="md-nav__link">
         
   
   
@@ -2516,7 +2401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0003-llm-explanation/" class="md-nav__link">
+      <a href="../0003-llm-explanation/" class="md-nav__link">
         
   
   
@@ -2551,7 +2436,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0004-fix-engine/" class="md-nav__link">
+      <a href="../0004-fix-engine/" class="md-nav__link">
         
   
   
@@ -2586,7 +2471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0005-factstore-extension/" class="md-nav__link">
+      <a href="../0005-factstore-extension/" class="md-nav__link">
         
   
   
@@ -2621,7 +2506,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0006-external-packs/" class="md-nav__link">
+      <a href="../0006-external-packs/" class="md-nav__link">
         
   
   
@@ -2656,7 +2541,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0008-contract-exit-codes/" class="md-nav__link">
+      <a href="../0008-contract-exit-codes/" class="md-nav__link">
         
   
   
@@ -2691,7 +2576,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0009-output-schema-rules-with-findings/" class="md-nav__link">
+      <a href="../0009-output-schema-rules-with-findings/" class="md-nav__link">
         
   
   
@@ -2726,7 +2611,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0010-factstore-languages/" class="md-nav__link">
+      <a href="../0010-factstore-languages/" class="md-nav__link">
         
   
   
@@ -2761,7 +2646,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0011-ecosystem-collector/" class="md-nav__link">
+      <a href="../0011-ecosystem-collector/" class="md-nav__link">
         
   
   
@@ -2796,7 +2681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0012-1.0-stability/" class="md-nav__link">
+      <a href="../0012-1.0-stability/" class="md-nav__link">
         
   
   
@@ -2831,7 +2716,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0013-exit-code-5-revisited/" class="md-nav__link">
+      <a href="../0013-exit-code-5-revisited/" class="md-nav__link">
         
   
   
@@ -2883,8 +2768,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -2893,10 +2776,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-seven-principles" class="md-nav__link">
+  <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Seven Principles
+        Context
       
     </span>
   </a>
@@ -2904,10 +2787,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
+  <a href="#decision" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Start
+        Decision
       
     </span>
   </a>
@@ -2915,43 +2798,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#what-archfit-produces" class="md-nav__link">
+  <a href="#consequences" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What archfit produces
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#current-rule-set" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Rule Set
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Features
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Documentation
+        Consequences
       
     </span>
   </a>
@@ -2975,7 +2825,7 @@
 
 
   
-    <a href="https://github.com/shibuiwilliam/archfit/edit/main/docs/index.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/shibuiwilliam/archfit/edit/main/docs/adr/0014-stability-re-tiering.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -2983,159 +2833,95 @@
   
 
 
-<h1 id="archfit">archfit<a class="headerlink" href="#archfit" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p><strong>Architecture fitness evaluator for the coding-agent era.</strong></p>
-</blockquote>
-<p>archfit scans a repository and evaluates how well it is shaped for coding agents to work on safely and quickly. It measures seven architectural properties that determine whether an agent can change the system without breaking it.</p>
-<h2 id="the-seven-principles">The Seven Principles<a class="headerlink" href="#the-seven-principles" title="Permanent link">&para;</a></h2>
+  <h1>Stability re-tiering — walk back blanket-stable freeze for uncalibrated rules</h1>
+
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>ADR 0012 promoted all 17 rules to <code>stability: stable</code> and froze rule IDs.
+This was appropriate for the ID freeze, but it also froze <em>behavioral
+promises</em> for rules whose thresholds and detection logic have never been
+validated against a calibration corpus.</p>
+<p>PROJECT.md §3.7 identifies three rules with known calibration gaps:</p>
+<ul>
+<li><strong>P1.LOC.003</strong> (dependency graph coupling bounded) — the threshold
+  (<code>max_reach ≤ 10 packages</code>) was chosen by intuition, not data.</li>
+<li><strong>P1.LOC.004</strong> (commits touch bounded files) — the threshold
+  (<code>fan-out ≤ 8 files</code>) was chosen by intuition, not data.</li>
+<li><strong>P5.AGG.001</strong> (security-sensitive files concentrated) — known false
+  positives on test fixture paths (testdata/, packs/*/fixtures/).</li>
+</ul>
+<p>Phase 1 introduces a calibration corpus (§6.1.5). Threshold and detection
+logic changes must be permitted on these three rules so that calibration
+data can drive them. The <code>stable</code> tier prevents this without an ADR per
+change.</p>
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<p>Walk back the stability tier for three rules from <code>stable</code> to
+<code>experimental</code>:</p>
 <table>
 <thead>
 <tr>
-<th></th>
-<th>Principle</th>
-<th>The question it asks</th>
+<th>Rule ID</th>
+<th>Current</th>
+<th>New</th>
+<th>Reason</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>P1</strong></td>
-<td>Locality</td>
-<td>Can a change be understood from a narrow slice of the repo?</td>
+<td>P1.LOC.003</td>
+<td>stable</td>
+<td>experimental</td>
+<td>Threshold uncalibrated</td>
 </tr>
 <tr>
-<td><strong>P2</strong></td>
-<td>Spec-first</td>
-<td>Are contracts schemas and types, not prose?</td>
+<td>P1.LOC.004</td>
+<td>stable</td>
+<td>experimental</td>
+<td>Threshold uncalibrated</td>
 </tr>
 <tr>
-<td><strong>P3</strong></td>
-<td>Shallow explicitness</td>
-<td>Is behavior visible without chasing reflection or deep indirection?</td>
-</tr>
-<tr>
-<td><strong>P4</strong></td>
-<td>Verifiability</td>
-<td>Can correctness be proven locally in seconds?</td>
-</tr>
-<tr>
-<td><strong>P5</strong></td>
-<td>Aggregation of danger</td>
-<td>Are auth, secrets, and migrations concentrated and guarded?</td>
-</tr>
-<tr>
-<td><strong>P6</strong></td>
-<td>Reversibility</td>
-<td>Can every change be rolled back cheaply?</td>
-</tr>
-<tr>
-<td><strong>P7</strong></td>
-<td>Machine-readability</td>
-<td>Are errors, ADRs, and CLIs readable by machines?</td>
+<td>P5.AGG.001</td>
+<td>stable</td>
+<td>experimental</td>
+<td>False positives on fixture paths</td>
 </tr>
 </tbody>
 </table>
-<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Build from source (Go 1.24+)</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/shibuiwilliam/archfit.git
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">cd</span><span class="w"> </span>archfit<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>build
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Scan a repository</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>./bin/archfit<span class="w"> </span>scan<span class="w"> </span>/path/to/your/repo
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Auto-fix findings</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>./bin/archfit<span class="w"> </span>fix<span class="w"> </span>--all<span class="w"> </span>/path/to/your/repo
-</code></pre></div>
-<p>See <a href="getting-started/">Getting Started</a> for detailed setup instructions.</p>
-<h2 id="what-archfit-produces">What archfit produces<a class="headerlink" href="#what-archfit-produces" title="Permanent link">&para;</a></h2>
+<p><strong>What stays frozen (per ADR 0012):</strong></p>
 <ul>
-<li>A <strong>score per principle</strong> (P1-P7) and an overall score (0-100)</li>
-<li><strong>Findings</strong> with severity, evidence strength, confidence, and remediation</li>
-<li><strong>Metrics</strong>: context span, verification latency, blast radius, and more</li>
-<li><strong>Auto-fixes</strong> for rules with deterministic remediation</li>
-<li><strong>SARIF output</strong> for GitHub Code Scanning integration</li>
+<li>Rule IDs — no renumbering or repurposing.</li>
+<li>Severity — changes still require an ADR.</li>
+<li>Output schema fields — unchanged.</li>
 </ul>
-<h2 id="current-rule-set">Current Rule Set<a class="headerlink" href="#current-rule-set" title="Permanent link">&para;</a></h2>
-<p>27 rules across 2 packs. Most rules are <code>stability: stable</code> (frozen per ADR 0012). Three rules remain <code>experimental</code> per ADR 0014: P1.LOC.003, P1.LOC.004, P5.AGG.001. Output schema version: <code>1.1.0</code>.</p>
+<p><strong>What becomes flexible:</strong></p>
 <ul>
-<li><strong><code>core</code> pack</strong> (24 rules): locality (P1.LOC.001-004), spec-first (P2.SPC.001), explicitness (P3.EXP.001), verifiability (P4.VER.001-003), aggregation (P5.AGG.001-004), reversibility (P6.REV.001-002), machine-readability (P7.MRD.001), and additional rules across all seven principles. P5.AGG.004 is the first rule with <code>severity: error</code>.</li>
-<li><strong><code>agent-tool</code> pack</strong> (3 rules): spec-first (P2.SPC.010), machine-readability (P7.MRD.002, P7.MRD.003)</li>
+<li>Detection logic (resolver implementation, keyword lists, thresholds).</li>
+<li>Evidence interpretation (e.g., excluding fixture paths from scatter count).</li>
+<li>Confidence values.</li>
 </ul>
-<p>See <a href="rules/">Rules Overview</a> for the full catalog.</p>
-<h2 id="key-features">Key Features<a class="headerlink" href="#key-features" title="Permanent link">&para;</a></h2>
+<p>These rules will be re-promoted to <code>stable</code> only after:</p>
+<ol>
+<li>A calibration corpus run shows precision ≥ 0.85.</li>
+<li>At least one full release cycle as <code>experimental</code>.</li>
+</ol>
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Deterministic</strong>: base scan makes zero network calls, produces byte-identical output</li>
-<li><strong>LLM-enriched</strong> (opt-in): <code>--with-llm</code> adds contextual explanations via Claude, OpenAI, or Gemini</li>
-<li><strong>Auto-fix</strong>: <code>archfit fix</code> closes the scan-fix-verify loop with automatic rollback on failure</li>
-<li><strong>Fitness contracts</strong>: declare hard constraints, area budgets, and agent directives in <code>.archfit-contract.yaml</code></li>
-<li><strong>CI-ready</strong>: SARIF, JSON, and Markdown output; <code>archfit diff</code> for PR gates</li>
-<li><strong>Self-consistent</strong>: archfit passes its own scan at score 100.0</li>
+<li><code>TestStability_AllRulesAreStable</code> is updated to allow these three rules
+  as <code>experimental</code>, documented by this ADR.</li>
+<li>Phase 1 rule additions will also enter as <code>experimental</code> — the test is
+  relaxed to use an allowlist rather than a blanket check.</li>
+<li>Consumers who depend on the <em>behavior</em> (not just the ID) of these rules
+  should pin to a specific archfit version until the rules return to
+  <code>stable</code>.</li>
 </ul>
-<h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Page</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><a href="installation/">Installation</a></td>
-<td>Install from source, binaries, <code>go install</code>, or Docker</td>
-</tr>
-<tr>
-<td><a href="getting-started/">Getting Started</a></td>
-<td>First scan, common commands</td>
-</tr>
-<tr>
-<td><a href="configuration/">Configuration</a></td>
-<td><code>.archfit.yaml</code> reference</td>
-</tr>
-<tr>
-<td><a href="contract/">Fitness Contract</a></td>
-<td><code>.archfit-contract.yaml</code> — hard constraints, area budgets, agent directives</td>
-</tr>
-<tr>
-<td><a href="rules/">Rules</a></td>
-<td>Rule catalog with detection patterns and remediation</td>
-</tr>
-<tr>
-<td><a href="agent-skill/">Agent Skill</a></td>
-<td>Claude Code skill — scan, remediate, and verify with progressive disclosure</td>
-</tr>
-<tr>
-<td><a href="fix/">Auto-Fix</a></td>
-<td><code>archfit fix</code> — scan-fix-verify loop</td>
-</tr>
-<tr>
-<td><a href="llm/">LLM Integration</a></td>
-<td><code>--with-llm</code> — Claude, OpenAI, Gemini enrichment</td>
-</tr>
-<tr>
-<td><a href="ci-cd/">CI/CD Integration</a></td>
-<td>SARIF, PR gates, trend tracking</td>
-</tr>
-<tr>
-<td><a href="exit-codes/">Exit Codes</a></td>
-<td>CLI exit code contract</td>
-</tr>
-<tr>
-<td><a href="dependencies/">Dependencies</a></td>
-<td>Runtime and build dependencies</td>
-</tr>
-<tr>
-<td><a href="deployment/">Deployment</a></td>
-<td>Release process and distribution</td>
-</tr>
-</tbody>
-</table>
 
 
 
 
 
 
+
+  
+  
 
 
 
@@ -3185,10 +2971,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>

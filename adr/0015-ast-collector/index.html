@@ -10,29 +10,27 @@
       
       
       
-        <link rel="canonical" href="https://shibuiwilliam.github.io/archfit/">
+        <link rel="canonical" href="https://shibuiwilliam.github.io/archfit/adr/0015-ast-collector/">
       
       
-      
-        <link rel="next" href="installation/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>archfit</title>
+        <title>AST collector — structured code analysis for Phase 1 rules - archfit</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,7 +49,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -76,7 +74,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#archfit" class="md-skip">
+        <a href="#context" class="md-skip">
           Skip to content
         </a>
       
@@ -92,7 +90,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="archfit" class="md-header__button md-logo" aria-label="archfit" data-md-component="logo">
+    <a href="../.." title="archfit" class="md-header__button md-logo" aria-label="archfit" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -112,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              AST collector — structured code analysis for Phase 1 rules
             
           </span>
         </div>
@@ -230,7 +228,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="archfit" class="md-nav__button md-logo" aria-label="archfit" data-md-component="logo">
+    <a href="../.." title="archfit" class="md-nav__button md-logo" aria-label="archfit" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -257,37 +255,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Home
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
         
   
   
@@ -303,92 +274,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#the-seven-principles" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Seven Principles
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Quick Start
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#what-archfit-produces" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What archfit produces
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#current-rule-set" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Rule Set
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key Features
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Documentation
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -466,7 +351,7 @@
   
   
     <li class="md-nav__item">
-      <a href="installation/" class="md-nav__link">
+      <a href="../../installation/" class="md-nav__link">
         
   
   
@@ -494,7 +379,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting-started/" class="md-nav__link">
+      <a href="../../getting-started/" class="md-nav__link">
         
   
   
@@ -522,7 +407,7 @@
   
   
     <li class="md-nav__item">
-      <a href="configuration/" class="md-nav__link">
+      <a href="../../configuration/" class="md-nav__link">
         
   
   
@@ -550,7 +435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="contract/" class="md-nav__link">
+      <a href="../../contract/" class="md-nav__link">
         
   
   
@@ -578,7 +463,7 @@
   
   
     <li class="md-nav__item">
-      <a href="exit-codes/" class="md-nav__link">
+      <a href="../../exit-codes/" class="md-nav__link">
         
   
   
@@ -652,7 +537,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="rules/" class="md-nav__link ">
+            <a href="../../rules/" class="md-nav__link ">
               
   
   
@@ -757,7 +642,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P1.LOC.001/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.001/" class="md-nav__link">
         
   
   
@@ -785,7 +670,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P1.LOC.002/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.002/" class="md-nav__link">
         
   
   
@@ -813,7 +698,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P1.LOC.003/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.003/" class="md-nav__link">
         
   
   
@@ -841,7 +726,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P1.LOC.004/" class="md-nav__link">
+      <a href="../../rules/P1.LOC.004/" class="md-nav__link">
         
   
   
@@ -934,7 +819,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P2.SPC.001/" class="md-nav__link">
+      <a href="../../rules/P2.SPC.001/" class="md-nav__link">
         
   
   
@@ -962,7 +847,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P2.SPC.010/" class="md-nav__link">
+      <a href="../../rules/P2.SPC.010/" class="md-nav__link">
         
   
   
@@ -1053,7 +938,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P3.EXP.001/" class="md-nav__link">
+      <a href="../../rules/P3.EXP.001/" class="md-nav__link">
         
   
   
@@ -1148,7 +1033,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P4.VER.001/" class="md-nav__link">
+      <a href="../../rules/P4.VER.001/" class="md-nav__link">
         
   
   
@@ -1176,7 +1061,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P4.VER.002/" class="md-nav__link">
+      <a href="../../rules/P4.VER.002/" class="md-nav__link">
         
   
   
@@ -1204,7 +1089,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P4.VER.003/" class="md-nav__link">
+      <a href="../../rules/P4.VER.003/" class="md-nav__link">
         
   
   
@@ -1297,7 +1182,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P5.AGG.001/" class="md-nav__link">
+      <a href="../../rules/P5.AGG.001/" class="md-nav__link">
         
   
   
@@ -1325,7 +1210,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P5.AGG.002/" class="md-nav__link">
+      <a href="../../rules/P5.AGG.002/" class="md-nav__link">
         
   
   
@@ -1418,7 +1303,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P6.REV.001/" class="md-nav__link">
+      <a href="../../rules/P6.REV.001/" class="md-nav__link">
         
   
   
@@ -1446,7 +1331,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P6.REV.002/" class="md-nav__link">
+      <a href="../../rules/P6.REV.002/" class="md-nav__link">
         
   
   
@@ -1541,7 +1426,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P7.MRD.001/" class="md-nav__link">
+      <a href="../../rules/P7.MRD.001/" class="md-nav__link">
         
   
   
@@ -1569,7 +1454,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P7.MRD.002/" class="md-nav__link">
+      <a href="../../rules/P7.MRD.002/" class="md-nav__link">
         
   
   
@@ -1597,7 +1482,7 @@
   
   
     <li class="md-nav__item">
-      <a href="rules/P7.MRD.003/" class="md-nav__link">
+      <a href="../../rules/P7.MRD.003/" class="md-nav__link">
         
   
   
@@ -1706,7 +1591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="agent-skill/" class="md-nav__link">
+      <a href="../../agent-skill/" class="md-nav__link">
         
   
   
@@ -1734,7 +1619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="llm/" class="md-nav__link">
+      <a href="../../llm/" class="md-nav__link">
         
   
   
@@ -1762,7 +1647,7 @@
   
   
     <li class="md-nav__item">
-      <a href="fix/" class="md-nav__link">
+      <a href="../../fix/" class="md-nav__link">
         
   
   
@@ -1790,7 +1675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="ci-cd/" class="md-nav__link">
+      <a href="../../ci-cd/" class="md-nav__link">
         
   
   
@@ -1818,7 +1703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="deployment/" class="md-nav__link">
+      <a href="../../deployment/" class="md-nav__link">
         
   
   
@@ -1939,7 +1824,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/architecture/" class="md-nav__link">
+      <a href="../../development/architecture/" class="md-nav__link">
         
   
   
@@ -1967,7 +1852,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/implementation-plan/" class="md-nav__link">
+      <a href="../../development/implementation-plan/" class="md-nav__link">
         
   
   
@@ -1995,7 +1880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/testing-strategy/" class="md-nav__link">
+      <a href="../../development/testing-strategy/" class="md-nav__link">
         
   
   
@@ -2023,7 +1908,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/metrics-and-scoring/" class="md-nav__link">
+      <a href="../../development/metrics-and-scoring/" class="md-nav__link">
         
   
   
@@ -2051,7 +1936,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/pack-development/" class="md-nav__link">
+      <a href="../../development/pack-development/" class="md-nav__link">
         
   
   
@@ -2079,7 +1964,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/api-reference/" class="md-nav__link">
+      <a href="../../development/api-reference/" class="md-nav__link">
         
   
   
@@ -2107,7 +1992,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/fix-engine/" class="md-nav__link">
+      <a href="../../development/fix-engine/" class="md-nav__link">
         
   
   
@@ -2135,7 +2020,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/llm-integration/" class="md-nav__link">
+      <a href="../../development/llm-integration/" class="md-nav__link">
         
   
   
@@ -2163,7 +2048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/ci-cd-integration/" class="md-nav__link">
+      <a href="../../development/ci-cd-integration/" class="md-nav__link">
         
   
   
@@ -2191,7 +2076,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/cross-stack-improvements/" class="md-nav__link">
+      <a href="../../development/cross-stack-improvements/" class="md-nav__link">
         
   
   
@@ -2219,7 +2104,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/fitness-contract/" class="md-nav__link">
+      <a href="../../development/fitness-contract/" class="md-nav__link">
         
   
   
@@ -2247,7 +2132,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/agent-observatory/" class="md-nav__link">
+      <a href="../../development/agent-observatory/" class="md-nav__link">
         
   
   
@@ -2275,7 +2160,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/adaptive-engine/" class="md-nav__link">
+      <a href="../../development/adaptive-engine/" class="md-nav__link">
         
   
   
@@ -2303,7 +2188,7 @@
   
   
     <li class="md-nav__item">
-      <a href="development/perf/" class="md-nav__link">
+      <a href="../../development/perf/" class="md-nav__link">
         
   
   
@@ -2331,7 +2216,7 @@
   
   
     <li class="md-nav__item">
-      <a href="dependencies/" class="md-nav__link">
+      <a href="../../dependencies/" class="md-nav__link">
         
   
   
@@ -2446,7 +2331,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0001-architecture-overview/" class="md-nav__link">
+      <a href="../0001-architecture-overview/" class="md-nav__link">
         
   
   
@@ -2481,7 +2366,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0002-phase2-dogfood-and-sarif/" class="md-nav__link">
+      <a href="../0002-phase2-dogfood-and-sarif/" class="md-nav__link">
         
   
   
@@ -2516,7 +2401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0003-llm-explanation/" class="md-nav__link">
+      <a href="../0003-llm-explanation/" class="md-nav__link">
         
   
   
@@ -2551,7 +2436,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0004-fix-engine/" class="md-nav__link">
+      <a href="../0004-fix-engine/" class="md-nav__link">
         
   
   
@@ -2586,7 +2471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0005-factstore-extension/" class="md-nav__link">
+      <a href="../0005-factstore-extension/" class="md-nav__link">
         
   
   
@@ -2621,7 +2506,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0006-external-packs/" class="md-nav__link">
+      <a href="../0006-external-packs/" class="md-nav__link">
         
   
   
@@ -2656,7 +2541,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0008-contract-exit-codes/" class="md-nav__link">
+      <a href="../0008-contract-exit-codes/" class="md-nav__link">
         
   
   
@@ -2691,7 +2576,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0009-output-schema-rules-with-findings/" class="md-nav__link">
+      <a href="../0009-output-schema-rules-with-findings/" class="md-nav__link">
         
   
   
@@ -2726,7 +2611,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0010-factstore-languages/" class="md-nav__link">
+      <a href="../0010-factstore-languages/" class="md-nav__link">
         
   
   
@@ -2761,7 +2646,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0011-ecosystem-collector/" class="md-nav__link">
+      <a href="../0011-ecosystem-collector/" class="md-nav__link">
         
   
   
@@ -2796,7 +2681,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0012-1.0-stability/" class="md-nav__link">
+      <a href="../0012-1.0-stability/" class="md-nav__link">
         
   
   
@@ -2831,7 +2716,7 @@
   
   
     <li class="md-nav__item">
-      <a href="adr/0013-exit-code-5-revisited/" class="md-nav__link">
+      <a href="../0013-exit-code-5-revisited/" class="md-nav__link">
         
   
   
@@ -2883,8 +2768,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -2893,10 +2776,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#the-seven-principles" class="md-nav__link">
+  <a href="#context" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Seven Principles
+        Context
       
     </span>
   </a>
@@ -2904,54 +2787,115 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#quick-start" class="md-nav__link">
+  <a href="#decision" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Quick Start
+        Decision
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Decision">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-new-package-internalcollectorast" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. New package: internal/collector/ast/
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#what-archfit-produces" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#2-factstore-extension" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What archfit produces
+        2. FactStore extension
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#current-rule-set" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#3-astfacts-model-types" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Rule Set
+        3. ASTFacts model types
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#4-depth-modes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Features
+        4. Depth modes
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#5-resource-limits" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Documentation
+        5. Resource limits
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-parse-failure-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Parse failure handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-caching-phase-1-opt-in" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Caching (Phase 1, opt-in)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-wiring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Wiring
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consequences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Consequences
       
     </span>
   </a>
@@ -2975,7 +2919,7 @@
 
 
   
-    <a href="https://github.com/shibuiwilliam/archfit/edit/main/docs/index.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/shibuiwilliam/archfit/edit/main/docs/adr/0015-ast-collector.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -2983,159 +2927,190 @@
   
 
 
-<h1 id="archfit">archfit<a class="headerlink" href="#archfit" title="Permanent link">&para;</a></h1>
-<blockquote>
-<p><strong>Architecture fitness evaluator for the coding-agent era.</strong></p>
-</blockquote>
-<p>archfit scans a repository and evaluates how well it is shaped for coding agents to work on safely and quickly. It measures seven architectural properties that determine whether an agent can change the system without breaking it.</p>
-<h2 id="the-seven-principles">The Seven Principles<a class="headerlink" href="#the-seven-principles" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>Principle</th>
-<th>The question it asks</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>P1</strong></td>
-<td>Locality</td>
-<td>Can a change be understood from a narrow slice of the repo?</td>
-</tr>
-<tr>
-<td><strong>P2</strong></td>
-<td>Spec-first</td>
-<td>Are contracts schemas and types, not prose?</td>
-</tr>
-<tr>
-<td><strong>P3</strong></td>
-<td>Shallow explicitness</td>
-<td>Is behavior visible without chasing reflection or deep indirection?</td>
-</tr>
-<tr>
-<td><strong>P4</strong></td>
-<td>Verifiability</td>
-<td>Can correctness be proven locally in seconds?</td>
-</tr>
-<tr>
-<td><strong>P5</strong></td>
-<td>Aggregation of danger</td>
-<td>Are auth, secrets, and migrations concentrated and guarded?</td>
-</tr>
-<tr>
-<td><strong>P6</strong></td>
-<td>Reversibility</td>
-<td>Can every change be rolled back cheaply?</td>
-</tr>
-<tr>
-<td><strong>P7</strong></td>
-<td>Machine-readability</td>
-<td>Are errors, ADRs, and CLIs readable by machines?</td>
-</tr>
-</tbody>
-</table>
-<h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Build from source (Go 1.24+)</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/shibuiwilliam/archfit.git
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">cd</span><span class="w"> </span>archfit<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>make<span class="w"> </span>build
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Scan a repository</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>./bin/archfit<span class="w"> </span>scan<span class="w"> </span>/path/to/your/repo
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Auto-fix findings</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>./bin/archfit<span class="w"> </span>fix<span class="w"> </span>--all<span class="w"> </span>/path/to/your/repo
+  <h1>AST collector — structured code analysis for Phase 1 rules</h1>
+
+<h2 id="context">Context<a class="headerlink" href="#context" title="Permanent link">&para;</a></h2>
+<p>Phase 1 introduces rules that require understanding code structure beyond
+file presence and path patterns (PROJECT.md §3.2, §6.1.1):</p>
+<ul>
+<li><strong>P3.EXP.002</strong> — no <code>init()</code> cross-package registration (Go)</li>
+<li><strong>P3.EXP.003</strong> — reflection / metaprogramming density bounded</li>
+<li><strong>P3.EXP.004</strong> — single-implementation interfaces flagged (Go)</li>
+<li><strong>P3.EXP.005</strong> — global mutable state minimized</li>
+</ul>
+<p>None of these can be detected by file-presence or regex. They require
+parsed syntax trees.</p>
+<p>The current FactStore has no AST accessor. Resolvers are pure functions of
+FactStore (CLAUDE.md §6 invariant 1), so parsing must happen in a collector,
+not in resolvers.</p>
+<h2 id="decision">Decision<a class="headerlink" href="#decision" title="Permanent link">&para;</a></h2>
+<h3 id="1-new-package-internalcollectorast">1. New package: <code>internal/collector/ast/</code><a class="headerlink" href="#1-new-package-internalcollectorast" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>internal/collector/ast/
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── ast.go            # Collect() entry point, ASTFacts builder
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── goast/            # Go-only analysis using go/parser + go/ast
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   ├── goast.go      # ParseGoFile(), returns GoFileFacts
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   └── goast_test.go
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── fake.go           # Fake for resolver tests
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>└── README.md
 </code></pre></div>
-<p>See <a href="getting-started/">Getting Started</a> for detailed setup instructions.</p>
-<h2 id="what-archfit-produces">What archfit produces<a class="headerlink" href="#what-archfit-produces" title="Permanent link">&para;</a></h2>
+<p>Phase 1 supports <strong>Go only</strong> via <code>go/parser</code>. Tree-sitter for cross-language
+support (TypeScript, Python, Rust, Java, Ruby) is deferred to Phase 1.5.
+The <code>Collect()</code> signature is language-agnostic so tree-sitter slots in
+without changing the FactStore interface.</p>
+<h3 id="2-factstore-extension">2. FactStore extension<a class="headerlink" href="#2-factstore-extension" title="Permanent link">&para;</a></h3>
+<p>Add one method using the established optional-return pattern (ADR 0005):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// AST returns AST-derived facts, or (ASTFacts{}, false) when the collector</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1">// was skipped (e.g., no parseable source files, or depth=shallow).</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nx">AST</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><span class="nx">ASTFacts</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="p">)</span>
+</code></pre></div>
+<p><code>AST()</code> returns <code>(zero, false)</code> when:</p>
 <ul>
-<li>A <strong>score per principle</strong> (P1-P7) and an overall score (0-100)</li>
-<li><strong>Findings</strong> with severity, evidence strength, confidence, and remediation</li>
-<li><strong>Metrics</strong>: context span, verification latency, blast radius, and more</li>
-<li><strong>Auto-fixes</strong> for rules with deterministic remediation</li>
-<li><strong>SARIF output</strong> for GitHub Code Scanning integration</li>
+<li><code>--depth=shallow</code> (AST collector is skipped entirely)</li>
+<li>No parseable source files detected</li>
 </ul>
-<h2 id="current-rule-set">Current Rule Set<a class="headerlink" href="#current-rule-set" title="Permanent link">&para;</a></h2>
-<p>27 rules across 2 packs. Most rules are <code>stability: stable</code> (frozen per ADR 0012). Three rules remain <code>experimental</code> per ADR 0014: P1.LOC.003, P1.LOC.004, P5.AGG.001. Output schema version: <code>1.1.0</code>.</p>
-<ul>
-<li><strong><code>core</code> pack</strong> (24 rules): locality (P1.LOC.001-004), spec-first (P2.SPC.001), explicitness (P3.EXP.001), verifiability (P4.VER.001-003), aggregation (P5.AGG.001-004), reversibility (P6.REV.001-002), machine-readability (P7.MRD.001), and additional rules across all seven principles. P5.AGG.004 is the first rule with <code>severity: error</code>.</li>
-<li><strong><code>agent-tool</code> pack</strong> (3 rules): spec-first (P2.SPC.010), machine-readability (P7.MRD.002, P7.MRD.003)</li>
-</ul>
-<p>See <a href="rules/">Rules Overview</a> for the full catalog.</p>
-<h2 id="key-features">Key Features<a class="headerlink" href="#key-features" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong>Deterministic</strong>: base scan makes zero network calls, produces byte-identical output</li>
-<li><strong>LLM-enriched</strong> (opt-in): <code>--with-llm</code> adds contextual explanations via Claude, OpenAI, or Gemini</li>
-<li><strong>Auto-fix</strong>: <code>archfit fix</code> closes the scan-fix-verify loop with automatic rollback on failure</li>
-<li><strong>Fitness contracts</strong>: declare hard constraints, area budgets, and agent directives in <code>.archfit-contract.yaml</code></li>
-<li><strong>CI-ready</strong>: SARIF, JSON, and Markdown output; <code>archfit diff</code> for PR gates</li>
-<li><strong>Self-consistent</strong>: archfit passes its own scan at score 100.0</li>
-</ul>
-<h2 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h2>
+<h3 id="3-astfacts-model-types">3. ASTFacts model types<a class="headerlink" href="#3-astfacts-model-types" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// ASTFacts is the top-level container for AST-derived facts.</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">type</span><span class="w"> </span><span class="nx">ASTFacts</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="c1">// GoFiles contains per-file analysis for Go source files.</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nx">GoFiles</span><span class="w"> </span><span class="p">[]</span><span class="nx">GoFileFacts</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">    </span><span class="c1">// ParseFailures records files that could not be parsed.</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">    </span><span class="c1">// Each entry becomes a ParseFailure finding in the resolver.</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="nx">ParseFailures</span><span class="w"> </span><span class="p">[]</span><span class="nx">ParseFailureEntry</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">}</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1">// GoFileFacts contains structural facts extracted from a single Go file.</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="kd">type</span><span class="w"> </span><span class="nx">GoFileFacts</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">    </span><span class="nx">Path</span><span class="w">           </span><span class="kt">string</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="nx">Package</span><span class="w">        </span><span class="kt">string</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">    </span><span class="nx">InitFunctions</span><span class="w">  </span><span class="p">[]</span><span class="nx">InitFact</span><span class="w">       </span><span class="c1">// init() declarations in this file</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">    </span><span class="nx">PkgLevelVars</span><span class="w">   </span><span class="p">[]</span><span class="nx">PkgVarFact</span><span class="w">     </span><span class="c1">// package-level var declarations</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="nx">Interfaces</span><span class="w">     </span><span class="p">[]</span><span class="nx">InterfaceFact</span><span class="w">  </span><span class="c1">// interface type declarations</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="nx">ReflectImports</span><span class="w"> </span><span class="kt">bool</span><span class="w">             </span><span class="c1">// imports &quot;reflect&quot; or &quot;reflect&quot; subpkg</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">    </span><span class="nx">ReflectCalls</span><span class="w">   </span><span class="kt">int</span><span class="w">              </span><span class="c1">// count of reflect.* call expressions (depth=deep)</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="p">}</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="c1">// InitFact describes a single init() function.</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="kd">type</span><span class="w"> </span><span class="nx">InitFact</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">    </span><span class="nx">Line</span><span class="w">          </span><span class="kt">int</span>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">    </span><span class="c1">// CrossPkgCalls lists function calls to other packages inside init().</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">    </span><span class="c1">// e.g., [&quot;http.HandleFunc&quot;, &quot;sql.Register&quot;, &quot;prometheus.MustRegister&quot;]</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">    </span><span class="nx">CrossPkgCalls</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="p">}</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="c1">// PkgVarFact describes a package-level var declaration.</span>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="kd">type</span><span class="w"> </span><span class="nx">PkgVarFact</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">    </span><span class="nx">Name</span><span class="w">    </span><span class="kt">string</span>
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">    </span><span class="nx">Line</span><span class="w">    </span><span class="kt">int</span>
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">    </span><span class="nx">Mutable</span><span class="w"> </span><span class="kt">bool</span><span class="w">   </span><span class="c1">// true for var, false for const</span>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">    </span><span class="nx">Type</span><span class="w">    </span><span class="kt">string</span><span class="w"> </span><span class="c1">// best-effort type string; &quot;&quot; if not determinable</span>
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="p">}</span>
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a>
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="c1">// InterfaceFact describes an interface type declaration.</span>
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="kd">type</span><span class="w"> </span><span class="nx">InterfaceFact</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="w">    </span><span class="nx">Name</span><span class="w">       </span><span class="kt">string</span>
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="w">    </span><span class="nx">Line</span><span class="w">       </span><span class="kt">int</span>
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="w">    </span><span class="nx">MethodCount</span><span class="w"> </span><span class="kt">int</span>
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a><span class="w">    </span><span class="c1">// Implementors is populated only at depth=deep. Lists type names in the</span>
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="w">    </span><span class="c1">// same module that satisfy the interface (best-effort, no cross-module).</span>
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a><span class="w">    </span><span class="nx">Implementors</span><span class="w"> </span><span class="p">[]</span><span class="kt">string</span>
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a><span class="p">}</span>
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a>
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a><span class="c1">// ParseFailureEntry records a file that failed to parse.</span>
+<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a><span class="kd">type</span><span class="w"> </span><span class="nx">ParseFailureEntry</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a><span class="w">    </span><span class="nx">Path</span><span class="w">  </span><span class="kt">string</span>
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a><span class="w">    </span><span class="nx">Error</span><span class="w"> </span><span class="kt">string</span>
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="4-depth-modes">4. Depth modes<a class="headerlink" href="#4-depth-modes" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
-<th>Page</th>
-<th>Description</th>
+<th>Depth</th>
+<th>What runs</th>
+<th>Cost</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="installation/">Installation</a></td>
-<td>Install from source, binaries, <code>go install</code>, or Docker</td>
+<td><code>shallow</code></td>
+<td>AST collector <strong>skipped</strong></td>
+<td>0</td>
 </tr>
 <tr>
-<td><a href="getting-started/">Getting Started</a></td>
-<td>First scan, common commands</td>
+<td><code>standard</code></td>
+<td>Declaration-level: init functions, pkg-level vars, interface declarations, imports</td>
+<td>O(files) with <code>go/parser.ParseFile</code> in declaration-only mode</td>
 </tr>
 <tr>
-<td><a href="configuration/">Configuration</a></td>
-<td><code>.archfit.yaml</code> reference</td>
-</tr>
-<tr>
-<td><a href="contract/">Fitness Contract</a></td>
-<td><code>.archfit-contract.yaml</code> — hard constraints, area budgets, agent directives</td>
-</tr>
-<tr>
-<td><a href="rules/">Rules</a></td>
-<td>Rule catalog with detection patterns and remediation</td>
-</tr>
-<tr>
-<td><a href="agent-skill/">Agent Skill</a></td>
-<td>Claude Code skill — scan, remediate, and verify with progressive disclosure</td>
-</tr>
-<tr>
-<td><a href="fix/">Auto-Fix</a></td>
-<td><code>archfit fix</code> — scan-fix-verify loop</td>
-</tr>
-<tr>
-<td><a href="llm/">LLM Integration</a></td>
-<td><code>--with-llm</code> — Claude, OpenAI, Gemini enrichment</td>
-</tr>
-<tr>
-<td><a href="ci-cd/">CI/CD Integration</a></td>
-<td>SARIF, PR gates, trend tracking</td>
-</tr>
-<tr>
-<td><a href="exit-codes/">Exit Codes</a></td>
-<td>CLI exit code contract</td>
-</tr>
-<tr>
-<td><a href="dependencies/">Dependencies</a></td>
-<td>Runtime and build dependencies</td>
-</tr>
-<tr>
-<td><a href="deployment/">Deployment</a></td>
-<td>Release process and distribution</td>
+<td><code>deep</code></td>
+<td>Full body analysis: reflect call counting, cross-pkg calls in init(), interface implementor search</td>
+<td>O(files × complexity)</td>
 </tr>
 </tbody>
 </table>
+<h3 id="5-resource-limits">5. Resource limits<a class="headerlink" href="#5-resource-limits" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>File size cap:</strong> 1 MiB. Files larger than this are skipped with a
+  <code>ParseFailureEntry</code> (reason: "file exceeds size limit").</li>
+<li><strong>Per-file timeout:</strong> 5 seconds. Parse exceeding this emits a
+  <code>ParseFailureEntry</code> (reason: "parse timeout exceeded").</li>
+<li><strong>Total file cap:</strong> 10,000 Go files. Beyond this, the collector stops
+  and emits a single <code>ParseFailureEntry</code> summarizing the skip.</li>
+</ul>
+<h3 id="6-parse-failure-handling">6. Parse failure handling<a class="headerlink" href="#6-parse-failure-handling" title="Permanent link">&para;</a></h3>
+<p>Parse failures are <strong>never silent</strong>. The collector records them in
+<code>ASTFacts.ParseFailures</code>. Resolvers that consume AST facts must convert
+these into findings using <code>model.ParseFailure</code> (severity: warn,
+evidence_strength: strong). This is enforced by fixture tests — every
+AST-backed rule must have a parse-failure fixture.</p>
+<h3 id="7-caching-phase-1-opt-in">7. Caching (Phase 1, opt-in)<a class="headerlink" href="#7-caching-phase-1-opt-in" title="Permanent link">&para;</a></h3>
+<p>When <code>--cache-dir</code> is set (default: none; convention: <code>.archfit-cache/ast/</code>):</p>
+<ul>
+<li>Cache key: SHA-256 of file content + collector version string.</li>
+<li>Cache value: serialized <code>GoFileFacts</code> (gob or JSON).</li>
+<li>Stale entries evicted on read if version mismatches.</li>
+<li>Cache is advisory: missing or corrupt entries cause a re-parse, not an error.</li>
+</ul>
+<p>Caching is not required for Phase 1 correctness. It is a performance
+optimization for large repos and may ship after the initial skeleton.</p>
+<h3 id="8-wiring">8. Wiring<a class="headerlink" href="#8-wiring" title="Permanent link">&para;</a></h3>
+<p>The collector is wired in <code>internal/core/scheduler.go</code>, following the same
+pattern as other collectors:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">var</span><span class="w"> </span><span class="nx">astFacts</span><span class="w"> </span><span class="nx">model</span><span class="p">.</span><span class="nx">ASTFacts</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nx">astOK</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">if</span><span class="w"> </span><span class="nx">in</span><span class="p">.</span><span class="nx">Depth</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s">&quot;shallow&quot;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="nx">a</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">collectast</span><span class="p">.</span><span class="nx">Collect</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">in</span><span class="p">.</span><span class="nx">Root</span><span class="p">,</span><span class="w"> </span><span class="nx">in</span><span class="p">.</span><span class="nx">Depth</span><span class="p">)</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">        </span><span class="nx">astFacts</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">a</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">        </span><span class="nx">astOK</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">}</span>
+</code></pre></div>
+<p>The <code>newFactStore</code> constructor gains <code>ast ASTFacts, astOK bool</code> parameters.</p>
+<h2 id="consequences">Consequences<a class="headerlink" href="#consequences" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>model.FactStore</code> interface gains one method. All implementations
+  (scheduler, test fakes) must be updated. Fakes return <code>(zero, false)</code>.</li>
+<li>New model types (<code>ASTFacts</code>, <code>GoFileFacts</code>, etc.) are added to
+  <code>internal/model/</code>. This is a public-surface change justified by this ADR.</li>
+<li>Phase 1 rules (P3.EXP.002–005) consume <code>facts.AST()</code> and are skipped
+  (with <code>applies_to.languages: [go]</code>) when AST is unavailable.</li>
+<li><code>go/parser</code> is a stdlib dependency — no new external dependency required.</li>
+<li>Tree-sitter integration (Phase 1.5) will add a <code>treesitter/</code> sub-package
+  and populate language-specific fact types alongside <code>GoFileFacts</code>.
+  The <code>ASTFacts</code> struct is designed to accommodate this without breaking
+  the FactStore interface.</li>
+<li>Existing rules and collectors are unaffected.</li>
+</ul>
 
 
 
 
 
 
+
+  
+  
 
 
 
@@ -3185,10 +3160,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "content.code.copy", "content.action.edit", "search.suggest", "search.highlight"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
