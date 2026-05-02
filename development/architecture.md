@@ -30,6 +30,7 @@ cmd/archfit/main.go
 │   ├── internal/collector/git/         ← git history facts
 │   ├── internal/collector/schema/      ← JSON Schema detection
 │   ├── internal/collector/depgraph/    ← import graph (Go)
+│   ├── internal/collector/ast/         ← AST analysis (Go, via go/parser)
 │   ├── internal/collector/command/     ← timed command execution
 │   ├── internal/rule/                  ← engine + registry
 │   └── internal/score/                 ← scoring + metrics
@@ -42,7 +43,7 @@ cmd/archfit/main.go
 ├── internal/policy/                    ← org policy enforcement
 ├── internal/packman/                   ← pack validation
 ├── internal/report/                    ← renderers (terminal, json, md, sarif)
-├── packs/core/                         ← 7 rules
+├── packs/core/                         ← 24 rules
 └── packs/agent-tool/                   ← 3 rules
 ```
 
@@ -69,7 +70,8 @@ If a resolver needs a new kind of data, the solution is always: add a Collector,
    b. git.Collect(ctx, runner) → GitFacts        (when Runner != nil)
    c. schema.Collect(repo)     → SchemaFacts     (always)
    d. depgraph.Collect(repo)   → DepGraphFacts   (when Go source exists)
-   e. command.Collect(...)     → CommandFacts     (only --depth=deep)
+   e. ast.Collect(repo)        → ASTFacts        (Go files; standard + deep modes)
+   f. command.Collect(...)     → CommandFacts     (only --depth=deep)
 4. scheduler.go builds factStore from collector outputs
 5. rule.Engine.Evaluate(ctx, rules, facts) → EvalResult
    - For each rule: call resolver(ctx, facts) → (findings, metrics, error)
@@ -122,6 +124,17 @@ Collectors gather data; resolvers interpret it. This separation:
 - Keeps resolvers pure (testable without I/O)
 - Enforces P5 (aggregation of dangerous capabilities) on archfit itself
 - Allows the same facts to be consumed by multiple rules
+
+### AST Collector Design
+
+`internal/collector/ast/` uses `go/parser` from the standard library (no external dependency). Two modes:
+
+- **standard** (default): parses package-level declarations, exported symbols, and function signatures.
+- **deep** (`--depth=deep`): additionally resolves struct field types and interface method sets.
+
+A per-file size cap of **1 MiB** prevents pathological files from stalling the scan. Files exceeding the cap produce a `parse_skipped` entry in `ASTFacts` rather than silently dropping.
+
+Go is the only language supported. Other languages are out of scope for the AST collector (see `PROJECT.md` for roadmap).
 
 ### Why JSON-in-YAML for config
 

@@ -74,6 +74,28 @@ Archive scans in CI and track fitness over time:
   run: archfit trend --history .archfit-history/
 ```
 
+## PR Check — Refined Gate
+
+`archfit pr-check` compares the current branch against a base ref and exits 1 only when new findings at `error` severity or above are introduced. This is more precise than `archfit diff` for PR workflows because it ignores pre-existing findings.
+
+```yaml
+- uses: shibuiwilliam/archfit/actions/pr-check@v0
+  with:
+    base: origin/main
+```
+
+Or run it manually:
+
+```bash
+archfit pr-check --base origin/main
+```
+
+Key behavior:
+
+- Exits 0 if no **new** `error`+ findings are introduced.
+- Exits 1 only on new `error`+ findings (pre-existing findings are ignored).
+- Warnings and info findings do not block the PR.
+
 ## Cross-Repo Comparison
 
 ```bash

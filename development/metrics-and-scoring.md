@@ -33,6 +33,7 @@ overall = 100 × (1 - Σ penalty(P) / Σ total_weight(P))
 - **Adding rules does not lower scores** for repos that pass the new rules. Scoring is normalized per applicable rule set.
 - **Multiple findings per rule do not compound**. A rule either fires or it doesn't — how many times doesn't affect the score.
 - **Deterministic**. Same input produces same scores. No randomness.
+- **`error_pass_rate` is the primary signal**; overall score is secondary. Reviewers and contracts should gate on `error_pass_rate` first.
 
 ## Metrics
 
@@ -157,11 +158,43 @@ blast_radius = MaxReach / PackageCount
 
 4. Update `schemas/output.schema.json` if the metric name is new (additive change — no version bump needed).
 
+## Evidence Factor
+
+Each rule's contribution to the score is weighted by its `evidence_strength`:
+
+| Evidence Strength | Factor |
+|---|---|
+| `strong` | 1.0 |
+| `medium` | 0.85 |
+| `sampled` | 0.8 |
+| `weak` | 0.7 |
+
+The formula for a passing rule's contribution:
+
+```
+contribution = passed × weight × evidence_factor
+```
+
+This means that a passing `strong`-evidence rule contributes its full weight, while a passing `weak`-evidence rule contributes only 70%. The factor applies symmetrically to penalties: a `weak`-evidence rule that fires also contributes a reduced penalty. The net effect is that `strong`-evidence rules dominate the score, which is intentional.
+
+## Severity Class Pass Rates (`by_severity_class`)
+
+The output includes pass rates broken down by severity tier:
+
+| Field | Meaning |
+|---|---|
+| `critical_pass_rate` | Fraction of critical-severity rules that produced no findings |
+| `error_pass_rate` | Fraction of error-severity rules that produced no findings |
+| `warn_pass_rate` | Fraction of warn-severity rules that produced no findings |
+| `info_pass_rate` | Fraction of info-severity rules that produced no findings |
+
+`error_pass_rate` is the primary quality signal. Contracts and CI gates should check it before the overall score. A repo can have a high overall score while failing critical rules if it has many passing info rules — `by_severity_class` makes this visible.
+
 ## JSON Output Shape
 
 ```json
 {
-  "schema_version": "0.1.0",
+  "schema_version": "1.1.0",
   "scores": {
     "overall": 92.5,
     "by_principle": {
@@ -169,6 +202,12 @@ blast_radius = MaxReach / PackageCount
       "P2": 85.0,
       "P4": 90.0,
       "P7": 95.0
+    },
+    "by_severity_class": {
+      "critical_pass_rate": 1.0,
+      "error_pass_rate": 0.95,
+      "warn_pass_rate": 0.88,
+      "info_pass_rate": 1.0
     }
   },
   "metrics": [
@@ -176,7 +215,7 @@ blast_radius = MaxReach / PackageCount
     {"name": "invariant_coverage", "value": 0.9, "unit": "ratio", "principle": "P4"}
   ],
   "findings": [...],
-  "rules_evaluated": 10
+  "rules_evaluated": 27
 }
 ```
 

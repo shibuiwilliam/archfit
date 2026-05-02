@@ -144,6 +144,10 @@ All tests must pass with `-race` flag. Non-determinism is a bug.
 4. Add a row to the table test in `pack_test.go`
 5. Verify: `go test -run TestPack/<rule-id> ./packs/<pack>/`
 
+### AST-Dependent Rules
+
+Rules that consume `ASTFacts` require an additional **parse-failure fixture**. This fixture contains a file that is syntactically invalid (e.g., truncated Go source) and asserts that the resolver produces a `severity: warn` / `evidence_strength: strong` finding via `model.ParseFailure` rather than silently returning zero findings. This prevents AST-dependent rules from appearing to pass on repos where the collector could not parse the source.
+
 ## Adding Tests for a New Fixer
 
 1. Create a FactStore that produces a finding for the target rule

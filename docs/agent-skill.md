@@ -9,12 +9,18 @@ The skill lives at `.claude/skills/archfit/` in the archfit repo. When Claude Co
 ```
 .claude/skills/archfit/
 ├── SKILL.md                    # Entry point (auto-loaded by Claude Code)
-└── reference/
-    └── remediation/            # Per-rule decision trees and fix snippets
-        ├── P1.LOC.001.md
-        ├── P1.LOC.002.md
-        ├── ...
-        └── P7.MRD.003.md
+├── scripts/                    # Orchestration scripts for multi-step workflows
+│   ├── triage.sh               # Classify findings by severity and actionability
+│   ├── plan_remediation.sh     # Build a remediation plan from scan results
+│   ├── apply_safe_fixes.sh     # Apply deterministic fixes with rollback
+│   └── verify_loop.sh          # Re-scan and confirm findings are resolved
+├── reference/
+│   └── remediation/            # Per-rule decision trees and fix snippets
+│       ├── P1.LOC.001.md
+│       ├── P1.LOC.002.md
+│       ├── ...
+│       └── P7.MRD.003.md
+└── templates/
 ```
 
 ### Progressive disclosure
@@ -96,6 +102,19 @@ The skill enforces these boundaries:
 - **Never suppress without documentation** — ignores require a `reason` and `expires` date in `.archfit.yaml`
 - **Never skip re-scan** — the re-scan is the proof that the fix worked
 - **Never change rule severities** — that's an archfit-internal change
+
+## Skill Scripts
+
+The `scripts/` directory contains shell scripts that orchestrate multi-step workflows. Claude Code invokes these as part of the scan-fix-verify loop:
+
+| Script | Purpose |
+|--------|---------|
+| `triage.sh` | Classify findings by severity and actionability; prioritize what to fix first |
+| `plan_remediation.sh` | Build an ordered remediation plan from scan JSON output |
+| `apply_safe_fixes.sh` | Apply deterministic (static) fixes with automatic rollback on failure |
+| `verify_loop.sh` | Re-scan after fixes and confirm each targeted finding is resolved |
+
+The scripts are designed to be composable. A typical agent session runs them in sequence: triage, plan, apply, verify.
 
 ## Contract-aware workflow
 

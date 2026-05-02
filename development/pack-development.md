@@ -8,7 +8,7 @@ A rule pack is a vertical slice of rules targeting a specific domain or project 
 
 | Pack | Directory | Rules | Scope |
 |---|---|---|---|
-| `core` | `packs/core/` | 7 | Universal principles for any repository |
+| `core` | `packs/core/` | 24 | Universal principles for any repository |
 | `agent-tool` | `packs/agent-tool/` | 3 | Tools consumed by coding agents |
 
 ## Pack Structure
