@@ -1,0 +1,481 @@
+{
+  "schema_version": "1.1.0",
+  "tool": {
+    "name": "archfit",
+    "version": "0.1.14-dirty"
+  },
+  "target": {
+    "path": ".",
+    "git": {
+      "commit": "3ff1a5686c6d267c055b2498357a72a2ca937225",
+      "branch": "main"
+    },
+    "profile": "standard"
+  },
+  "summary": {
+    "rules_evaluated": 26,
+    "rules_with_findings": 4,
+    "findings_total": 5,
+    "by_severity": {
+      "info": 1,
+      "warn": 4,
+      "error": 0,
+      "critical": 0
+    }
+  },
+  "scores": {
+    "overall": 94.9,
+    "by_principle": {
+      "P1": 82,
+      "P2": 100,
+      "P3": 97.7,
+      "P4": 100,
+      "P5": 100,
+      "P6": 100,
+      "P7": 100
+    },
+    "by_severity_class": {
+      "critical_pass_rate": 1,
+      "error_pass_rate": 1,
+      "warn_pass_rate": 0.83,
+      "info_pass_rate": 0.86
+    }
+  },
+  "findings": [
+    {
+      "rule_id": "P1.LOC.005",
+      "principle": "P1",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.9,
+      "path": "calibration/ground_truth/terraform-aws-modules",
+      "message": "calibration/ground_truth/terraform-aws-modules is a high-risk directory but has no INTENT.md",
+      "evidence": {
+        "directory": "calibration/ground_truth/terraform-aws-modules",
+        "looked_for": "calibration/ground_truth/terraform-aws-modules/INTENT.md"
+      },
+      "remediation": {
+        "summary": "Add an INTENT.md to every high-risk directory (auth, secret, migration, deploy) explaining the directory's purpose and invariants.",
+        "guide_ref": "docs/rules/P1.LOC.005.md"
+      }
+    },
+    {
+      "rule_id": "P1.LOC.005",
+      "principle": "P1",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.9,
+      "path": "docs/migration",
+      "message": "docs/migration is a high-risk directory but has no INTENT.md",
+      "evidence": {
+        "directory": "docs/migration",
+        "looked_for": "docs/migration/INTENT.md"
+      },
+      "remediation": {
+        "summary": "Add an INTENT.md to every high-risk directory (auth, secret, migration, deploy) explaining the directory's purpose and invariants.",
+        "guide_ref": "docs/rules/P1.LOC.005.md"
+      }
+    },
+    {
+      "rule_id": "P1.LOC.006",
+      "principle": "P1",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.95,
+      "path": "CLAUDE.md",
+      "message": "CLAUDE.md exceeds 400 lines (586 lines) — agents may not fit it in context",
+      "evidence": {
+        "lines": 586,
+        "max_lines": 400
+      },
+      "remediation": {
+        "summary": "Trim CLAUDE.md / AGENTS.md to 400 lines and 10 KB. Move deep material to linked reference documents.",
+        "guide_ref": "docs/rules/P1.LOC.006.md"
+      }
+    },
+    {
+      "rule_id": "P1.LOC.009",
+      "principle": "P1",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.9,
+      "path": "",
+      "message": "repository has deployment artifacts but no RUNBOOK.md",
+      "evidence": {
+        "checked_paths": [
+          "RUNBOOK.md",
+          "runbook.md",
+          "docs/RUNBOOK.md",
+          "docs/runbook.md"
+        ],
+        "deployment_artifact": "Dockerfile"
+      },
+      "remediation": {
+        "summary": "Add a RUNBOOK.md at the repository root or in docs/ describing deployment procedures, rollback steps, and on-call escalation paths.",
+        "guide_ref": "docs/rules/P1.LOC.009.md"
+      }
+    },
+    {
+      "rule_id": "P3.EXP.005",
+      "principle": "P3",
+      "severity": "info",
+      "evidence_strength": "medium",
+      "confidence": 0.85,
+      "path": ".",
+      "message": "repository has 61 global mutable package-level variables (threshold: 10)",
+      "evidence": {
+        "threshold": 10,
+        "total_mutable_vars": 61,
+        "vars": [
+          {
+            "line": 422,
+            "name": "timeNow",
+            "path": "cmd/archfit/main.go"
+          },
+          {
+            "line": 55,
+            "name": "principleConst",
+            "path": "cmd/internal-tools/genrules/main.go"
+          },
+          {
+            "line": 65,
+            "name": "severityConst",
+            "path": "cmd/internal-tools/genrules/main.go"
+          },
+          {
+            "line": 72,
+            "name": "evidenceConst",
+            "path": "cmd/internal-tools/genrules/main.go"
+          },
+          {
+            "line": 79,
+            "name": "stabilityConst",
+            "path": "cmd/internal-tools/genrules/main.go"
+          },
+          {
+            "line": 170,
+            "name": "goTmpl",
+            "path": "cmd/internal-tools/genrules/main.go"
+          },
+          {
+            "line": 103,
+            "name": "ErrNotConfigured",
+            "path": "internal/adapter/llm/llm.go"
+          },
+          {
+            "line": 106,
+            "name": "ErrBudgetExhausted",
+            "path": "internal/adapter/llm/llm.go"
+          },
+          {
+            "line": 22,
+            "name": "knownCommands",
+            "path": "internal/collector/command/collector.go"
+          },
+          {
+            "line": 26,
+            "name": "ciRules",
+            "path": "internal/collector/ecosystem/ecosystem.go"
+          },
+          {
+            "line": 39,
+            "name": "deployRules",
+            "path": "internal/collector/ecosystem/ecosystem.go"
+          },
+          {
+            "line": 61,
+            "name": "frameworkRules",
+            "path": "internal/collector/ecosystem/ecosystem.go"
+          },
+          {
+            "line": 67,
+            "name": "fixturePathPrefixes",
+            "path": "internal/collector/ecosystem/ecosystem.go"
+          },
+          {
+            "line": 20,
+            "name": "defaultIgnoredDirs",
+            "path": "internal/collector/fs/fs.go"
+          },
+          {
+            "line": 24,
+            "name": "ErrNoGit",
+            "path": "internal/collector/git/git.go"
+          },
+          {
+            "line": 64,
+            "name": "candidates",
+            "path": "internal/config/config.go"
+          },
+          {
+            "line": 69,
+            "name": "candidates",
+            "path": "internal/contract/contract.go"
+          },
+          {
+            "line": 6,
+            "name": "templates",
+            "path": "internal/fix/static/embed.go"
+          },
+          {
+            "line": 29,
+            "name": "allPrinciples",
+            "path": "internal/model/model.go"
+          },
+          {
+            "line": 152,
+            "name": "ruleIDPattern",
+            "path": "internal/model/model.go"
+          },
+          {
+            "line": 189,
+            "name": "ErrSARIFNeedsRegistry",
+            "path": "internal/report/sarif.go"
+          },
+          {
+            "line": 24,
+            "name": "severityPenalty",
+            "path": "internal/score/score.go"
+          },
+          {
+            "line": 34,
+            "name": "evidenceFactor",
+            "path": "internal/score/score.go"
+          },
+          {
+            "line": 11,
+            "name": "Version",
+            "path": "internal/version/version.go"
+          },
+          {
+            "line": 24,
+            "name": "linkerVersion",
+            "path": "internal/version/version.go"
+          },
+          {
+            "line": 18,
+            "name": "resolverMap",
+            "path": "packs/agent-tool/pack.go"
+          },
+          {
+            "line": 48,
+            "name": "cliDirPrefixes",
+            "path": "packs/agent-tool/resolvers/machine_readable.go"
+          },
+          {
+            "line": 51,
+            "name": "cliSourceExts",
+            "path": "packs/agent-tool/resolvers/machine_readable.go"
+          },
+          {
+            "line": 58,
+            "name": "cliIndicatorBasenames",
+            "path": "packs/agent-tool/resolvers/machine_readable.go"
+          },
+          {
+            "line": 17,
+            "name": "specFirstBasenames",
+            "path": "packs/agent-tool/resolvers/schema.go"
+          },
+          {
+            "line": 22,
+            "name": "specFirstExtensions",
+            "path": "packs/agent-tool/resolvers/schema.go"
+          },
+          {
+            "line": 21,
+            "name": "resolverMap",
+            "path": "packs/core/pack.go"
+          },
+          {
+            "line": 15,
+            "name": "sensitiveCategories",
+            "path": "packs/core/resolvers/aggregation.go"
+          },
+          {
+            "line": 13,
+            "name": "codeownersLocations",
+            "path": "packs/core/resolvers/aggregation_codeowners.go"
+          },
+          {
+            "line": 23,
+            "name": "highRiskKeywords",
+            "path": "packs/core/resolvers/aggregation_codeowners.go"
+          },
+          {
+            "line": 10,
+            "name": "riskTierCandidates",
+            "path": "packs/core/resolvers/aggregation_risktier.go"
+          },
+          {
+            "line": 12,
+            "name": "secretScannerKeywords",
+            "path": "packs/core/resolvers/aggregation_secrets.go"
+          },
+          {
+            "line": 12,
+            "name": "envExampleCandidates",
+            "path": "packs/core/resolvers/explicitness.go"
+          },
+          {
+            "line": 21,
+            "name": "envFileExclusions",
+            "path": "packs/core/resolvers/explicitness.go"
+          },
+          {
+            "line": 30,
+            "name": "configDocCandidates",
+            "path": "packs/core/resolvers/explicitness.go"
+          },
+          {
+            "line": 41,
+            "name": "tfvarsDocCandidates",
+            "path": "packs/core/resolvers/explicitness.go"
+          },
+          {
+            "line": 238,
+            "name": "fixturePathPrefixes",
+            "path": "packs/core/resolvers/explicitness.go"
+          },
+          {
+            "line": 18,
+            "name": "sliceContainers",
+            "path": "packs/core/resolvers/locality.go"
+          },
+          {
+            "line": 17,
+            "name": "agentDocFiles",
+            "path": "packs/core/resolvers/locality_bloat.go"
+          },
+          {
+            "line": 20,
+            "name": "cliEntryPrefixes",
+            "path": "packs/core/resolvers/locality_coupling.go"
+          },
+          {
+            "line": 12,
+            "name": "runbookCandidates",
+            "path": "packs/core/resolvers/locality_runbook.go"
+          },
+          {
+            "line": 14,
+            "name": "exitCodeDocCandidates",
+            "path": "packs/core/resolvers/machine_readable.go"
+          },
+          {
+            "line": 44,
+            "name": "cliDirPrefixes",
+            "path": "packs/core/resolvers/machine_readable.go"
+          },
+          {
+            "line": 47,
+            "name": "cliSourceExts",
+            "path": "packs/core/resolvers/machine_readable.go"
+          },
+          {
+            "line": 55,
+            "name": "cliIndicatorBasenames",
+            "path": "packs/core/resolvers/machine_readable.go"
+          },
+          {
+            "line": 12,
+            "name": "deploymentArtifacts",
+            "path": "packs/core/resolvers/reversibility.go"
+          },
+          {
+            "line": 40,
+            "name": "deploymentDirPrefixes",
+            "path": "packs/core/resolvers/reversibility.go"
+          },
+          {
+            "line": 58,
+            "name": "rollbackDocCandidates",
+            "path": "packs/core/resolvers/reversibility.go"
+          },
+          {
+            "line": 12,
+            "name": "featureFlagKeywords",
+            "path": "packs/core/resolvers/reversibility_flags.go"
+          },
+          {
+            "line": 12,
+            "name": "apiContractBasenames",
+            "path": "packs/core/resolvers/specfirst_api.go"
+          },
+          {
+            "line": 20,
+            "name": "apiContractExtensionDirs",
+            "path": "packs/core/resolvers/specfirst_api.go"
+          },
+          {
+            "line": 36,
+            "name": "serviceIndicatorSegments",
+            "path": "packs/core/resolvers/specfirst_api.go"
+          },
+          {
+            "line": 49,
+            "name": "serviceIndicatorBasenames",
+            "path": "packs/core/resolvers/specfirst_api.go"
+          },
+          {
+            "line": 12,
+            "name": "migrationDirNames",
+            "path": "packs/core/resolvers/specfirst_migration.go"
+          },
+          {
+            "line": 12,
+            "name": "verificationEntrypoints",
+            "path": "packs/core/resolvers/verifiability.go"
+          },
+          {
+            "line": 16,
+            "name": "testSuffixes",
+            "path": "packs/core/resolvers/verifiability_tests.go"
+          }
+        ]
+      },
+      "remediation": {
+        "summary": "Move package-level vars into struct fields or function parameters. Convert read-only vars to constants where possible.",
+        "guide_ref": "docs/rules/P3.EXP.005.md"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "name": "coupling_max_reach",
+      "value": 27,
+      "unit": "packages",
+      "principle": "P1"
+    },
+    {
+      "name": "context_span_p50",
+      "value": 3,
+      "unit": "files",
+      "principle": "P1"
+    },
+    {
+      "name": "parallel_conflict_rate",
+      "value": 0,
+      "unit": "ratio",
+      "principle": "P1"
+    },
+    {
+      "name": "rollback_signal",
+      "value": 0,
+      "unit": "ratio",
+      "principle": "P6"
+    },
+    {
+      "name": "blast_radius_score",
+      "value": 0.355,
+      "unit": "ratio",
+      "principle": "P5"
+    },
+    {
+      "name": "invariant_coverage",
+      "value": 1,
+      "unit": "ratio",
+      "principle": "P4"
+    }
+  ]
+}
