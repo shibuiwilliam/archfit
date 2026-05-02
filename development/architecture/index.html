@@ -2005,6 +2005,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ast-collector-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AST Collector Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#why-json-in-yaml-for-config" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3112,6 +3123,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#ast-collector-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AST Collector Design
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#why-json-in-yaml-for-config" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3209,20 +3231,21 @@
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│   ├── internal/collector/git/         ← git history facts
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│   ├── internal/collector/schema/      ← JSON Schema detection
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│   ├── internal/collector/depgraph/    ← import graph (Go)
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   ├── internal/collector/command/     ← timed command execution
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│   ├── internal/rule/                  ← engine + registry
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│   └── internal/score/                 ← scoring + metrics
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>├── internal/adapter/exec/              ← subprocess runner
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>├── internal/adapter/llm/               ← LLM boundary (3 backends)
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>├── internal/fix/                       ← remediation engine
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│   ├── internal/fix/static/            ← deterministic fixers
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│   └── internal/fix/llmfix/            ← LLM-assisted fixers
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>├── internal/config/                    ← .archfit.yaml
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>├── internal/policy/                    ← org policy enforcement
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>├── internal/packman/                   ← pack validation
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>├── internal/report/                    ← renderers (terminal, json, md, sarif)
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>├── packs/core/                         ← 7 rules
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>└── packs/agent-tool/                   ← 3 rules
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│   ├── internal/collector/ast/         ← AST analysis (Go, via go/parser)
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│   ├── internal/collector/command/     ← timed command execution
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│   ├── internal/rule/                  ← engine + registry
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│   └── internal/score/                 ← scoring + metrics
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>├── internal/adapter/exec/              ← subprocess runner
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>├── internal/adapter/llm/               ← LLM boundary (3 backends)
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>├── internal/fix/                       ← remediation engine
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│   ├── internal/fix/static/            ← deterministic fixers
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│   └── internal/fix/llmfix/            ← LLM-assisted fixers
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>├── internal/config/                    ← .archfit.yaml
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>├── internal/policy/                    ← org policy enforcement
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>├── internal/packman/                   ← pack validation
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>├── internal/report/                    ← renderers (terminal, json, md, sarif)
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>├── packs/core/                         ← 24 rules
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>└── packs/agent-tool/                   ← 3 rules
 </code></pre></div>
 <h2 id="critical-boundary-packs-cannot-import-adapters">Critical Boundary: Packs Cannot Import Adapters<a class="headerlink" href="#critical-boundary-packs-cannot-import-adapters" title="Permanent link">&para;</a></h2>
 <p>This is the most important architectural invariant. It is enforced by <code>.go-arch-lint.yaml</code>.</p>
@@ -3239,16 +3262,17 @@
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>   b. git.Collect(ctx, runner) → GitFacts        (when Runner != nil)
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>   c. schema.Collect(repo)     → SchemaFacts     (always)
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>   d. depgraph.Collect(repo)   → DepGraphFacts   (when Go source exists)
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>   e. command.Collect(...)     → CommandFacts     (only --depth=deep)
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>4. scheduler.go builds factStore from collector outputs
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>5. rule.Engine.Evaluate(ctx, rules, facts) → EvalResult
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>   - For each rule: call resolver(ctx, facts) → (findings, metrics, error)
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>   - Sort findings deterministically
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>6. scheduler.go computes metrics from facts
-<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>7. score.Compute(rules, findings) → Scores
-<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>8. Return ScanResult{Findings, Metrics, Scores, ...}
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>9. main.go renders via report.Render() or report.RenderSARIF()
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>10. main.go checks --fail-on threshold → exit code
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>   e. ast.Collect(repo)        → ASTFacts        (Go files; standard + deep modes)
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>   f. command.Collect(...)     → CommandFacts     (only --depth=deep)
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>4. scheduler.go builds factStore from collector outputs
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>5. rule.Engine.Evaluate(ctx, rules, facts) → EvalResult
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>   - For each rule: call resolver(ctx, facts) → (findings, metrics, error)
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>   - Sort findings deterministically
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>6. scheduler.go computes metrics from facts
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>7. score.Compute(rules, findings) → Scores
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>8. Return ScanResult{Findings, Metrics, Scores, ...}
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>9. main.go renders via report.Render() or report.RenderSARIF()
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>10. main.go checks --fail-on threshold → exit code
 </code></pre></div>
 <h3 id="fix-flow">Fix Flow<a class="headerlink" href="#fix-flow" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>1. main.go runs initial scan (same as above)
@@ -3281,6 +3305,14 @@
 - Keeps resolvers pure (testable without I/O)
 - Enforces P5 (aggregation of dangerous capabilities) on archfit itself
 - Allows the same facts to be consumed by multiple rules</p>
+<h3 id="ast-collector-design">AST Collector Design<a class="headerlink" href="#ast-collector-design" title="Permanent link">&para;</a></h3>
+<p><code>internal/collector/ast/</code> uses <code>go/parser</code> from the standard library (no external dependency). Two modes:</p>
+<ul>
+<li><strong>standard</strong> (default): parses package-level declarations, exported symbols, and function signatures.</li>
+<li><strong>deep</strong> (<code>--depth=deep</code>): additionally resolves struct field types and interface method sets.</li>
+</ul>
+<p>A per-file size cap of <strong>1 MiB</strong> prevents pathological files from stalling the scan. Files exceeding the cap produce a <code>parse_skipped</code> entry in <code>ASTFacts</code> rather than silently dropping.</p>
+<p>Go is the only language supported. Other languages are out of scope for the AST collector (see <code>PROJECT.md</code> for roadmap).</p>
 <h3 id="why-json-in-yaml-for-config">Why JSON-in-YAML for config<a class="headerlink" href="#why-json-in-yaml-for-config" title="Permanent link">&para;</a></h3>
 <p>Phase 1 parses <code>.archfit.yaml</code> as JSON. YAML 1.2 is a strict JSON superset, so this works. The benefit: zero external dependencies for config parsing. Full YAML support (anchors, block scalars) deferred to when <code>yaml.v3</code> is added.</p>
 <h3 id="why-three-llm-backends-behind-one-interface">Why three LLM backends behind one interface<a class="headerlink" href="#why-three-llm-backends-behind-one-interface" title="Permanent link">&para;</a></h3>

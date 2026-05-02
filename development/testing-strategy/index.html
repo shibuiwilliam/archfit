@@ -2074,6 +2074,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Adding Tests for a New Rule">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ast-dependent-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AST-Dependent Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3103,6 +3120,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Adding Tests for a New Rule">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ast-dependent-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AST-Dependent Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -3252,6 +3286,8 @@
 <li>Add a row to the table test in <code>pack_test.go</code></li>
 <li>Verify: <code>go test -run TestPack/&lt;rule-id&gt; ./packs/&lt;pack&gt;/</code></li>
 </ol>
+<h3 id="ast-dependent-rules">AST-Dependent Rules<a class="headerlink" href="#ast-dependent-rules" title="Permanent link">&para;</a></h3>
+<p>Rules that consume <code>ASTFacts</code> require an additional <strong>parse-failure fixture</strong>. This fixture contains a file that is syntactically invalid (e.g., truncated Go source) and asserts that the resolver produces a <code>severity: warn</code> / <code>evidence_strength: strong</code> finding via <code>model.ParseFailure</code> rather than silently returning zero findings. This prevents AST-dependent rules from appearing to pass on repos where the collector could not parse the source.</p>
 <h2 id="adding-tests-for-a-new-fixer">Adding Tests for a New Fixer<a class="headerlink" href="#adding-tests-for-a-new-fixer" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Create a FactStore that produces a finding for the target rule</li>

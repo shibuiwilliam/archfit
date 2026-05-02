@@ -1794,6 +1794,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pr-check-refined-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR Check — Refined Gate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cross-repo-comparison" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2972,6 +2983,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pr-check-refined-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR Check — Refined Gate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cross-repo-comparison" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3087,11 +3109,26 @@
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Show trend</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">archfit trend --history .archfit-history/</span>
 </code></pre></div>
+<h2 id="pr-check-refined-gate">PR Check — Refined Gate<a class="headerlink" href="#pr-check-refined-gate" title="Permanent link">&para;</a></h2>
+<p><code>archfit pr-check</code> compares the current branch against a base ref and exits 1 only when new findings at <code>error</code> severity or above are introduced. This is more precise than <code>archfit diff</code> for PR workflows because it ignores pre-existing findings.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">shibuiwilliam/archfit/actions/pr-check@v0</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">with</span><span class="p">:</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">base</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">origin/main</span>
+</code></pre></div>
+<p>Or run it manually:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>archfit<span class="w"> </span>pr-check<span class="w"> </span>--base<span class="w"> </span>origin/main
+</code></pre></div>
+<p>Key behavior:</p>
+<ul>
+<li>Exits 0 if no <strong>new</strong> <code>error</code>+ findings are introduced.</li>
+<li>Exits 1 only on new <code>error</code>+ findings (pre-existing findings are ignored).</li>
+<li>Warnings and info findings do not block the PR.</li>
+</ul>
 <h2 id="cross-repo-comparison">Cross-Repo Comparison<a class="headerlink" href="#cross-repo-comparison" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>archfit<span class="w"> </span>compare<span class="w"> </span>repo-a.json<span class="w"> </span>repo-b.json<span class="w"> </span>repo-c.json<span class="w"> </span>--format<span class="o">=</span>md
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>archfit<span class="w"> </span>compare<span class="w"> </span>repo-a.json<span class="w"> </span>repo-b.json<span class="w"> </span>repo-c.json<span class="w"> </span>--format<span class="o">=</span>md
 </code></pre></div>
 <h2 id="organization-policy">Organization Policy<a class="headerlink" href="#organization-policy" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>archfit<span class="w"> </span>scan<span class="w"> </span>--policy<span class="w"> </span>policy.json<span class="w"> </span>.
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>archfit<span class="w"> </span>scan<span class="w"> </span>--policy<span class="w"> </span>policy.json<span class="w"> </span>.
 </code></pre></div>
 <p>Policy violations are reported to stderr (advisory, do not change exit code).</p>
 <h2 id="exit-codes">Exit Codes<a class="headerlink" href="#exit-codes" title="Permanent link">&para;</a></h2>

@@ -2127,6 +2127,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evidence-factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence Factor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#severity-class-pass-rates-by_severity_class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Severity Class Pass Rates (by_severity_class)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#json-output-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3150,6 +3172,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#evidence-factor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence Factor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#severity-class-pass-rates-by_severity_class" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Severity Class Pass Rates (by_severity_class)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#json-output-shape" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3230,6 +3274,7 @@
 <li><strong>Adding rules does not lower scores</strong> for repos that pass the new rules. Scoring is normalized per applicable rule set.</li>
 <li><strong>Multiple findings per rule do not compound</strong>. A rule either fires or it doesn't — how many times doesn't affect the score.</li>
 <li><strong>Deterministic</strong>. Same input produces same scores. No randomness.</li>
+<li><strong><code>error_pass_rate</code> is the primary signal</strong>; overall score is secondary. Reviewers and contracts should gate on <code>error_pass_rate</code> first.</li>
 </ul>
 <h2 id="metrics">Metrics<a class="headerlink" href="#metrics" title="Permanent link">&para;</a></h2>
 <h3 id="context_span_p50-p1-locality"><code>context_span_p50</code> (P1 Locality)<a class="headerlink" href="#context_span_p50-p1-locality" title="Permanent link">&para;</a></h3>
@@ -3316,25 +3361,92 @@
 <p>Update <code>schemas/output.schema.json</code> if the metric name is new (additive change — no version bump needed).</p>
 </li>
 </ol>
+<h2 id="evidence-factor">Evidence Factor<a class="headerlink" href="#evidence-factor" title="Permanent link">&para;</a></h2>
+<p>Each rule's contribution to the score is weighted by its <code>evidence_strength</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Evidence Strength</th>
+<th>Factor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>strong</code></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><code>medium</code></td>
+<td>0.85</td>
+</tr>
+<tr>
+<td><code>sampled</code></td>
+<td>0.8</td>
+</tr>
+<tr>
+<td><code>weak</code></td>
+<td>0.7</td>
+</tr>
+</tbody>
+</table>
+<p>The formula for a passing rule's contribution:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>contribution = passed × weight × evidence_factor
+</code></pre></div>
+<p>This means that a passing <code>strong</code>-evidence rule contributes its full weight, while a passing <code>weak</code>-evidence rule contributes only 70%. The factor applies symmetrically to penalties: a <code>weak</code>-evidence rule that fires also contributes a reduced penalty. The net effect is that <code>strong</code>-evidence rules dominate the score, which is intentional.</p>
+<h2 id="severity-class-pass-rates-by_severity_class">Severity Class Pass Rates (<code>by_severity_class</code>)<a class="headerlink" href="#severity-class-pass-rates-by_severity_class" title="Permanent link">&para;</a></h2>
+<p>The output includes pass rates broken down by severity tier:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>critical_pass_rate</code></td>
+<td>Fraction of critical-severity rules that produced no findings</td>
+</tr>
+<tr>
+<td><code>error_pass_rate</code></td>
+<td>Fraction of error-severity rules that produced no findings</td>
+</tr>
+<tr>
+<td><code>warn_pass_rate</code></td>
+<td>Fraction of warn-severity rules that produced no findings</td>
+</tr>
+<tr>
+<td><code>info_pass_rate</code></td>
+<td>Fraction of info-severity rules that produced no findings</td>
+</tr>
+</tbody>
+</table>
+<p><code>error_pass_rate</code> is the primary quality signal. Contracts and CI gates should check it before the overall score. A repo can have a high overall score while failing critical rules if it has many passing info rules — <code>by_severity_class</code> makes this visible.</p>
 <h2 id="json-output-shape">JSON Output Shape<a class="headerlink" href="#json-output-shape" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">{</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="w">  </span><span class="nt">&quot;scores&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="w">    </span><span class="nt">&quot;overall&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">92.5</span><span class="p">,</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="w">    </span><span class="nt">&quot;by_principle&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="w">      </span><span class="nt">&quot;P1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="w">      </span><span class="nt">&quot;P2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">85.0</span><span class="p">,</span>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="w">      </span><span class="nt">&quot;P4&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="w">      </span><span class="nt">&quot;P7&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">95.0</span>
-<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="w">  </span><span class="p">},</span>
-<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="w">  </span><span class="nt">&quot;metrics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;context_span_p50&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;files&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;principle&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;P1&quot;</span><span class="p">},</span>
-<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;invariant_coverage&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ratio&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;principle&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;P4&quot;</span><span class="p">}</span>
-<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="w">  </span><span class="p">],</span>
-<a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a><span class="w">  </span><span class="nt">&quot;findings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
-<a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a><span class="w">  </span><span class="nt">&quot;rules_evaluated&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
-<a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="p">{</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">&quot;schema_version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.1.0&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nt">&quot;scores&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">    </span><span class="nt">&quot;overall&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">92.5</span><span class="p">,</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">    </span><span class="nt">&quot;by_principle&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">      </span><span class="nt">&quot;P1&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">100.0</span><span class="p">,</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">      </span><span class="nt">&quot;P2&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">85.0</span><span class="p">,</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">      </span><span class="nt">&quot;P4&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">90.0</span><span class="p">,</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">      </span><span class="nt">&quot;P7&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">95.0</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="w">    </span><span class="nt">&quot;by_severity_class&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">      </span><span class="nt">&quot;critical_pass_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="w">      </span><span class="nt">&quot;error_pass_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.95</span><span class="p">,</span>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a><span class="w">      </span><span class="nt">&quot;warn_pass_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.88</span><span class="p">,</span>
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a><span class="w">      </span><span class="nt">&quot;info_pass_rate&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">1.0</span>
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="w">  </span><span class="nt">&quot;metrics&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;context_span_p50&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">3.0</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;files&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;principle&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;P1&quot;</span><span class="p">},</span>
+<a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="w">    </span><span class="p">{</span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;invariant_coverage&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;value&quot;</span><span class="p">:</span><span class="w"> </span><span class="mf">0.9</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;unit&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;ratio&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;principle&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;P4&quot;</span><span class="p">}</span>
+<a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="w">  </span><span class="nt">&quot;findings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a><span class="w">  </span><span class="nt">&quot;rules_evaluated&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">27</span>
+<a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a><span class="p">}</span>
 </code></pre></div>
 <p>Scores are rounded to one decimal in output; internal math uses <code>float64</code>.</p>
 
