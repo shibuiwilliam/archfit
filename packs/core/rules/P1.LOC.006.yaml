@@ -1,0 +1,17 @@
+id: P1.LOC.006
+principle: P1
+dimension: LOC
+title: Agent-facing documentation is not bloated
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  CLAUDE.md and AGENTS.md must fit in an agent's context window. Files
+  exceeding 400 lines or 10 KB force agents to chunk or skip, defeating
+  the purpose of having a canonical entry point.
+remediation:
+  summary: >-
+    Trim CLAUDE.md / AGENTS.md to 400 lines and 10 KB. Move deep material
+    to linked reference documents.
+  guide_ref: docs/rules/P1.LOC.006.md

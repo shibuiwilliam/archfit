@@ -1,0 +1,19 @@
+id: P1.LOC.005
+principle: P1
+dimension: LOC
+title: High-risk paths declare INTENT.md
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Directories touching authentication, secrets, migrations, or deployment
+  carry elevated blast radius. An INTENT.md in those directories tells agents
+  (and humans) why the directory exists and what invariants must hold. Without
+  it, agents may make locally-plausible changes that violate security or
+  operational constraints.
+remediation:
+  summary: >-
+    Add an INTENT.md to every high-risk directory (auth, secret, migration,
+    deploy) explaining the directory's purpose and invariants.
+  guide_ref: docs/rules/P1.LOC.005.md

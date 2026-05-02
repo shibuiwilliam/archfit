@@ -168,9 +168,18 @@ func (r Rule) Validate() error {
 	if !r.Stability.Valid() {
 		return fmt.Errorf("rule %s: invalid stability %q", r.ID, r.Stability)
 	}
-	// CLAUDE.md §13: "Do not add rules whose evidence is only weak and whose severity is error."
-	if r.EvidenceStrength == EvidenceWeak && r.Severity.Rank() >= SeverityError.Rank() {
-		return fmt.Errorf("rule %s: severity %s requires evidence stronger than weak", r.ID, r.Severity)
+	// Severity ↔ evidence matrix (CLAUDE.md §6 invariant 2):
+	//   critical → strong only
+	//   error    → strong only
+	//   warn     → medium, strong, or sampled (weak rejected)
+	//   info     → any
+	switch {
+	case r.Severity == SeverityCritical && r.EvidenceStrength != EvidenceStrong:
+		return fmt.Errorf("rule %s: severity critical requires evidence_strength strong, got %s", r.ID, r.EvidenceStrength)
+	case r.Severity == SeverityError && r.EvidenceStrength != EvidenceStrong:
+		return fmt.Errorf("rule %s: severity error requires evidence_strength strong, got %s", r.ID, r.EvidenceStrength)
+	case r.Severity == SeverityWarn && r.EvidenceStrength == EvidenceWeak:
+		return fmt.Errorf("rule %s: severity warn requires evidence_strength medium or stronger, got weak", r.ID)
 	}
 	if r.Resolver == nil {
 		return fmt.Errorf("rule %s: resolver must not be nil", r.ID)
@@ -280,6 +289,9 @@ type FactStore interface {
 	// frameworks). See ADR 0011. Resolvers should use this instead of maintaining
 	// private keyword tables for ecosystem detection.
 	Ecosystems() EcosystemFacts
+	// AST returns AST-derived facts, or (ASTFacts{}, false) when the collector
+	// was skipped (e.g., no parseable source, or depth=shallow). See ADR 0015.
+	AST() (ASTFacts, bool)
 }
 
 // EcosystemEntry represents a detected framework, platform, or tool. See ADR 0011.
@@ -421,4 +433,57 @@ type DepGraphFacts struct {
 	PackageCount int    `json:"package_count"`
 	MaxReach     int    `json:"max_reach"`
 	MaxReachPkg  string `json:"max_reach_pkg"`
+}
+
+// ASTFacts holds AST-derived facts. See ADR 0015.
+// Phase 1 supports Go only (go/parser). Tree-sitter is Phase 1.5.
+type ASTFacts struct {
+	// GoFiles contains per-file analysis for Go source files.
+	GoFiles []GoFileFacts
+	// ParseFailures records files that could not be parsed.
+	// Resolvers convert these into ParseFailure findings.
+	ParseFailures []ASTParseFailure
+}
+
+// GoFileFacts contains structural facts extracted from a single Go file.
+type GoFileFacts struct {
+	Path           string
+	Package        string
+	InitFunctions  []InitFact
+	PkgLevelVars   []PkgVarFact
+	Interfaces     []InterfaceFact
+	ReflectImports bool // imports "reflect"
+	ReflectCalls   int  // count of reflect.* call expressions (depth=deep only)
+}
+
+// InitFact describes a single init() function.
+type InitFact struct {
+	Line int
+	// CrossPkgCalls lists qualified function calls to other packages inside
+	// init(), e.g. "http.HandleFunc", "sql.Register".
+	CrossPkgCalls []string
+}
+
+// PkgVarFact describes a package-level var declaration.
+type PkgVarFact struct {
+	Name    string
+	Line    int
+	Mutable bool   // true for var, false for const
+	Type    string // best-effort type string; "" if not determinable
+}
+
+// InterfaceFact describes an interface type declaration.
+type InterfaceFact struct {
+	Name        string
+	Line        int
+	MethodCount int
+	// Implementors is populated only at depth=deep. Lists type names in the
+	// same module that satisfy the interface (best-effort, no cross-module).
+	Implementors []string
+}
+
+// ASTParseFailure records a file that failed to parse during AST collection.
+type ASTParseFailure struct {
+	Path  string
+	Error string
 }

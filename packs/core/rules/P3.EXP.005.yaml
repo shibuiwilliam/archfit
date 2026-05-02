@@ -1,0 +1,21 @@
+id: P3.EXP.005
+principle: P3
+dimension: EXP
+title: Global mutable state minimized
+severity: info
+evidence_strength: medium
+stability: experimental
+weight: 1
+applies_to:
+  languages: [go]
+rationale: >
+  Package-level mutable variables are global state. When their count grows
+  beyond a modest threshold the codebase becomes harder for agents to reason
+  about because any function in the package can silently read or write them.
+  Keeping mutable package-level state low encourages passing dependencies
+  through structs and function parameters — which is traceable by reading.
+remediation:
+  summary: >-
+    Move package-level vars into struct fields or function parameters.
+    Convert read-only vars to constants where possible.
+  guide_ref: docs/rules/P3.EXP.005.md

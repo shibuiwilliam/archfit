@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "tool": {
     "name": "archfit",
     "version": "e2e-golden"
@@ -9,25 +9,32 @@
     "profile": "standard"
   },
   "summary": {
-    "rules_evaluated": 16,
-    "rules_with_findings": 4,
-    "findings_total": 4,
+    "rules_evaluated": 26,
+    "rules_with_findings": 5,
+    "findings_total": 5,
     "by_severity": {
       "info": 1,
-      "warn": 3,
+      "warn": 4,
       "error": 0,
       "critical": 0
     }
   },
   "scores": {
-    "overall": 91.9,
+    "overall": 93.3,
     "by_principle": {
-      "P1": 90,
-      "P2": 80,
-      "P4": 96.7,
-      "P5": 100,
+      "P1": 94,
+      "P2": 90,
+      "P3": 100,
+      "P4": 96.5,
+      "P5": 90,
       "P6": 100,
       "P7": 86.7
+    },
+    "by_severity_class": {
+      "critical_pass_rate": 1,
+      "error_pass_rate": 1,
+      "warn_pass_rate": 0.76,
+      "info_pass_rate": 0.88
     }
   },
   "findings": [
@@ -78,6 +85,28 @@
       "remediation": {
         "summary": "Place a JSON Schema at schemas/output.schema.json (or similar) with a top-level $id identifying it unambiguously, and emit a schema_version field in your tool's JSON output that matches.",
         "guide_ref": "docs/rules/P2.SPC.010.md"
+      }
+    },
+    {
+      "rule_id": "P5.AGG.003",
+      "principle": "P5",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.9,
+      "path": "",
+      "message": "no risk-tier declaration found — agents cannot distinguish high-risk paths from safe ones",
+      "evidence": {
+        "looked_for": [
+          "RISK_TIERS.md",
+          "risk_tiers.md",
+          "SECURITY.md",
+          "security.md",
+          ".archfit.yaml"
+        ]
+      },
+      "remediation": {
+        "summary": "Add a risk-tier declaration: RISK_TIERS.md at the root, a risk_tiers block in .archfit.yaml, or a SECURITY.md that names high-risk paths.",
+        "guide_ref": "docs/rules/P5.AGG.003.md"
       }
     },
     {

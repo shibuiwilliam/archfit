@@ -1,0 +1,16 @@
+# CODEOWNERS — archfit
+#
+# Mandatory reviewers for high-risk paths. See P5.AGG.004.
+
+# Adapter boundary — all side effects (exec, fs, llm) go through here.
+/internal/adapter/   @shibuiwilliam
+
+# Core model types — changes require an ADR (CLAUDE.md §9).
+/internal/model/     @shibuiwilliam
+
+# Output schemas — contract surface, versioned.
+/schemas/            @shibuiwilliam
+
+# Deployment and release configuration.
+/docs/deployment.md  @shibuiwilliam
+/.github/workflows/  @shibuiwilliam

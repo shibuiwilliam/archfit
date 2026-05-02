@@ -60,7 +60,11 @@ generate: ## Regenerate packs/*/generated_rules.go from YAML rule files.
 	$(GO) run -tags tools ./cmd/internal-tools/genrules
 
 .PHONY: self-scan
-self-scan: build ## Run archfit on itself. Must exit 0 under --fail-on=error.
+self-scan: build ## Refined self-scan gate (CLAUDE.md §19). New-rule findings are informational.
+	@scripts/self-scan-gate.sh $(BIN)
+
+.PHONY: self-scan-simple
+self-scan-simple: build ## Legacy self-scan: exit 0 iff no error+ findings from any rule.
 	$(BIN) scan --fail-on=error .
 
 .PHONY: self-scan-json

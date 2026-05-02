@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P3.EXP.003",
+      "severity": "info",
+      "path": ".",
+      "message_contains": "reflect"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "tool": {
     "name": "archfit",
     "version": "e2e-golden"
@@ -9,12 +9,12 @@
     "profile": "standard"
   },
   "summary": {
-    "rules_evaluated": 16,
-    "rules_with_findings": 5,
-    "findings_total": 5,
+    "rules_evaluated": 26,
+    "rules_with_findings": 7,
+    "findings_total": 7,
     "by_severity": {
       "info": 2,
-      "warn": 3,
+      "warn": 5,
       "error": 0,
       "critical": 0
     }
@@ -22,15 +22,44 @@
   "scores": {
     "overall": 91.3,
     "by_principle": {
-      "P1": 100,
-      "P2": 80,
-      "P4": 96.7,
-      "P5": 100,
+      "P1": 94,
+      "P2": 90,
+      "P3": 100,
+      "P4": 96.5,
+      "P5": 90,
       "P6": 75,
       "P7": 86.7
+    },
+    "by_severity_class": {
+      "critical_pass_rate": 1,
+      "error_pass_rate": 1,
+      "warn_pass_rate": 0.71,
+      "info_pass_rate": 0.75
     }
   },
   "findings": [
+    {
+      "rule_id": "P1.LOC.009",
+      "principle": "P1",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.9,
+      "path": "",
+      "message": "repository has deployment artifacts but no RUNBOOK.md",
+      "evidence": {
+        "checked_paths": [
+          "RUNBOOK.md",
+          "runbook.md",
+          "docs/RUNBOOK.md",
+          "docs/runbook.md"
+        ],
+        "deployment_artifact": "Dockerfile"
+      },
+      "remediation": {
+        "summary": "Add a RUNBOOK.md at the repository root or in docs/ describing deployment procedures, rollback steps, and on-call escalation paths.",
+        "guide_ref": "docs/rules/P1.LOC.009.md"
+      }
+    },
     {
       "rule_id": "P2.SPC.010",
       "principle": "P2",
@@ -59,6 +88,28 @@
       "remediation": {
         "summary": "Place a JSON Schema at schemas/output.schema.json (or similar) with a top-level $id identifying it unambiguously, and emit a schema_version field in your tool's JSON output that matches.",
         "guide_ref": "docs/rules/P2.SPC.010.md"
+      }
+    },
+    {
+      "rule_id": "P5.AGG.003",
+      "principle": "P5",
+      "severity": "warn",
+      "evidence_strength": "strong",
+      "confidence": 0.9,
+      "path": "",
+      "message": "no risk-tier declaration found — agents cannot distinguish high-risk paths from safe ones",
+      "evidence": {
+        "looked_for": [
+          "RISK_TIERS.md",
+          "risk_tiers.md",
+          "SECURITY.md",
+          "security.md",
+          ".archfit.yaml"
+        ]
+      },
+      "remediation": {
+        "summary": "Add a risk-tier declaration: RISK_TIERS.md at the root, a risk_tiers block in .archfit.yaml, or a SECURITY.md that names high-risk paths.",
+        "guide_ref": "docs/rules/P5.AGG.003.md"
       }
     },
     {

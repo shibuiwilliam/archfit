@@ -1,0 +1,22 @@
+id: P3.EXP.003
+principle: P3
+dimension: EXP
+title: Reflection/metaprogramming density bounded
+severity: info
+evidence_strength: medium
+stability: experimental
+weight: 1
+applies_to:
+  languages: [go]
+rationale: >
+  Heavy use of the reflect package makes code opaque to static analysis and
+  to agents reading source. A few reflect imports are normal (serialization,
+  test helpers), but when many files import reflect the codebase likely uses
+  reflection as a core dispatch mechanism, which hides concrete types and
+  call paths behind interface{}/any.
+remediation:
+  summary: >-
+    Replace reflection-based dispatch with explicit type switches, code
+    generation, or generic functions. Limit reflect imports to serialization
+    and test utility code.
+  guide_ref: docs/rules/P3.EXP.003.md

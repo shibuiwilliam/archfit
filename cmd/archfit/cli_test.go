@@ -103,8 +103,8 @@ func TestCLI_Scan_JSON_CleanRepo(t *testing.T) {
 	if err := json.Unmarshal([]byte(stdout), &doc); err != nil {
 		t.Fatalf("invalid JSON: %v", err)
 	}
-	if doc["schema_version"] != "1.0.0" {
-		t.Errorf("schema_version = %v, want 1.0.0", doc["schema_version"])
+	if doc["schema_version"] != "1.1.0" {
+		t.Errorf("schema_version = %v, want 1.1.0", doc["schema_version"])
 	}
 	summary := doc["summary"].(map[string]any)
 	if summary["findings_total"].(float64) != 0 {

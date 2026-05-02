@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P2.SPC.004",
+      "severity": "info",
+      "path": "docs/adr/0001-use-postgres.md",
+      "message_contains": "missing YAML frontmatter"
+    }
+  ]
+}

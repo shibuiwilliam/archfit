@@ -4,7 +4,7 @@ dimension: AGG
 title: Security-sensitive files are concentrated in few directories
 severity: warn
 evidence_strength: strong
-stability: stable
+stability: experimental
 weight: 1
 rationale: >
   Dangerous capabilities (auth, secrets, migrations, deploy) should be

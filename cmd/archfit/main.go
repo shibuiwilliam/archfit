@@ -1105,18 +1105,40 @@ func cmdPRCheck(args []string, stdout, stderr io.Writer) int {
 	// 4. Diff.
 	d := report.Diff(baseResult.Findings, headResult.Findings)
 
-	// 5. Render.
+	// 5. Count new error+ findings — these are the only ones that fail the gate.
+	newErrorPlus := 0
+	for _, f := range d.New {
+		if f.Severity.Rank() >= model.SeverityError.Rank() {
+			newErrorPlus++
+		}
+	}
+
+	// 6. Render.
 	if *jsonOut {
 		doc := map[string]any{
-			"base_ref":    base,
-			"head_ref":    head,
-			"base_score":  baseResult.Scores.Overall,
-			"head_score":  headResult.Scores.Overall,
-			"score_delta": math.Round((headResult.Scores.Overall-baseResult.Scores.Overall)*10) / 10,
+			"schema_version": report.OutputSchemaVersion,
+			"base_ref":       base,
+			"head_ref":       head,
+			"base_score":     baseResult.Scores.Overall,
+			"head_score":     headResult.Scores.Overall,
+			"score_delta":    math.Round((headResult.Scores.Overall-baseResult.Scores.Overall)*10) / 10,
 			"summary": map[string]int{
-				"new":       len(d.New),
-				"fixed":     len(d.Fixed),
-				"unchanged": len(d.Unchanged),
+				"new":            len(d.New),
+				"new_error_plus": newErrorPlus,
+				"fixed":          len(d.Fixed),
+				"unchanged":      len(d.Unchanged),
+			},
+			"base_severity_class": map[string]float64{
+				"critical_pass_rate": baseResult.Scores.BySeverityClass.CriticalPassRate,
+				"error_pass_rate":    baseResult.Scores.BySeverityClass.ErrorPassRate,
+				"warn_pass_rate":     baseResult.Scores.BySeverityClass.WarnPassRate,
+				"info_pass_rate":     baseResult.Scores.BySeverityClass.InfoPassRate,
+			},
+			"head_severity_class": map[string]float64{
+				"critical_pass_rate": headResult.Scores.BySeverityClass.CriticalPassRate,
+				"error_pass_rate":    headResult.Scores.BySeverityClass.ErrorPassRate,
+				"warn_pass_rate":     headResult.Scores.BySeverityClass.WarnPassRate,
+				"info_pass_rate":     headResult.Scores.BySeverityClass.InfoPassRate,
 			},
 			"new":   d.New,
 			"fixed": d.Fixed,
@@ -1137,18 +1159,25 @@ func cmdPRCheck(args []string, stdout, stderr io.Writer) int {
 	} else {
 		delta := headResult.Scores.Overall - baseResult.Scores.Overall
 		fmt.Fprintf(stdout, "archfit pr-check: %s → %s\n", base, head)
-		fmt.Fprintf(stdout, "base score: %.1f → head score: %.1f (delta: %+.1f)\n\n",
+		fmt.Fprintf(stdout, "base score: %.1f → head score: %.1f (delta: %+.1f)\n",
 			baseResult.Scores.Overall, headResult.Scores.Overall, delta)
-		fmt.Fprintf(stdout, "new: %d   fixed: %d   unchanged: %d\n\n",
-			len(d.New), len(d.Fixed), len(d.Unchanged))
+		fmt.Fprintf(stdout, "error_pass_rate: %.2f → %.2f\n\n",
+			baseResult.Scores.BySeverityClass.ErrorPassRate,
+			headResult.Scores.BySeverityClass.ErrorPassRate)
+		fmt.Fprintf(stdout, "new: %d (error+: %d)   fixed: %d   unchanged: %d\n\n",
+			len(d.New), newErrorPlus, len(d.Fixed), len(d.Unchanged))
 		if len(d.New) > 0 {
-			fmt.Fprintln(stdout, "NEW findings (regressions):")
+			fmt.Fprintln(stdout, "NEW findings:")
 			for _, f := range d.New {
 				p := f.Path
 				if p == "" {
 					p = "(repo)"
 				}
-				fmt.Fprintf(stdout, "  [%s] %s %s — %s\n", f.Severity, f.RuleID, p, f.Message)
+				marker := ""
+				if f.Severity.Rank() >= model.SeverityError.Rank() {
+					marker = " ← BLOCKS"
+				}
+				fmt.Fprintf(stdout, "  [%s] %s %s — %s%s\n", f.Severity, f.RuleID, p, f.Message, marker)
 			}
 			fmt.Fprintln(stdout)
 		}
@@ -1164,7 +1193,9 @@ func cmdPRCheck(args []string, stdout, stderr io.Writer) int {
 		}
 	}
 
-	if len(d.New) > 0 {
+	// Exit 1 only on new error+ findings (PROJECT.md §6.1.7).
+	// New warn/info findings are informational — they don't block the PR.
+	if newErrorPlus > 0 {
 		return exitFindingsAtLevel
 	}
 	return exitOK
@@ -1360,6 +1391,8 @@ func (f *cliFactStore) DepGraph() (model.DepGraphFacts, bool) {
 func (f *cliFactStore) Languages() map[string]int { return f.Repo().Languages }
 
 func (f *cliFactStore) Ecosystems() model.EcosystemFacts { return model.EcosystemFacts{} }
+
+func (f *cliFactStore) AST() (model.ASTFacts, bool) { return model.ASTFacts{}, false }
 
 // collectForFix does a lightweight filesystem collect for the fix engine.
 func collectForFix(root string) (model.RepoFacts, error) {

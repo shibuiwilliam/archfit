@@ -1,0 +1,19 @@
+id: P2.SPC.002
+principle: P2
+dimension: SPC
+title: DB migrations are bidirectional
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Database migrations that only go forward are a reversibility and spec hazard.
+  When both up and down migrations exist, agents can reason about rollbacks and
+  the full lifecycle of a schema change. Missing down migrations signal that
+  the migration was not spec'd as a reversible operation.
+remediation:
+  summary: >-
+    For every up migration file, create a corresponding down migration that
+    reverses the schema change. Use naming conventions like
+    001_create.up.sql / 001_create.down.sql.
+  guide_ref: docs/rules/P2.SPC.002.md

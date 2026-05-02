@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P1.LOC.009",
+      "severity": "warn",
+      "path": "",
+      "message_contains": "deployment artifacts but no RUNBOOK.md"
+    }
+  ]
+}

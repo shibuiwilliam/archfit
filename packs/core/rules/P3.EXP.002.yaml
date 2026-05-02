@@ -1,0 +1,23 @@
+id: P3.EXP.002
+principle: P3
+dimension: EXP
+title: No init() cross-package registration
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+applies_to:
+  languages: [go]
+rationale: >
+  init() functions that register handlers, drivers, or middleware in other
+  packages create invisible side effects. An agent searching for where a
+  handler is registered finds nothing — the registration happens at import
+  time via init(). Explicit registration in main() or a wiring function is
+  traceable by reading, not by running.
+remediation:
+  summary: >-
+    Move cross-package registrations from init() to explicit calls in
+    main() or a dedicated wiring function. Replace sql.Register,
+    http.HandleFunc, and similar init()-time side effects with direct
+    invocations at the call site.
+  guide_ref: docs/rules/P3.EXP.002.md

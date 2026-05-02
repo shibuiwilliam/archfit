@@ -12,6 +12,55 @@ are called out explicitly below with migration notes.
 
 ### Changed
 
+- **Stability re-tiering (ADR 0014)**: P1.LOC.003, P1.LOC.004, P5.AGG.001
+  walked back from `stable` to `experimental`. Rule IDs remain frozen per
+  ADR 0012. Thresholds and detection logic may change until calibration
+  data supports re-promotion.
+
+### Added
+
+- **AST collector** (`internal/collector/ast/`): Go source analysis via
+  `go/parser`. Supports standard (declaration-level) and deep (body
+  analysis) modes. See ADR 0015.
+- **Rule P3.EXP.002**: No `init()` cross-package registration. Fires when
+  Go `init()` functions register handlers, drivers, or middleware in other
+  packages. Core pack, warn severity, strong evidence, experimental.
+  First AST-dependent rule.
+- **Rule P5.AGG.004**: High-risk paths protected by CODEOWNERS. Fires when
+  auth/secret/migration/deploy directories exist but no CODEOWNERS file is
+  present. Core pack, **error** severity, strong evidence, experimental.
+  First error-severity rule in archfit.
+- **Severity ↔ evidence matrix enforced**: `Rule.Validate` now rejects
+  critical/error with non-strong evidence, and warn with weak evidence.
+  `TestSeverityCalibration_AllRules` CI gate walks all registered rules.
+- **Calibration corpus v0**: `calibration/corpus.yaml` with 10 permissively-
+  licensed repos. Ground truth scaffold in `calibration/ground_truth/`.
+- **Rule P1.LOC.005**: High-risk paths declare INTENT.md. Experimental.
+- **Rule P1.LOC.006**: Agent-facing docs not bloated (≤400 lines, ≤10 KB). Experimental.
+- **Rule P1.LOC.009**: Runbook per high-risk slice. Experimental.
+- **Rule P2.SPC.002**: DB migrations are bidirectional. Experimental.
+- **Rule P2.SPC.004**: ADRs use YAML frontmatter. Experimental.
+- **Rule P3.EXP.003**: Reflection/metaprogramming density bounded. Experimental. AST-dependent.
+- **Rule P3.EXP.005**: Global mutable state minimized. Experimental. AST-dependent.
+- **Skill scripts**: `.claude/skills/archfit/scripts/` ships four executable
+  helpers: `triage.sh` (top-N findings), `plan_remediation.sh` (prioritized
+  fix order), `apply_safe_fixes.sh` (archfit fix wrapper with dry-run),
+  `verify_loop.sh` (fix → re-scan → diff loop, stops on regression).
+  POSIX sh, dependencies: `jq` + `archfit` only.
+- **`archfit pr-check` exit code refined**: now exits 1 only on new error+
+  findings, not all new findings. New warn/info findings are informational.
+  JSON output gains `schema_version`, `new_error_plus`, `base_severity_class`,
+  and `head_severity_class` fields.
+- **Self-scan gate refined**: `make self-scan` now uses
+  `scripts/self-scan-gate.sh` which allows findings from newly introduced
+  rules without failing the gate. Only error+ findings from baseline rules
+  fail. Old behavior preserved as `make self-scan-simple`.
+- **Score model v2**: `scores.by_severity_class` added to JSON output with
+  `critical_pass_rate`, `error_pass_rate`, `warn_pass_rate`,
+  `info_pass_rate`. `error_pass_rate` is the primary signal. Evidence
+  factor modulates rule weight contribution (strong=1.0, medium=0.85,
+  weak=0.7, sampled=0.8). **`schema_version` bumped to `1.1.0`** (additive).
+
 - **Output schema bumped to `1.0.0`**: field set is now frozen. No fields
   removed or renamed since 0.1.0. See `docs/migration/0.x-to-1.0.md`.
 - **All 17 rules promoted to `stability: stable`**: rule IDs in `core` and

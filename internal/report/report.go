@@ -19,7 +19,7 @@ import (
 
 // OutputSchemaVersion is the version of the JSON output schema we emit.
 // Bump per the rules in CLAUDE.md §9.
-const OutputSchemaVersion = "1.0.0"
+const OutputSchemaVersion = "1.1.0"
 
 // Format enumerates the supported renderers. Add entries here, not elsewhere.
 type Format string
@@ -106,8 +106,16 @@ type jsonSeverity struct {
 }
 
 type jsonScores struct {
-	Overall     float64            `json:"overall"`
-	ByPrinciple map[string]float64 `json:"by_principle"`
+	Overall         float64                 `json:"overall"`
+	ByPrinciple     map[string]float64      `json:"by_principle"`
+	BySeverityClass *jsonSeverityClassRates `json:"by_severity_class,omitempty"`
+}
+
+type jsonSeverityClassRates struct {
+	CriticalPassRate float64 `json:"critical_pass_rate"`
+	ErrorPassRate    float64 `json:"error_pass_rate"`
+	WarnPassRate     float64 `json:"warn_pass_rate"`
+	InfoPassRate     float64 `json:"info_pass_rate"`
 }
 
 func toJSON(res core.ScanResult, toolVersion, profile string) jsonOutput {
@@ -142,6 +150,12 @@ func toJSON(res core.ScanResult, toolVersion, profile string) jsonOutput {
 	out.Scores.ByPrinciple = map[string]float64{}
 	for p, v := range res.Scores.ByPrinciple {
 		out.Scores.ByPrinciple[string(p)] = v
+	}
+	out.Scores.BySeverityClass = &jsonSeverityClassRates{
+		CriticalPassRate: res.Scores.BySeverityClass.CriticalPassRate,
+		ErrorPassRate:    res.Scores.BySeverityClass.ErrorPassRate,
+		WarnPassRate:     res.Scores.BySeverityClass.WarnPassRate,
+		InfoPassRate:     res.Scores.BySeverityClass.InfoPassRate,
 	}
 	// If the resolver produced nil slices, ensure we emit [] rather than null.
 	if out.Findings == nil {

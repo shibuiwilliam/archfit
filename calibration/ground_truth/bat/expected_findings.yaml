@@ -1,0 +1,3 @@
+# Ground truth for this repo. Annotate after running archfit scan.
+# See ../README.md for format.
+findings: []

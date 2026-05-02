@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P5.AGG.004",
+      "severity": "error",
+      "path": "",
+      "message_contains": "high-risk paths detected but no CODEOWNERS"
+    }
+  ]
+}

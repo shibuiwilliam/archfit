@@ -38,6 +38,7 @@ func (f *fakeFactStore) Commands() (model.CommandFacts, bool)  { return model.Co
 func (f *fakeFactStore) DepGraph() (model.DepGraphFacts, bool) { return model.DepGraphFacts{}, false }
 func (f *fakeFactStore) Languages() map[string]int             { return nil }
 func (f *fakeFactStore) Ecosystems() model.EcosystemFacts      { return model.EcosystemFacts{} }
+func (f *fakeFactStore) AST() (model.ASTFacts, bool)           { return model.ASTFacts{}, false }
 
 func TestLLMFixer_EnrichesContent(t *testing.T) {
 	fake := llm.NewFake()

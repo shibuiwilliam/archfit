@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P3.EXP.002",
+      "severity": "warn",
+      "path": "pkg/registration/register.go",
+      "message_contains": "init() registers across package boundaries"
+    }
+  ]
+}

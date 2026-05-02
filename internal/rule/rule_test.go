@@ -18,6 +18,7 @@ func (stubFacts) Commands() (model.CommandFacts, bool)  { return model.CommandFa
 func (stubFacts) DepGraph() (model.DepGraphFacts, bool) { return model.DepGraphFacts{}, false }
 func (stubFacts) Languages() map[string]int             { return nil }
 func (stubFacts) Ecosystems() model.EcosystemFacts      { return model.EcosystemFacts{} }
+func (stubFacts) AST() (model.ASTFacts, bool)           { return model.ASTFacts{}, false }
 
 func mkRule(id string, fn model.ResolverFunc) model.Rule {
 	return model.Rule{
@@ -48,6 +49,7 @@ func (s stubFactsWithLangs) DepGraph() (model.DepGraphFacts, bool) {
 }
 func (s stubFactsWithLangs) Languages() map[string]int        { return s.langs }
 func (s stubFactsWithLangs) Ecosystems() model.EcosystemFacts { return model.EcosystemFacts{} }
+func (s stubFactsWithLangs) AST() (model.ASTFacts, bool)      { return model.ASTFacts{}, false }
 
 func TestEngine_SkipsRulesWithLanguageMismatch(t *testing.T) {
 	noop := func(context.Context, model.FactStore) ([]model.Finding, []model.Metric, error) {

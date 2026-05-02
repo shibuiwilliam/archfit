@@ -1,0 +1,19 @@
+id: P1.LOC.009
+principle: P1
+dimension: LOC
+title: Runbook per high-risk slice
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Repositories with deployment artifacts (Dockerfile, Terraform files,
+  deployment docs) carry operational risk. A RUNBOOK.md at the repo root or
+  in docs/ gives agents and on-call humans a single place to find operational
+  procedures. Without it, agents may propose deployment changes without
+  understanding the operational context.
+remediation:
+  summary: >-
+    Add a RUNBOOK.md at the repository root or in docs/ describing
+    deployment procedures, rollback steps, and on-call escalation paths.
+  guide_ref: docs/rules/P1.LOC.009.md

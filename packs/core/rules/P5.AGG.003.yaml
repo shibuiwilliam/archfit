@@ -1,0 +1,17 @@
+id: P5.AGG.003
+principle: P5
+dimension: AGG
+title: Repository declares a risk-tier file
+severity: warn
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  A risk-tier file (RISK_TIERS.md, .archfit.yaml risk_tiers, or
+  SECURITY.md with path annotations) tells agents and humans which parts
+  of the repo are dangerous. Without it, every path looks equally safe.
+remediation:
+  summary: >-
+    Add a risk-tier declaration: RISK_TIERS.md at the root, a risk_tiers
+    block in .archfit.yaml, or a SECURITY.md that names high-risk paths.
+  guide_ref: docs/rules/P5.AGG.003.md

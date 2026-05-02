@@ -26,7 +26,7 @@ archfit scan .
 
 ```
 archfit 0.1.0 — target . (profile=standard)
-rules evaluated: 14 (2 with findings), findings: 2
+rules evaluated: 27 (2 with findings), findings: 2
 overall score: 84.0
   P1: 100.0
   P3: 60.0

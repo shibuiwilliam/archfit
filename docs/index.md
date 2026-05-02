@@ -42,9 +42,9 @@ See [Getting Started](getting-started.md) for detailed setup instructions.
 
 ## Current Rule Set
 
-17 rules across 2 packs, all `experimental` stability.
+27 rules across 2 packs. Most rules are `stability: stable` (frozen per ADR 0012). Three rules remain `experimental` per ADR 0014: P1.LOC.003, P1.LOC.004, P5.AGG.001. Output schema version: `1.1.0`.
 
-- **`core` pack** (14 rules): locality (P1.LOC.001-004), spec-first (P2.SPC.001), explicitness (P3.EXP.001), verifiability (P4.VER.001-003), aggregation (P5.AGG.001-002), reversibility (P6.REV.001-002), machine-readability (P7.MRD.001)
+- **`core` pack** (24 rules): locality (P1.LOC.001-004), spec-first (P2.SPC.001), explicitness (P3.EXP.001), verifiability (P4.VER.001-003), aggregation (P5.AGG.001-004), reversibility (P6.REV.001-002), machine-readability (P7.MRD.001), and additional rules across all seven principles. P5.AGG.004 is the first rule with `severity: error`.
 - **`agent-tool` pack** (3 rules): spec-first (P2.SPC.010), machine-readability (P7.MRD.002, P7.MRD.003)
 
 See [Rules Overview](rules/index.md) for the full catalog.

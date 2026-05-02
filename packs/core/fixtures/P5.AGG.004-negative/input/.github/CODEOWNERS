@@ -1,0 +1,3 @@
+# Protect high-risk paths
+/src/auth/ @security-team
+/migrations/ @dba-team

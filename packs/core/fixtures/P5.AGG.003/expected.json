@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P5.AGG.003",
+      "severity": "warn",
+      "path": "",
+      "message_contains": "no risk-tier"
+    }
+  ]
+}

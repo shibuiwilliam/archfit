@@ -4,7 +4,7 @@ dimension: LOC
 title: Dependency graph coupling is bounded
 severity: info
 evidence_strength: medium
-stability: stable
+stability: experimental
 weight: 1
 rationale: >
   Packages with high transitive reach force agents to load many neighbors.

@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P1.LOC.006",
+      "severity": "warn",
+      "path": "CLAUDE.md",
+      "message_contains": "exceeds"
+    }
+  ]
+}

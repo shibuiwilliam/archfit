@@ -1,0 +1,75 @@
+# Calibration corpus v0 — 10 permissively-licensed repositories.
+# Used by `make calibrate` (Phase 1) to compute per-rule precision/recall.
+# See PROJECT.md §6.1.5 and CLAUDE.md §7.3.
+#
+# Each entry specifies:
+#   repo:       GitHub owner/name
+#   license:    SPDX identifier (must be permissive: MIT, Apache-2.0, BSD-*)
+#   languages:  primary languages (lowercase)
+#   category:   what the repo represents (web, cli, library, iac, monorepo)
+#   notes:      why this repo is in the corpus
+#
+# Ground truth lives in ground_truth/<repo-name>/expected_findings.yaml.
+# A rule is promoted from experimental to stable only after corpus
+# precision >= 0.85. See CLAUDE.md §7.3.
+
+repos:
+  - repo: gin-gonic/gin
+    license: MIT
+    languages: [go]
+    category: web
+    notes: Popular Go web framework. Tests P1 locality, P3 explicitness, P4 verification.
+
+  - repo: charmbracelet/bubbletea
+    license: MIT
+    languages: [go]
+    category: cli
+    notes: Go TUI framework. Tests P7 machine-readability, P1 locality.
+
+  - repo: fastapi/fastapi
+    license: MIT
+    languages: [python]
+    category: web
+    notes: Python web framework. Tests cross-language applicability, P2 spec-first.
+
+  - repo: strapi/strapi
+    license: MIT
+    languages: [typescript, javascript]
+    category: monorepo
+    notes: Large TS monorepo. Tests P1 locality at scale, P5 aggregation.
+
+  - repo: posthog/posthog
+    license: MIT
+    languages: [typescript, python]
+    category: web
+    notes: Mixed TS/Python. Tests multi-language handling, P5 deploy scatter.
+
+  - repo: hashicorp/terraform-aws-modules
+    license: Apache-2.0
+    languages: [terraform]
+    category: iac
+    notes: Terraform modules. Tests P2 spec-first, P5 deploy aggregation.
+
+  - repo: sharkdp/bat
+    license: Apache-2.0
+    languages: [rust]
+    category: cli
+    notes: Rust CLI. Tests P7 exit codes, P4 verification.
+
+  - repo: mlflow/mlflow
+    license: Apache-2.0
+    languages: [python]
+    category: library
+    notes: Python MLOps library. Tests P6 reversibility, P2 schema contracts.
+
+  - repo: ktor-io/ktor
+    license: Apache-2.0
+    languages: [kotlin]
+    category: web
+    notes: Kotlin server framework. Tests JVM-ecosystem applicability.
+
+  - repo: expo/expo
+    license: MIT
+    languages: [typescript, javascript]
+    category: monorepo
+    notes: Large mobile monorepo. Tests P1 at monorepo scale, P5 aggregation.

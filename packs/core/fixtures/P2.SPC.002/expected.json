@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P2.SPC.002",
+      "severity": "warn",
+      "path": "migrations",
+      "message_contains": "only up migrations"
+    }
+  ]
+}

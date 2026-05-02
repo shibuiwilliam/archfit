@@ -38,12 +38,52 @@ func TestRuleValidate_BadID(t *testing.T) {
 	}
 }
 
-func TestRuleValidate_WeakErrorForbidden(t *testing.T) {
-	r := validRule()
-	r.EvidenceStrength = model.EvidenceWeak
-	r.Severity = model.SeverityError
-	if err := r.Validate(); err == nil {
-		t.Fatal("expected error: weak+error is forbidden")
+func TestRuleValidate_SeverityEvidenceMatrix(t *testing.T) {
+	// CLAUDE.md §6 invariant 2:
+	//   critical → strong only
+	//   error    → strong only
+	//   warn     → strong, medium, sampled OK; weak rejected
+	//   info     → any OK
+	tests := []struct {
+		severity model.Severity
+		evidence model.EvidenceStrength
+		wantErr  bool
+	}{
+		// critical
+		{model.SeverityCritical, model.EvidenceStrong, false},
+		{model.SeverityCritical, model.EvidenceMedium, true},
+		{model.SeverityCritical, model.EvidenceWeak, true},
+		{model.SeverityCritical, model.EvidenceSampled, true},
+		// error
+		{model.SeverityError, model.EvidenceStrong, false},
+		{model.SeverityError, model.EvidenceMedium, true},
+		{model.SeverityError, model.EvidenceWeak, true},
+		{model.SeverityError, model.EvidenceSampled, true},
+		// warn
+		{model.SeverityWarn, model.EvidenceStrong, false},
+		{model.SeverityWarn, model.EvidenceMedium, false},
+		{model.SeverityWarn, model.EvidenceSampled, false},
+		{model.SeverityWarn, model.EvidenceWeak, true},
+		// info
+		{model.SeverityInfo, model.EvidenceStrong, false},
+		{model.SeverityInfo, model.EvidenceMedium, false},
+		{model.SeverityInfo, model.EvidenceSampled, false},
+		{model.SeverityInfo, model.EvidenceWeak, false},
+	}
+	for _, tt := range tests {
+		name := string(tt.severity) + "/" + string(tt.evidence)
+		t.Run(name, func(t *testing.T) {
+			r := validRule()
+			r.Severity = tt.severity
+			r.EvidenceStrength = tt.evidence
+			err := r.Validate()
+			if tt.wantErr && err == nil {
+				t.Errorf("expected validation error for %s+%s", tt.severity, tt.evidence)
+			}
+			if !tt.wantErr && err != nil {
+				t.Errorf("unexpected error for %s+%s: %v", tt.severity, tt.evidence, err)
+			}
+		})
 	}
 }
 

@@ -1,0 +1,17 @@
+id: P2.SPC.004
+principle: P2
+dimension: SPC
+title: ADRs use YAML frontmatter
+severity: info
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  ADRs with YAML frontmatter (id, title, status, date) are machine-parseable.
+  Agents can query ADR status, find superseded decisions, and link changes
+  to the ADR that authorized them. Prose-only ADRs require human interpretation.
+remediation:
+  summary: >-
+    Add YAML frontmatter (id, title, status, date) to each ADR file in
+    docs/adr/. Use --- delimiters.
+  guide_ref: docs/rules/P2.SPC.004.md

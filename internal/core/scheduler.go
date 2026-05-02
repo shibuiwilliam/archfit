@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/shibuiwilliam/archfit/internal/adapter/exec"
+	collectast "github.com/shibuiwilliam/archfit/internal/collector/ast"
 	collectcmd "github.com/shibuiwilliam/archfit/internal/collector/command"
 	collectdep "github.com/shibuiwilliam/archfit/internal/collector/depgraph"
 	collecteco "github.com/shibuiwilliam/archfit/internal/collector/ecosystem"
@@ -107,7 +108,18 @@ func Scan(ctx context.Context, in ScanInput) (ScanResult, error) {
 		}
 	}
 
-	facts := newFactStore(repo, gitFacts, gitOK, schemas, cmdFacts, cmdOK, depFacts, depOK, ecoFacts)
+	// AST collector: runs at standard and deep depth. See ADR 0015.
+	var astFacts model.ASTFacts
+	astOK := false
+	if in.Depth != "shallow" {
+		a, aerr := collectast.Collect(in.Root, in.Depth)
+		if aerr == nil {
+			astFacts = a
+			astOK = true
+		}
+	}
+
+	facts := newFactStore(repo, gitFacts, gitOK, schemas, cmdFacts, cmdOK, depFacts, depOK, ecoFacts, astFacts, astOK)
 	ev := rule.NewEngine().Evaluate(ctx, in.Rules, facts)
 
 	// Compute metrics from collected facts.
@@ -155,10 +167,12 @@ type factStore struct {
 	dep     model.DepGraphFacts
 	depOK   bool
 	eco     model.EcosystemFacts
+	ast     model.ASTFacts
+	astOK   bool
 }
 
-func newFactStore(repo model.RepoFacts, git model.GitFacts, gitOK bool, schemas model.SchemaFacts, cmds model.CommandFacts, cmdsOK bool, dep model.DepGraphFacts, depOK bool, eco model.EcosystemFacts) model.FactStore {
-	return &factStore{repo: repo, git: git, gitOK: gitOK, schemas: schemas, cmds: cmds, cmdsOK: cmdsOK, dep: dep, depOK: depOK, eco: eco}
+func newFactStore(repo model.RepoFacts, git model.GitFacts, gitOK bool, schemas model.SchemaFacts, cmds model.CommandFacts, cmdsOK bool, dep model.DepGraphFacts, depOK bool, eco model.EcosystemFacts, ast model.ASTFacts, astOK bool) model.FactStore {
+	return &factStore{repo: repo, git: git, gitOK: gitOK, schemas: schemas, cmds: cmds, cmdsOK: cmdsOK, dep: dep, depOK: depOK, eco: eco, ast: ast, astOK: astOK}
 }
 
 // Repo returns the collected repo-wide facts.
@@ -181,3 +195,6 @@ func (f *factStore) DepGraph() (model.DepGraphFacts, bool) { return f.dep, f.dep
 
 // Ecosystems returns typed ecosystem detection results.
 func (f *factStore) Ecosystems() model.EcosystemFacts { return f.eco }
+
+// AST returns AST-derived facts and whether they are available. See ADR 0015.
+func (f *factStore) AST() (model.ASTFacts, bool) { return f.ast, f.astOK }

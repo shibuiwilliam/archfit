@@ -1,0 +1,10 @@
+{
+  "findings": [
+    {
+      "rule_id": "P1.LOC.005",
+      "severity": "warn",
+      "path": "src/auth",
+      "message_contains": "high-risk directory but has no INTENT.md"
+    }
+  ]
+}

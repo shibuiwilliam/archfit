@@ -1,0 +1,20 @@
+id: P5.AGG.004
+principle: P5
+dimension: AGG
+title: High-risk paths are protected by CODEOWNERS
+severity: error
+evidence_strength: strong
+stability: experimental
+weight: 1
+rationale: >
+  Directories containing auth, secrets, migrations, or deployment
+  configuration are high-risk. Without CODEOWNERS entries covering these
+  paths, any contributor (human or agent) can modify them without a
+  mandatory review from domain experts. CODEOWNERS is the cheapest
+  enforceable guardrail for dangerous capabilities.
+remediation:
+  summary: >-
+    Add a CODEOWNERS file (.github/CODEOWNERS, CODEOWNERS, or
+    docs/CODEOWNERS) with entries covering high-risk directories
+    (auth, secrets, migrations, deploy/infra).
+  guide_ref: docs/rules/P5.AGG.004.md

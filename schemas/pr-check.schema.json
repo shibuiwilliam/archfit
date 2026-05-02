@@ -7,6 +7,10 @@
   "required": ["base_ref", "head_ref", "base_score", "head_score", "score_delta", "summary", "new", "fixed"],
   "additionalProperties": false,
   "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
     "base_ref": {"type": "string"},
     "head_ref": {"type": "string"},
     "base_score": {"type": "number", "minimum": 0, "maximum": 100},
@@ -18,8 +22,29 @@
       "additionalProperties": false,
       "properties": {
         "new": {"type": "integer", "minimum": 0},
+        "new_error_plus": {"type": "integer", "minimum": 0},
         "fixed": {"type": "integer", "minimum": 0},
         "unchanged": {"type": "integer", "minimum": 0}
+      }
+    },
+    "base_severity_class": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "critical_pass_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "error_pass_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "warn_pass_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "info_pass_rate": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "head_severity_class": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "critical_pass_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "error_pass_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "warn_pass_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "info_pass_rate": {"type": "number", "minimum": 0, "maximum": 1}
       }
     },
     "new": {

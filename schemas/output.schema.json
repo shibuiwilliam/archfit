@@ -70,6 +70,17 @@
             "^P[1-7]$": {"type": "number", "minimum": 0, "maximum": 100}
           },
           "additionalProperties": false
+        },
+        "by_severity_class": {
+          "type": "object",
+          "description": "Pass rates per severity tier. Added in schema 1.1.0. error_pass_rate is the primary signal.",
+          "additionalProperties": false,
+          "properties": {
+            "critical_pass_rate": {"type": "number", "minimum": 0, "maximum": 1},
+            "error_pass_rate": {"type": "number", "minimum": 0, "maximum": 1},
+            "warn_pass_rate": {"type": "number", "minimum": 0, "maximum": 1},
+            "info_pass_rate": {"type": "number", "minimum": 0, "maximum": 1}
+          }
         }
       }
     },
